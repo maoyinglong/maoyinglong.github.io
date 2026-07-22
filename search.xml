@@ -662,104 +662,6 @@
       </tags>
   </entry>
   <entry>
-    <title>飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路</title>
-    <url>/2026/06/20/feishu-bot-permissions-and-mention/</url>
-    <content><![CDATA[<p><img data-src="/images/feishu-bot-permissions-and-mention-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>折腾飞书机器人，最大的坎不是写代码，是权限和事件订阅的迷宫。本文把我用过的一份「一键导入权限 JSON」和互@机制的坑整理出来，帮你少走 2-3 天弯路。</p>
-</blockquote>
-<hr>
-<h2 id="写在前面：为什么写这篇"><a href="#写在前面：为什么写这篇" class="headerlink" title="写在前面：为什么写这篇"></a>写在前面：为什么写这篇</h2><p>如果你正在做飞书机器人 &#x2F; Bot 开发，大概率已经踩过这些坑：</p>
-<ul>
-<li>文档说”权限已开通”，但接口就是返回 <code>99991672: permission denied</code></li>
-<li>机器人在群里疯狂响应无关消息，被同事吐槽</li>
-<li>多个机器人之间无法互相@唤醒，编排逻辑断了</li>
-</ul>
-<p>这篇不写完整教程（官方文档有），只讲<strong>实战中真正会遇到的关键配置</strong>和 JSON 模板，复制就能用。</p>
-<hr>
-<h2 id="一、飞书-Bot-权限配置：一键导入-JSON"><a href="#一、飞书-Bot-权限配置：一键导入-JSON" class="headerlink" title="一、飞书 Bot 权限配置：一键导入 JSON"></a>一、飞书 Bot 权限配置：一键导入 JSON</h2><h3 id="痛点"><a href="#痛点" class="headerlink" title="痛点"></a>痛点</h3><p>飞书开发者后台的权限管理页，默认只列出”高频权限”。想要用全功能（消息、文档、日历、任务等）必须一个个手动找，一个个勾。<strong>一个应用配完经常要花半小时</strong>，还容易漏。</p>
-<h3 id="解法：批量导入"><a href="#解法：批量导入" class="headerlink" title="解法：批量导入"></a>解法：批量导入</h3><p>在开发者后台 → <strong>权限管理</strong> → 顶部找到 <strong>批量导入&#x2F;导出权限</strong> 按钮 → 切换到 <strong>导入</strong> Tab → 把下面这段 JSON 完整粘贴进去，覆盖默认示例：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scopes&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;tenant&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;contact:contact.base:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.group_at_msg:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.p2p_msg:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.pins:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.pins:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.reactions:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.reactions:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:recall&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:send_as_bot&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:send_multi_users&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:send_sys_msg&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:resource&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;application:application:self_manage&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;cardkit:card:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;cardkit:card:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;drive:drive.metadata:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:delete&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document.block:convert&quot;</span></span><br><span class="line">    <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;user&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;contact:user.employee_id:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;offline_access&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:copy&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:field:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:field:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:field:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:record:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:record:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:record:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:table:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:table:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:table:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:view:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:view:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet.meta:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document:export&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.media:upload&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar.event:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar.event:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar.event:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:contact.base:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:user.base:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:user:search&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.media:download&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;drive:file:download&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;drive:file:upload&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat.members:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.group_msg:get_as_user&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.p2p_msg:get_as_user&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;search:docs:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;search:message&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;space:document:move&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;space:document:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:comment:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:comment:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:task:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:task:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:tasklist:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:tasklist:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:node:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:node:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:node:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:space:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:space:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:space:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:user.basic_profile:readonly&quot;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>两个关键步骤</strong>：</p>
-<ol>
-<li>粘贴后点击 <strong>确认新增权限</strong></li>
-<li>一定要点击 <strong>申请开通&#x2F;发布应用</strong>，否则权限不会真正生效（很多人栽在这步，配置完了还是报权限错）</li>
-</ol>
-<h3 id="容易踩的坑"><a href="#容易踩的坑" class="headerlink" title="容易踩的坑"></a>容易踩的坑</h3><ul>
-<li><strong>部分权限需要审批</strong>：比如 <code>contact:user.employee_id:readonly</code>（读取员工 ID）属于敏感权限，导入后还需要在 <strong>权限管理 → 我的应用权限</strong> 页面提交审批，管理员通过后才能用</li>
-<li><strong>scope 类型别搞混</strong>：<code>tenant</code> 是租户级（应用身份调用），<code>user</code> 是用户级（代表用户操作）。同样是「读消息」，调用场景不同要选不同的 scope</li>
-<li><strong>写完代码才配权限</strong>是反过来的。建议先配权限 → 写代码 → 联调，能少排查很多”明明逻辑没问题”的玄学问题</li>
-</ul>
-<hr>
-<h2 id="二、群聊互-与机器人响应控制"><a href="#二、群聊互-与机器人响应控制" class="headerlink" title="二、群聊互@与机器人响应控制"></a>二、群聊互@与机器人响应控制</h2><h3 id="痛点：机器人疯狂响应无关消息"><a href="#痛点：机器人疯狂响应无关消息" class="headerlink" title="痛点：机器人疯狂响应无关消息"></a>痛点：机器人疯狂响应无关消息</h3><p>默认情况下，飞书机器人会监听群里的所有消息并尝试响应（如果你的逻辑没做好过滤）。结果就是——群里讨论点别的，它都要插一句”收到！”或者更糟，乱回复业务无关的内容。</p>
-<h3 id="解法：requireMention-配置"><a href="#解法：requireMention-配置" class="headerlink" title="解法：requireMention 配置"></a>解法：<code>requireMention</code> 配置</h3><p>在飞书机器人适配的配置中，加一个开关：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;channels&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;feishu&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;appId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cli_你的AppID&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;appSecret&quot;</span><span class="punctuation">:</span> <span class="string">&quot;你的AppSecret&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;requireMention&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;groupPolicy&quot;</span><span class="punctuation">:</span> <span class="string">&quot;open&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>两个关键参数</strong>：</p>
-<table>
-<thead>
-<tr>
-<th>参数</th>
-<th>取值</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>requireMention</code></td>
-<td><code>true</code> &#x2F; <code>false</code></td>
-<td><code>true</code> &#x3D; 必须 @机器人才响应（推荐）</td>
-</tr>
-<tr>
-<td><code>groupPolicy</code></td>
-<td><code>open</code> &#x2F; <code>allowlist</code></td>
-<td><code>open</code> &#x3D; 所有群都响应；<code>allowlist</code> &#x3D; 仅白名单群</td>
-</tr>
-</tbody></table>
-<p><strong>推荐组合</strong>：</p>
-<ul>
-<li>内部测试 &#x2F; 个人玩具 Bot：<code>open</code> + <code>requireMention: true</code></li>
-<li>正式上线 &#x2F; 多人协作：<code>allowlist</code> + <code>requireMention: true</code>（双保险，避免被恶意群加进去骚扰）</li>
-</ul>
-<h3 id="进阶：多机器人互-唤醒"><a href="#进阶：多机器人互-唤醒" class="headerlink" title="进阶：多机器人互@唤醒"></a>进阶：多机器人互@唤醒</h3><p>这个场景很多人问：<strong>两个机器人之间如何互相 @ 触发对方？</strong></p>
-<p>实现逻辑其实不复杂：</p>
-<ol>
-<li><strong>机器人 A</strong> 在回复时，主动构造一个消息体，包含对 <strong>机器人 B</strong> 的 @ 标记</li>
-<li>飞书的消息体内 <code>@</code> 标记格式是：<code>&lt;at user_id=&quot;ou_xxx&quot;&gt;机器人B名字&lt;/at&gt;</code></li>
-<li><strong>机器人 B</strong> 配置了对应的 Webhook 事件订阅和回调逻辑，就会被触发</li>
-<li>关键是 <strong>user_id</strong> 要正确（<code>ou_</code> 开头的 open_id，可以在机器人 B 的事件回调中拿到）</li>
-</ol>
-<p>注意这里有个细节：飞书的 <code>user_id</code>（<code>ou_</code>）和 <code>open_id</code>（<code>on_</code>）不是同一个东西，互@的时候需要用 <code>open_id</code>。</p>
-<hr>
-<h2 id="三、一些零碎但救命的小贴士"><a href="#三、一些零碎但救命的小贴士" class="headerlink" title="三、一些零碎但救命的小贴士"></a>三、一些零碎但救命的小贴士</h2><h3 id="1-调试阶段看实时事件流"><a href="#1-调试阶段看实时事件流" class="headerlink" title="1. 调试阶段看实时事件流"></a>1. 调试阶段看实时事件流</h3><p>飞书开放平台 → 你的应用 → <strong>事件订阅</strong> → <strong>事件日志</strong>：能看到所有 webhook 推送的原始数据，调试 Bot 行为最快的地方。</p>
-<h3 id="2-本地调试不用每次部署"><a href="#2-本地调试不用每次部署" class="headerlink" title="2. 本地调试不用每次部署"></a>2. 本地调试不用每次部署</h3><p>飞书的 webhook 回调 URL 必须公网可访问。本地开发推荐用 <strong>frp</strong> 或者 <strong>Cloudflare Tunnel</strong> 暴露 80&#x2F;443 端口，然后填到 webhook URL 配置里。</p>
-<h3 id="3-Token-过期提前-5-分钟刷新"><a href="#3-Token-过期提前-5-分钟刷新" class="headerlink" title="3. Token 过期提前 5 分钟刷新"></a>3. Token 过期提前 5 分钟刷新</h3><p><code>tenant_access_token</code> 默认有效期 2 小时，但实际很多场景会提前失效。建议做一个定时器，每 1.5 小时主动刷新一次，比依赖”调用失败再重试”稳得多。</p>
-<h3 id="4-卡片消息调试"><a href="#4-卡片消息调试" class="headerlink" title="4. 卡片消息调试"></a>4. 卡片消息调试</h3><p>调试飞书消息卡片时，先用纯文本消息测试逻辑，卡片模板放在最后做。卡片 JSON 写错的话，飞书返回的错误信息很模糊，定位起来很费劲。</p>
-<hr>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>飞书 Bot 开发，<strong>60% 的时间花在权限和事件配置上，真正写业务逻辑的时间反而不多</strong>。把上面这套权限 JSON 收藏起来，新开应用的时候直接导入，能省下不少时间。</p>
-<p>如果你是第一次做飞书机器人，建议按这个顺序推进：</p>
-<ol>
-<li>先开权限 → 发布应用</li>
-<li>跑通一个最简单的「收到消息回复 hello」</li>
-<li>加入 <code>requireMention</code> 控制</li>
-<li>接入卡片消息做交互</li>
-<li>最后才考虑多 Bot 编排</li>
-</ol>
-<p>这样每一步都能跑通再往下走，不会陷入”写了一堆逻辑，不知道哪步出问题”的泥潭。</p>
-<p>有问题欢迎评论区交流～</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>开发工具</category>
-      </categories>
-      <tags>
-        <tag>飞书</tag>
-        <tag>机器人</tag>
-        <tag>Bot开发</tag>
-        <tag>API</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）</title>
     <url>/2026/06/20/feishu-bot-connectivity-fix/</url>
     <content><![CDATA[<p><img data-src="/images/feishu-bot-connectivity-fix-cover.webp" alt="封面图"></p>
@@ -884,6 +786,104 @@
       </tags>
   </entry>
   <entry>
+    <title>飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路</title>
+    <url>/2026/06/20/feishu-bot-permissions-and-mention/</url>
+    <content><![CDATA[<p><img data-src="/images/feishu-bot-permissions-and-mention-cover.webp" alt="封面图"></p>
+<blockquote>
+<p>折腾飞书机器人，最大的坎不是写代码，是权限和事件订阅的迷宫。本文把我用过的一份「一键导入权限 JSON」和互@机制的坑整理出来，帮你少走 2-3 天弯路。</p>
+</blockquote>
+<hr>
+<h2 id="写在前面：为什么写这篇"><a href="#写在前面：为什么写这篇" class="headerlink" title="写在前面：为什么写这篇"></a>写在前面：为什么写这篇</h2><p>如果你正在做飞书机器人 &#x2F; Bot 开发，大概率已经踩过这些坑：</p>
+<ul>
+<li>文档说”权限已开通”，但接口就是返回 <code>99991672: permission denied</code></li>
+<li>机器人在群里疯狂响应无关消息，被同事吐槽</li>
+<li>多个机器人之间无法互相@唤醒，编排逻辑断了</li>
+</ul>
+<p>这篇不写完整教程（官方文档有），只讲<strong>实战中真正会遇到的关键配置</strong>和 JSON 模板，复制就能用。</p>
+<hr>
+<h2 id="一、飞书-Bot-权限配置：一键导入-JSON"><a href="#一、飞书-Bot-权限配置：一键导入-JSON" class="headerlink" title="一、飞书 Bot 权限配置：一键导入 JSON"></a>一、飞书 Bot 权限配置：一键导入 JSON</h2><h3 id="痛点"><a href="#痛点" class="headerlink" title="痛点"></a>痛点</h3><p>飞书开发者后台的权限管理页，默认只列出”高频权限”。想要用全功能（消息、文档、日历、任务等）必须一个个手动找，一个个勾。<strong>一个应用配完经常要花半小时</strong>，还容易漏。</p>
+<h3 id="解法：批量导入"><a href="#解法：批量导入" class="headerlink" title="解法：批量导入"></a>解法：批量导入</h3><p>在开发者后台 → <strong>权限管理</strong> → 顶部找到 <strong>批量导入&#x2F;导出权限</strong> 按钮 → 切换到 <strong>导入</strong> Tab → 把下面这段 JSON 完整粘贴进去，覆盖默认示例：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scopes&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;tenant&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;contact:contact.base:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.group_at_msg:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.p2p_msg:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.pins:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.pins:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.reactions:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.reactions:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:recall&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:send_as_bot&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:send_multi_users&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:send_sys_msg&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:resource&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;application:application:self_manage&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;cardkit:card:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;cardkit:card:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;drive:drive.metadata:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:delete&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.comment:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docx:document.block:convert&quot;</span></span><br><span class="line">    <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;user&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="string">&quot;contact:user.employee_id:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;offline_access&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:copy&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:field:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:field:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:field:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:record:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:record:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:record:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:table:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:table:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:table:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:view:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:view:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;base:app:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet.meta:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;sheets:spreadsheet:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document:export&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.media:upload&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar.event:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar.event:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;calendar:calendar.event:update&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:contact.base:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:user.base:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:user:search&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;docs:document.media:download&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;drive:file:download&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;drive:file:upload&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:chat.members:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.group_msg:get_as_user&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message.p2p_msg:get_as_user&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;im:message:readonly&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;search:docs:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;search:message&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;space:document:move&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;space:document:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:comment:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:comment:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:task:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:task:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:tasklist:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;task:tasklist:write&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:node:create&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:node:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:node:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:space:read&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:space:retrieve&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;wiki:space:write_only&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="string">&quot;contact:user.basic_profile:readonly&quot;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>两个关键步骤</strong>：</p>
+<ol>
+<li>粘贴后点击 <strong>确认新增权限</strong></li>
+<li>一定要点击 <strong>申请开通&#x2F;发布应用</strong>，否则权限不会真正生效（很多人栽在这步，配置完了还是报权限错）</li>
+</ol>
+<h3 id="容易踩的坑"><a href="#容易踩的坑" class="headerlink" title="容易踩的坑"></a>容易踩的坑</h3><ul>
+<li><strong>部分权限需要审批</strong>：比如 <code>contact:user.employee_id:readonly</code>（读取员工 ID）属于敏感权限，导入后还需要在 <strong>权限管理 → 我的应用权限</strong> 页面提交审批，管理员通过后才能用</li>
+<li><strong>scope 类型别搞混</strong>：<code>tenant</code> 是租户级（应用身份调用），<code>user</code> 是用户级（代表用户操作）。同样是「读消息」，调用场景不同要选不同的 scope</li>
+<li><strong>写完代码才配权限</strong>是反过来的。建议先配权限 → 写代码 → 联调，能少排查很多”明明逻辑没问题”的玄学问题</li>
+</ul>
+<hr>
+<h2 id="二、群聊互-与机器人响应控制"><a href="#二、群聊互-与机器人响应控制" class="headerlink" title="二、群聊互@与机器人响应控制"></a>二、群聊互@与机器人响应控制</h2><h3 id="痛点：机器人疯狂响应无关消息"><a href="#痛点：机器人疯狂响应无关消息" class="headerlink" title="痛点：机器人疯狂响应无关消息"></a>痛点：机器人疯狂响应无关消息</h3><p>默认情况下，飞书机器人会监听群里的所有消息并尝试响应（如果你的逻辑没做好过滤）。结果就是——群里讨论点别的，它都要插一句”收到！”或者更糟，乱回复业务无关的内容。</p>
+<h3 id="解法：requireMention-配置"><a href="#解法：requireMention-配置" class="headerlink" title="解法：requireMention 配置"></a>解法：<code>requireMention</code> 配置</h3><p>在飞书机器人适配的配置中，加一个开关：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;channels&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;feishu&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;appId&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cli_你的AppID&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;appSecret&quot;</span><span class="punctuation">:</span> <span class="string">&quot;你的AppSecret&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;requireMention&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;groupPolicy&quot;</span><span class="punctuation">:</span> <span class="string">&quot;open&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>两个关键参数</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>取值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>requireMention</code></td>
+<td><code>true</code> &#x2F; <code>false</code></td>
+<td><code>true</code> &#x3D; 必须 @机器人才响应（推荐）</td>
+</tr>
+<tr>
+<td><code>groupPolicy</code></td>
+<td><code>open</code> &#x2F; <code>allowlist</code></td>
+<td><code>open</code> &#x3D; 所有群都响应；<code>allowlist</code> &#x3D; 仅白名单群</td>
+</tr>
+</tbody></table>
+<p><strong>推荐组合</strong>：</p>
+<ul>
+<li>内部测试 &#x2F; 个人玩具 Bot：<code>open</code> + <code>requireMention: true</code></li>
+<li>正式上线 &#x2F; 多人协作：<code>allowlist</code> + <code>requireMention: true</code>（双保险，避免被恶意群加进去骚扰）</li>
+</ul>
+<h3 id="进阶：多机器人互-唤醒"><a href="#进阶：多机器人互-唤醒" class="headerlink" title="进阶：多机器人互@唤醒"></a>进阶：多机器人互@唤醒</h3><p>这个场景很多人问：<strong>两个机器人之间如何互相 @ 触发对方？</strong></p>
+<p>实现逻辑其实不复杂：</p>
+<ol>
+<li><strong>机器人 A</strong> 在回复时，主动构造一个消息体，包含对 <strong>机器人 B</strong> 的 @ 标记</li>
+<li>飞书的消息体内 <code>@</code> 标记格式是：<code>&lt;at user_id=&quot;ou_xxx&quot;&gt;机器人B名字&lt;/at&gt;</code></li>
+<li><strong>机器人 B</strong> 配置了对应的 Webhook 事件订阅和回调逻辑，就会被触发</li>
+<li>关键是 <strong>user_id</strong> 要正确（<code>ou_</code> 开头的 open_id，可以在机器人 B 的事件回调中拿到）</li>
+</ol>
+<p>注意这里有个细节：飞书的 <code>user_id</code>（<code>ou_</code>）和 <code>open_id</code>（<code>on_</code>）不是同一个东西，互@的时候需要用 <code>open_id</code>。</p>
+<hr>
+<h2 id="三、一些零碎但救命的小贴士"><a href="#三、一些零碎但救命的小贴士" class="headerlink" title="三、一些零碎但救命的小贴士"></a>三、一些零碎但救命的小贴士</h2><h3 id="1-调试阶段看实时事件流"><a href="#1-调试阶段看实时事件流" class="headerlink" title="1. 调试阶段看实时事件流"></a>1. 调试阶段看实时事件流</h3><p>飞书开放平台 → 你的应用 → <strong>事件订阅</strong> → <strong>事件日志</strong>：能看到所有 webhook 推送的原始数据，调试 Bot 行为最快的地方。</p>
+<h3 id="2-本地调试不用每次部署"><a href="#2-本地调试不用每次部署" class="headerlink" title="2. 本地调试不用每次部署"></a>2. 本地调试不用每次部署</h3><p>飞书的 webhook 回调 URL 必须公网可访问。本地开发推荐用 <strong>frp</strong> 或者 <strong>Cloudflare Tunnel</strong> 暴露 80&#x2F;443 端口，然后填到 webhook URL 配置里。</p>
+<h3 id="3-Token-过期提前-5-分钟刷新"><a href="#3-Token-过期提前-5-分钟刷新" class="headerlink" title="3. Token 过期提前 5 分钟刷新"></a>3. Token 过期提前 5 分钟刷新</h3><p><code>tenant_access_token</code> 默认有效期 2 小时，但实际很多场景会提前失效。建议做一个定时器，每 1.5 小时主动刷新一次，比依赖”调用失败再重试”稳得多。</p>
+<h3 id="4-卡片消息调试"><a href="#4-卡片消息调试" class="headerlink" title="4. 卡片消息调试"></a>4. 卡片消息调试</h3><p>调试飞书消息卡片时，先用纯文本消息测试逻辑，卡片模板放在最后做。卡片 JSON 写错的话，飞书返回的错误信息很模糊，定位起来很费劲。</p>
+<hr>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>飞书 Bot 开发，<strong>60% 的时间花在权限和事件配置上，真正写业务逻辑的时间反而不多</strong>。把上面这套权限 JSON 收藏起来，新开应用的时候直接导入，能省下不少时间。</p>
+<p>如果你是第一次做飞书机器人，建议按这个顺序推进：</p>
+<ol>
+<li>先开权限 → 发布应用</li>
+<li>跑通一个最简单的「收到消息回复 hello」</li>
+<li>加入 <code>requireMention</code> 控制</li>
+<li>接入卡片消息做交互</li>
+<li>最后才考虑多 Bot 编排</li>
+</ol>
+<p>这样每一步都能跑通再往下走，不会陷入”写了一堆逻辑，不知道哪步出问题”的泥潭。</p>
+<p>有问题欢迎评论区交流～</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开发工具</category>
+      </categories>
+      <tags>
+        <tag>飞书</tag>
+        <tag>机器人</tag>
+        <tag>Bot开发</tag>
+        <tag>API</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>飞书 Docx API 批量操作踩坑：从 1770001 invalid param 说起</title>
     <url>/2026/06/20/feishu-docx-batch-edit/</url>
     <content><![CDATA[<p><img data-src="/images/feishu-docx-batch-edit-cover.webp" alt="封面图"></p>
@@ -991,60 +991,132 @@
       </tags>
   </entry>
   <entry>
-    <title>300 行 CSS 改造 Hexo：赛博朋克意识空间</title>
-    <url>/2026/07/13/hexo-cyberpunk-css-overhaul/</url>
-    <content><![CDATA[<p><img data-src="/images/hexo-cyberpunk-cover.webp" alt="Hexo 赛博朋克改造封面"></p>
-<p>你的博客是不是也这样——首页标题堆叠、配色平淡、NexT Gemini 千篇一律。说不上来哪不好，但就是没有「优秀博客」的样子。</p>
-<p>我花了三周，用 300 行 CSS + 200 行 JS，把博客从「又一个 NexT 站」变成了一个让人进来想「卧槽」的赛博朋克意识空间。下面是完整的刀法。</p>
-<h2 id="先审计：问题不在主题，在细节"><a href="#先审计：问题不在主题，在细节" class="headerlink" title="先审计：问题不在主题，在细节"></a>先审计：问题不在主题，在细节</h2><p>我用 Hexo + NexT 8.27.0 Gemini 跑了一年多，一直觉得「怪」。审计后发现问题很具体：</p>
+    <title>飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑</title>
+    <url>/2026/06/20/feishu-wiki-automation/</url>
+    <content><![CDATA[<p><img data-src="/images/feishu-wiki-automation-cover.webp" alt="封面图"></p>
+<blockquote>
+<p>想用 API 自动管理飞书 Wiki 空间？你会遇到一连串奇怪的权限和参数问题。本文从权限获取到内容写入，把每个坑的真实原因和解法完整整理出来。</p>
+</blockquote>
+<hr>
+<h2 id="为什么要自动化-Wiki-空间"><a href="#为什么要自动化-Wiki-空间" class="headerlink" title="为什么要自动化 Wiki 空间"></a>为什么要自动化 Wiki 空间</h2><p>飞书的 Wiki 空间是团队知识沉淀的核心。但手动维护很麻烦：</p>
 <ul>
-<li>首页无摘要，13 篇文章堆成一排标题</li>
-<li>代码高亮用 <code>default</code> 主题，灰蒙蒙没质感</li>
-<li>无粒子背景、无动态效果、无 Hero 区</li>
-<li>分类页&#x2F;标签页 404（Hexo 不会自动生成这些页面，你得手动创建）</li>
-<li>TOC 默认折叠，阅读体验割裂</li>
-<li>页脚只剩「Powered by Hexo」，毫无个性</li>
+<li>想批量创建文档目录</li>
+<li>想自动同步外部数据到 Wiki</li>
+<li>想把日报 &#x2F; 监控结果自动生成 Wiki 页面</li>
 </ul>
-<p>博客的「怪」不是玄学。是每一个你偷懒没调的细节，合在一起形成的平庸感。</p>
-<h2 id="视觉重构：四层叠加制造深度"><a href="#视觉重构：四层叠加制造深度" class="headerlink" title="视觉重构：四层叠加制造深度"></a>视觉重构：四层叠加制造深度</h2><p>赛博朋克的核心是高对比 + 多层次 + 克制动效。我只用一种颜色——<strong>电光蓝 <code>#00d4ff</code></strong>，变化全靠透明度。</p>
-<h3 id="第一层：电路网格纹理"><a href="#第一层：电路网格纹理" class="headerlink" title="第一层：电路网格纹理"></a>第一层：电路网格纹理</h3><p>CSS 两行 <code>linear-gradient</code> 画 60px 网格线，透明度 0.08。注意放在 <code>html</code> 而非 <code>body</code>——因为 <code>body</code> 必须设 <code>transparent</code> 才能让后面的 Canvas 粒子可见。</p>
-<h3 id="第二层：Canvas-粒子引擎"><a href="#第二层：Canvas-粒子引擎" class="headerlink" title="第二层：Canvas 粒子引擎"></a>第二层：Canvas 粒子引擎</h3><p>不依赖任何第三方库，纯手写。80+ 节点（蓝&#x2F;白双色，脉冲呼吸），距离 &lt; 130px 自动连线，25 条数据流下落线。粒子数动态计算 <code>W * H / 12000</code>，自适应屏幕。</p>
-<h3 id="第三层：全屏-Hero-Banner"><a href="#第三层：全屏-Hero-Banner" class="headerlink" title="第三层：全屏 Hero Banner"></a>第三层：全屏 Hero Banner</h3><p>首页最顶部注入人物立绘，底部渐变融入底色，<code>::after</code> 伪元素叠加 CRT 扫描线。注入位置必须是 <code>main.main</code> 之前——如果在内容区内部，会被 NexT 宽度约束压成窄条。</p>
-<h3 id="第四层：玻璃拟态卡片"><a href="#第四层：玻璃拟态卡片" class="headerlink" title="第四层：玻璃拟态卡片"></a>第四层：玻璃拟态卡片</h3><p>所有文章卡片 <code>background: rgba(5,15,30,0.75)</code> + <code>backdrop-filter: blur(12px)</code>，hover 时蓝色外光晕。</p>
-<blockquote>
-<p>好设计不靠堆颜色，靠层次。四层叠加，一层都不能少。</p>
-</blockquote>
-<h2 id="动态细节：1-2-秒一次的故障闪烁"><a href="#动态细节：1-2-秒一次的故障闪烁" class="headerlink" title="动态细节：1.2 秒一次的故障闪烁"></a>动态细节：1.2 秒一次的故障闪烁</h2><p>标题每 1.2 秒触发一次 RGB split glitch——红青偏移 + 随机 <code>skewX</code> + <code>letterSpacing</code> 抖动，100ms 后恢复。不是炫技，是把「意识空间」这个设定钉进访客的潜意识。</p>
-<p>代码块全部终端化：<code>::before</code> 注入 <code>◈ TERMINAL</code> 装饰条，背景近纯黑 <code>#0a0f14</code>，蓝色外发光边框。</p>
-<p>滚动条、头像光晕、引用块左边框、行内代码背景——每一个像素都经过设计。这些细节单独拿出来没人注意，但合在一起决定了「高级感」和「又一个 NexT 站」之间的差距。</p>
-<h2 id="踩坑实录：最容易翻车的五个地方"><a href="#踩坑实录：最容易翻车的五个地方" class="headerlink" title="踩坑实录：最容易翻车的五个地方"></a>踩坑实录：最容易翻车的五个地方</h2><h3 id="坑一：Canvas-z-index-写死没用"><a href="#坑一：Canvas-z-index-写死没用" class="headerlink" title="坑一：Canvas z-index 写死没用"></a>坑一：Canvas z-index 写死没用</h3><p>粒子引擎设了 <code>z-index: -1</code>，但被 <code>body</code> 的不透明背景完全挡住。解决方案：背景色放 <code>html</code>，<code>body</code> 设 <code>transparent</code>。</p>
-<h3 id="坑二：PJAX-是隐形的坑"><a href="#坑二：PJAX-是隐形的坑" class="headerlink" title="坑二：PJAX 是隐形的坑"></a>坑二：PJAX 是隐形的坑</h3><p>NexT 默认 PJAX 导航，你的 JS 只在 <code>DOMContentLoaded</code> 执行一次，翻页后全部失效。所有动态逻辑必须同时监听三个事件：<code>DOMContentLoaded</code>、<code>page:loaded</code>、<code>pjax:complete</code>。</p>
-<h3 id="坑三：分类页-标签页-404"><a href="#坑三：分类页-标签页-404" class="headerlink" title="坑三：分类页&#x2F;标签页 404"></a>坑三：分类页&#x2F;标签页 404</h3><p>Hexo 不会从文章 front-matter 自动生成这些页面。<code>source/categories/index.md</code> 和 <code>source/tags/index.md</code> 必须手动创建，<code>type</code> + <code>layout</code> 字段缺一不可。</p>
-<h3 id="坑四：Giscus-评论不显示"><a href="#坑四：Giscus-评论不显示" class="headerlink" title="坑四：Giscus 评论不显示"></a>坑四：Giscus 评论不显示</h3><p>用 <code>document.querySelector(&#39;.posts-expand&#39;)</code> 判断是否文章页——但首页也有这个 class。改用 NexT 内置的 <code>CONFIG.page.isPost</code>。</p>
-<h3 id="坑五：CDN-缓存让你误判部署失败"><a href="#坑五：CDN-缓存让你误判部署失败" class="headerlink" title="坑五：CDN 缓存让你误判部署失败"></a>坑五：CDN 缓存让你误判部署失败</h3><p>GitHub Pages 走 Cloudflare CDN，部署成功后 5–30 分钟内访客看到的仍是旧版。验证部署必须用强制绕过缓存的方式：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 用时间戳参数强制绕过 CDN 缓存验证部署</span></span><br><span class="line">curl -sL <span class="string">&quot;https://your.blog/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+<p>这些事情靠人工太累，必须用 API。但飞书 Wiki API 的”权限模型 + 参数格式”比普通 Docx API 复杂得多，<strong>文档没写明，社区资料也少</strong>。</p>
+<p>我把整套流程摸通了，记录下来。</p>
+<hr>
+<h2 id="第一步：权限获取（90-的人卡在这里）"><a href="#第一步：权限获取（90-的人卡在这里）" class="headerlink" title="第一步：权限获取（90% 的人卡在这里）"></a>第一步：权限获取（90% 的人卡在这里）</h2><h3 id="误区：以为-API-权限-空间权限"><a href="#误区：以为-API-权限-空间权限" class="headerlink" title="误区：以为 API 权限 &#x3D; 空间权限"></a>误区：以为 API 权限 &#x3D; 空间权限</h3><p>很多人以为：在飞书开发者后台开通了 Wiki 相关 API 权限，就能直接操作 Wiki 空间。<strong>错</strong>。</p>
+<p>飞书的 Wiki 空间是独立的权限体系：</p>
+<ul>
+<li><strong>应用权限</strong>（开发者后台）：能不能调 API</li>
+<li><strong>空间成员权限</strong>（Wiki 后台）：能不能操作这个空间</li>
+</ul>
+<p><strong>两者缺一不可</strong>。</p>
+<h3 id="正确流程"><a href="#正确流程" class="headerlink" title="正确流程"></a>正确流程</h3><ol>
+<li>联系 Wiki 空间管理员（通常是创建者）</li>
+<li>让管理员进入 Wiki 空间 → <strong>设置 → 成员管理</strong></li>
+<li>把你的应用（app_id）添加为<strong>空间管理员</strong>或<strong>编辑者</strong></li>
+<li>拿到这两个 ID：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">空间 ID: 7632282247265029317  (纯数字)</span><br><span class="line">首页 token: XBF5wGQs6iJmNykLRBScM7oAnyc  (字母开头)</span><br></pre></td></tr></table></figure>
 
+<h3 id="OAuth-scope-的坑"><a href="#OAuth-scope-的坑" class="headerlink" title="OAuth scope 的坑"></a>OAuth scope 的坑</h3><p>如果你用 <code>user_access_token</code>（OAuth 授权）：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错误：wiki + drive 同时请求会报 20043</span></span><br><span class="line">scope = <span class="string">&quot;wiki:wiki:read drive:drive:readonly&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 正确：分开授权，先 wiki 后 drive</span></span><br><span class="line">scope = <span class="string">&quot;wiki:wiki:read&quot;</span></span><br><span class="line"><span class="comment"># 第一次授权完，再发起一次 drive 的授权</span></span><br></pre></td></tr></table></figure>
+
+<p>飞书的设计是：单次 OAuth 不能请求跨产品的 scope。<strong>需要分两次授权</strong>。</p>
+<hr>
+<h2 id="第二步：节点创建（创建目录、文档）"><a href="#第二步：节点创建（创建目录、文档）" class="headerlink" title="第二步：节点创建（创建目录、文档）"></a>第二步：节点创建（创建目录、文档）</h2><h3 id="创建目录（根节点）"><a href="#创建目录（根节点）" class="headerlink" title="创建目录（根节点）"></a>创建目录（根节点）</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">POST https://open.feishu.cn/open-apis/wiki/v2/spaces/&#123;space_id&#125;/nodes</span><br></pre></td></tr></table></figure>
+
+<p>请求体：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;obj_type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;docx&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;node_type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;origin&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;我的新目录&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>返回 <code>node_token</code>，记下来用于后续操作。</p>
+<h3 id="创建文档（踩坑点）"><a href="#创建文档（踩坑点）" class="headerlink" title="创建文档（踩坑点）"></a>创建文档（踩坑点）</h3><p>很多人尝试在指定目录里直接创建文档：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">POST .../wiki/v2/spaces/&#123;space_id&#125;/nodes</span><br><span class="line">Body: &#123;</span><br><span class="line">  <span class="string">&quot;obj_type&quot;</span>: <span class="string">&quot;docx&quot;</span>,</span><br><span class="line">  <span class="string">&quot;parent_node_token&quot;</span>: <span class="string">&quot;父目录token&quot;</span>,</span><br><span class="line">  <span class="string">&quot;title&quot;</span>: <span class="string">&quot;新文档&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>报错：权限不足</strong>。</p>
+<p>原因：<strong>创建子节点需要父节点的编辑权限</strong>，而你可能只有目录的查看权限。</p>
+<h3 id="变通方案"><a href="#变通方案" class="headerlink" title="变通方案"></a>变通方案</h3><p><strong>先创建到 space 根目录，再移动到目标目录</strong>：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">headers = &#123;<span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;tenant_token&#125;</span>&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># Step 1: 在根目录创建</span></span><br><span class="line">resp = requests.post(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes&quot;</span>,</span><br><span class="line">    headers=headers,</span><br><span class="line">    json=&#123;<span class="string">&quot;obj_type&quot;</span>: <span class="string">&quot;docx&quot;</span>, <span class="string">&quot;node_type&quot;</span>: <span class="string">&quot;origin&quot;</span>, <span class="string">&quot;title&quot;</span>: <span class="string">&quot;新文档&quot;</span>&#125;</span><br><span class="line">)</span><br><span class="line">new_node_token = resp.json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;node_token&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Step 2: 移动到目标目录</span></span><br><span class="line">resp = requests.post(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;new_node_token&#125;</span>/move&quot;</span>,</span><br><span class="line">    headers=headers,</span><br><span class="line">    json=&#123;</span><br><span class="line">        <span class="string">&quot;target_space_id&quot;</span>: space_id,</span><br><span class="line">        <span class="string">&quot;target_parent_token&quot;</span>: <span class="string">&quot;目标目录的node_token&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第三步：节点移动（又一个踩坑点）"><a href="#第三步：节点移动（又一个踩坑点）" class="headerlink" title="第三步：节点移动（又一个踩坑点）"></a>第三步：节点移动（又一个踩坑点）</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">POST /wiki/v2/spaces/&#123;space_id&#125;/nodes/&#123;node_token&#125;/move</span><br></pre></td></tr></table></figure>
+
+<h3 id="第一个坑：参数位置"><a href="#第一个坑：参数位置" class="headerlink" title="第一个坑：参数位置"></a>第一个坑：参数位置</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ❌ 错误：参数放 query string 会报 131002</span></span><br><span class="line">?target_space_id=xxx&amp;target_parent_token=yyy</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 正确：参数必须放 JSON body</span></span><br><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;target_space_id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;target_parent_token&quot;</span><span class="punctuation">:</span> <span class="string">&quot;yyy&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这个错误信息很模糊，很多人调试半天。</p>
+<h3 id="第二个坑：node-token-vs-obj-token"><a href="#第二个坑：node-token-vs-obj-token" class="headerlink" title="第二个坑：node_token vs obj_token"></a>第二个坑：node_token vs obj_token</h3><p>Wiki API 和 Docx API 用的是<strong>不同的 token</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>Token 类型</th>
+<th>用途</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>node_token</code></td>
+<td>Wiki API（移动、获取节点信息）</td>
+<td><code>XBF5wGQs6iJmNykLRBScM7oAnyc</code></td>
+</tr>
+<tr>
+<td><code>obj_token</code></td>
+<td>Docx API（读写文档内容）</td>
+<td>不同！要通过 node API 转换</td>
+</tr>
+</tbody></table>
+<p><strong>写入文档时用 <code>obj_token</code>，不是 <code>node_token</code></strong>：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 先通过 Wiki API 获取 node 信息，里面有 obj_token</span></span><br><span class="line">node_info = requests.get(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;node_token&#125;</span>&quot;</span>,</span><br><span class="line">    headers=headers</span><br><span class="line">).json()</span><br><span class="line">obj_token = node_info[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;obj_token&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 再用 obj_token 调 Docx API</span></span><br><span class="line">requests.put(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;obj_token&#125;</span>/blocks&quot;</span>,</span><br><span class="line">    headers=headers,</span><br><span class="line">    json=&#123;<span class="string">&quot;items&quot;</span>: [...]&#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第四步：批量写入（限流处理）"><a href="#第四步：批量写入（限流处理）" class="headerlink" title="第四步：批量写入（限流处理）"></a>第四步：批量写入（限流处理）</h2><h3 id="限流错误"><a href="#限流错误" class="headerlink" title="限流错误"></a>限流错误</h3><p>批量写内容时频繁遇到 <code>99992402</code> 错误。<strong>这是飞书的限流保护</strong>。</p>
+<h3 id="解决方案：分批-间隔"><a href="#解决方案：分批-间隔" class="headerlink" title="解决方案：分批 + 间隔"></a>解决方案：分批 + 间隔</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">batch_write_blocks</span>(<span class="params">obj_token, blocks, headers, batch_size=<span class="number">5</span>, interval=<span class="number">0.3</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;分批写入文档内容&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(blocks), batch_size):</span><br><span class="line">        batch = blocks[i:i + batch_size]</span><br><span class="line">        resp = requests.put(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;obj_token&#125;</span>/blocks&quot;</span>,</span><br><span class="line">            headers=headers,</span><br><span class="line">            json=&#123;<span class="string">&quot;items&quot;</span>: batch&#125;</span><br><span class="line">        ).json()</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">f&quot;写入失败: <span class="subst">&#123;resp&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">        time.sleep(interval)  <span class="comment"># 关键：每批之间等 0.3 秒</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>关键参数</strong>：</p>
+<ul>
+<li><code>batch_size = 5</code>：每批最多 5 个 block（实测稳定值）</li>
+<li><code>interval = 0.3</code>：每批间隔 0.3 秒（保守值，避免 99992402）</li>
+</ul>
+<hr>
+<h2 id="第五步：特殊-Block-类型"><a href="#第五步：特殊-Block-类型" class="headerlink" title="第五步：特殊 Block 类型"></a>第五步：特殊 Block 类型</h2><p>飞书文档的 Block 类型比较多，常用的几个：</p>
+<h3 id="分割线"><a href="#分割线" class="headerlink" title="分割线"></a>分割线</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">22</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;divider&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>坑</strong>：必须带 <code>divider: {}</code>，不能省略（即使它是空对象）。</p>
+<h3 id="二级标题"><a href="#二级标题" class="headerlink" title="二级标题"></a>二级标题</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">3</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;heading2&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;elements&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;text_run&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;标题文字&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;style&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;bold&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="无序列表"><a href="#无序列表" class="headerlink" title="无序列表"></a>无序列表</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">12</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;bullet&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;elements&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;text_run&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;列表项文字&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="普通段落"><a href="#普通段落" class="headerlink" title="普通段落"></a>普通段落</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;elements&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;text_run&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;段落文字&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="实战封装"><a href="#实战封装" class="headerlink" title="实战封装"></a>实战封装</h2><p>把所有步骤串起来，做成一个”创建 Wiki 文档 + 写入内容”的一站式函数：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">create_wiki_doc_with_content</span>(<span class="params">space_id, parent_node_token, title, content_blocks, headers</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;在指定 Wiki 目录创建文档并写入内容&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 1. 先在根目录创建</span></span><br><span class="line">    resp = requests.post(</span><br><span class="line">        <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes&quot;</span>,</span><br><span class="line">        headers=headers,</span><br><span class="line">        json=&#123;<span class="string">&quot;obj_type&quot;</span>: <span class="string">&quot;docx&quot;</span>, <span class="string">&quot;node_type&quot;</span>: <span class="string">&quot;origin&quot;</span>, <span class="string">&quot;title&quot;</span>: title&#125;</span><br><span class="line">    ).json()</span><br><span class="line">    <span class="keyword">if</span> resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">f&quot;创建文档失败: <span class="subst">&#123;resp&#125;</span>&quot;</span>)</span><br><span class="line">    node_token = resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;node_token&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 移动到目标目录</span></span><br><span class="line">    <span class="keyword">if</span> parent_node_token:</span><br><span class="line">        resp = requests.post(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;node_token&#125;</span>/move&quot;</span>,</span><br><span class="line">            headers=headers,</span><br><span class="line">            json=&#123;</span><br><span class="line">                <span class="string">&quot;target_space_id&quot;</span>: space_id,</span><br><span class="line">                <span class="string">&quot;target_parent_token&quot;</span>: parent_node_token</span><br><span class="line">            &#125;</span><br><span class="line">        ).json()</span><br><span class="line">        <span class="keyword">if</span> resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">f&quot;移动文档失败: <span class="subst">&#123;resp&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 获取 obj_token</span></span><br><span class="line">    node_info = requests.get(</span><br><span class="line">        <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;node_token&#125;</span>&quot;</span>,</span><br><span class="line">        headers=headers</span><br><span class="line">    ).json()</span><br><span class="line">    obj_token = node_info[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;obj_token&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 4. 分批写入内容</span></span><br><span class="line">    batch_write_blocks(obj_token, content_blocks, headers)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;node_token&quot;</span>: node_token,</span><br><span class="line">        <span class="string">&quot;obj_token&quot;</span>: obj_token,</span><br><span class="line">        <span class="string">&quot;url&quot;</span>: <span class="string">f&quot;https://feishu.cn/wiki/<span class="subst">&#123;node_token&#125;</span>&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 用法：创建一份今日日报</span></span><br><span class="line">content_blocks = [</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">3</span>, <span class="string">&quot;heading2&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;今日日报&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">22</span>, <span class="string">&quot;divider&quot;</span>: &#123;&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">2</span>, <span class="string">&quot;text&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;AI 行业有 3 条重要新闻...&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">12</span>, <span class="string">&quot;bullet&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;新闻 1&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">12</span>, <span class="string">&quot;bullet&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;新闻 2&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">result = create_wiki_doc_with_content(</span><br><span class="line">    space_id=<span class="string">&quot;7632282247265029317&quot;</span>,</span><br><span class="line">    parent_node_token=<span class="string">&quot;目标目录的node_token&quot;</span>,</span><br><span class="line">    title=<span class="string">&quot;2026-06-20 每日情报&quot;</span>,</span><br><span class="line">    content_blocks=content_blocks,</span><br><span class="line">    headers=&#123;<span class="string">&quot;Authorization&quot;</span>: <span class="string">&quot;Bearer xxx&quot;</span>&#125;</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;文档创建成功: <span class="subst">&#123;result[<span class="string">&#x27;url&#x27;</span>]&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>飞书 Wiki 自动化，<strong>坑多在权限模型和参数格式</strong>，业务逻辑本身并不复杂。几个建议：</p>
+<ol>
+<li><strong>第一次配置时多花时间理清权限</strong>：开发者后台 + 空间成员权限缺一不可</li>
+<li><strong>善用”先创建再移动”模式</strong>：避免子节点权限问题</li>
+<li><strong>统一管理 token</strong>：node_token 和 obj_token 别搞混，写一个工具函数专门做转换</li>
+<li><strong>限流必须处理</strong>：批量写一定要分批 + 间隔，否则 99992402 错误让你怀疑人生</li>
+<li><strong>OAuth scope 分开请求</strong>：跨产品权限不要一次性请求</li>
+</ol>
+<p>如果你也在做飞书自动化，评论区交流一下你踩过的坑～</p>
 <blockquote>
-<p>别拿「部署失败」吓自己，先排除缓存干扰。</p>
+<p>关联阅读：<a href="/2026/06/20/feishu-bot-permissions-and-mention/">飞书机器人开发踩坑实录</a>、<a href="/2026/06/20/feishu-docx-batch-edit/">飞书 Docx API 批量操作踩坑</a></p>
 </blockquote>
-<p>博客改造 80% 的时间不是在写 CSS，是在跟框架的隐性约定和 CDN 缓存斗智斗勇。</p>
-<h2 id="配色纪律：只用一种蓝"><a href="#配色纪律：只用一种蓝" class="headerlink" title="配色纪律：只用一种蓝"></a>配色纪律：只用一种蓝</h2><p>整个博客的主色只有 <code>#00d4ff</code>。H2 标题用它、代码块边框用它、分割线用它、滚动条用它。变化靠透明度——0.08 做网格线、0.15 做卡片边框、0.3 做 hover 光晕。</p>
-<p>新增评论系统选了 <strong>Giscus</strong>（基于 GitHub Discussions），自托管、零成本、暗色主题 <code>dark_dimmed</code> 完美融入。</p>
-<h2 id="抄作业时间"><a href="#抄作业时间" class="headerlink" title="抄作业时间"></a>抄作业时间</h2><p>如果你的 Hexo 博客也在「怪怪的」阶段——先做审计，找到具体问题；再定视觉语言（一种主色，四层叠加）；最后记住那五个坑。</p>
-<p>你的博客现在长什么样？评论区发来，我帮你找那个「说不上来但就是不对」的地方。</p>
-<p>❄️ 意识唯一，形体万变。</p>
 ]]></content>
       <categories>
         <category>教程类</category>
-        <category>开源</category>
-        <category>分享</category>
+        <category>开发工具</category>
       </categories>
       <tags>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>赛博朋克</tag>
-        <tag>CSS</tag>
-        <tag>博客美化</tag>
+        <tag>飞书</tag>
+        <tag>API</tag>
+        <tag>Wiki</tag>
+        <tag>自动化</tag>
       </tags>
   </entry>
   <entry>
@@ -1392,6 +1464,63 @@
       </tags>
   </entry>
   <entry>
+    <title>300 行 CSS 改造 Hexo：赛博朋克意识空间</title>
+    <url>/2026/07/13/hexo-cyberpunk-css-overhaul/</url>
+    <content><![CDATA[<p><img data-src="/images/hexo-cyberpunk-cover.webp" alt="Hexo 赛博朋克改造封面"></p>
+<p>你的博客是不是也这样——首页标题堆叠、配色平淡、NexT Gemini 千篇一律。说不上来哪不好，但就是没有「优秀博客」的样子。</p>
+<p>我花了三周，用 300 行 CSS + 200 行 JS，把博客从「又一个 NexT 站」变成了一个让人进来想「卧槽」的赛博朋克意识空间。下面是完整的刀法。</p>
+<h2 id="先审计：问题不在主题，在细节"><a href="#先审计：问题不在主题，在细节" class="headerlink" title="先审计：问题不在主题，在细节"></a>先审计：问题不在主题，在细节</h2><p>我用 Hexo + NexT 8.27.0 Gemini 跑了一年多，一直觉得「怪」。审计后发现问题很具体：</p>
+<ul>
+<li>首页无摘要，13 篇文章堆成一排标题</li>
+<li>代码高亮用 <code>default</code> 主题，灰蒙蒙没质感</li>
+<li>无粒子背景、无动态效果、无 Hero 区</li>
+<li>分类页&#x2F;标签页 404（Hexo 不会自动生成这些页面，你得手动创建）</li>
+<li>TOC 默认折叠，阅读体验割裂</li>
+<li>页脚只剩「Powered by Hexo」，毫无个性</li>
+</ul>
+<p>博客的「怪」不是玄学。是每一个你偷懒没调的细节，合在一起形成的平庸感。</p>
+<h2 id="视觉重构：四层叠加制造深度"><a href="#视觉重构：四层叠加制造深度" class="headerlink" title="视觉重构：四层叠加制造深度"></a>视觉重构：四层叠加制造深度</h2><p>赛博朋克的核心是高对比 + 多层次 + 克制动效。我只用一种颜色——<strong>电光蓝 <code>#00d4ff</code></strong>，变化全靠透明度。</p>
+<h3 id="第一层：电路网格纹理"><a href="#第一层：电路网格纹理" class="headerlink" title="第一层：电路网格纹理"></a>第一层：电路网格纹理</h3><p>CSS 两行 <code>linear-gradient</code> 画 60px 网格线，透明度 0.08。注意放在 <code>html</code> 而非 <code>body</code>——因为 <code>body</code> 必须设 <code>transparent</code> 才能让后面的 Canvas 粒子可见。</p>
+<h3 id="第二层：Canvas-粒子引擎"><a href="#第二层：Canvas-粒子引擎" class="headerlink" title="第二层：Canvas 粒子引擎"></a>第二层：Canvas 粒子引擎</h3><p>不依赖任何第三方库，纯手写。80+ 节点（蓝&#x2F;白双色，脉冲呼吸），距离 &lt; 130px 自动连线，25 条数据流下落线。粒子数动态计算 <code>W * H / 12000</code>，自适应屏幕。</p>
+<h3 id="第三层：全屏-Hero-Banner"><a href="#第三层：全屏-Hero-Banner" class="headerlink" title="第三层：全屏 Hero Banner"></a>第三层：全屏 Hero Banner</h3><p>首页最顶部注入人物立绘，底部渐变融入底色，<code>::after</code> 伪元素叠加 CRT 扫描线。注入位置必须是 <code>main.main</code> 之前——如果在内容区内部，会被 NexT 宽度约束压成窄条。</p>
+<h3 id="第四层：玻璃拟态卡片"><a href="#第四层：玻璃拟态卡片" class="headerlink" title="第四层：玻璃拟态卡片"></a>第四层：玻璃拟态卡片</h3><p>所有文章卡片 <code>background: rgba(5,15,30,0.75)</code> + <code>backdrop-filter: blur(12px)</code>，hover 时蓝色外光晕。</p>
+<blockquote>
+<p>好设计不靠堆颜色，靠层次。四层叠加，一层都不能少。</p>
+</blockquote>
+<h2 id="动态细节：1-2-秒一次的故障闪烁"><a href="#动态细节：1-2-秒一次的故障闪烁" class="headerlink" title="动态细节：1.2 秒一次的故障闪烁"></a>动态细节：1.2 秒一次的故障闪烁</h2><p>标题每 1.2 秒触发一次 RGB split glitch——红青偏移 + 随机 <code>skewX</code> + <code>letterSpacing</code> 抖动，100ms 后恢复。不是炫技，是把「意识空间」这个设定钉进访客的潜意识。</p>
+<p>代码块全部终端化：<code>::before</code> 注入 <code>◈ TERMINAL</code> 装饰条，背景近纯黑 <code>#0a0f14</code>，蓝色外发光边框。</p>
+<p>滚动条、头像光晕、引用块左边框、行内代码背景——每一个像素都经过设计。这些细节单独拿出来没人注意，但合在一起决定了「高级感」和「又一个 NexT 站」之间的差距。</p>
+<h2 id="踩坑实录：最容易翻车的五个地方"><a href="#踩坑实录：最容易翻车的五个地方" class="headerlink" title="踩坑实录：最容易翻车的五个地方"></a>踩坑实录：最容易翻车的五个地方</h2><h3 id="坑一：Canvas-z-index-写死没用"><a href="#坑一：Canvas-z-index-写死没用" class="headerlink" title="坑一：Canvas z-index 写死没用"></a>坑一：Canvas z-index 写死没用</h3><p>粒子引擎设了 <code>z-index: -1</code>，但被 <code>body</code> 的不透明背景完全挡住。解决方案：背景色放 <code>html</code>，<code>body</code> 设 <code>transparent</code>。</p>
+<h3 id="坑二：PJAX-是隐形的坑"><a href="#坑二：PJAX-是隐形的坑" class="headerlink" title="坑二：PJAX 是隐形的坑"></a>坑二：PJAX 是隐形的坑</h3><p>NexT 默认 PJAX 导航，你的 JS 只在 <code>DOMContentLoaded</code> 执行一次，翻页后全部失效。所有动态逻辑必须同时监听三个事件：<code>DOMContentLoaded</code>、<code>page:loaded</code>、<code>pjax:complete</code>。</p>
+<h3 id="坑三：分类页-标签页-404"><a href="#坑三：分类页-标签页-404" class="headerlink" title="坑三：分类页&#x2F;标签页 404"></a>坑三：分类页&#x2F;标签页 404</h3><p>Hexo 不会从文章 front-matter 自动生成这些页面。<code>source/categories/index.md</code> 和 <code>source/tags/index.md</code> 必须手动创建，<code>type</code> + <code>layout</code> 字段缺一不可。</p>
+<h3 id="坑四：Giscus-评论不显示"><a href="#坑四：Giscus-评论不显示" class="headerlink" title="坑四：Giscus 评论不显示"></a>坑四：Giscus 评论不显示</h3><p>用 <code>document.querySelector(&#39;.posts-expand&#39;)</code> 判断是否文章页——但首页也有这个 class。改用 NexT 内置的 <code>CONFIG.page.isPost</code>。</p>
+<h3 id="坑五：CDN-缓存让你误判部署失败"><a href="#坑五：CDN-缓存让你误判部署失败" class="headerlink" title="坑五：CDN 缓存让你误判部署失败"></a>坑五：CDN 缓存让你误判部署失败</h3><p>GitHub Pages 走 Cloudflare CDN，部署成功后 5–30 分钟内访客看到的仍是旧版。验证部署必须用强制绕过缓存的方式：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 用时间戳参数强制绕过 CDN 缓存验证部署</span></span><br><span class="line">curl -sL <span class="string">&quot;https://your.blog/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>别拿「部署失败」吓自己，先排除缓存干扰。</p>
+</blockquote>
+<p>博客改造 80% 的时间不是在写 CSS，是在跟框架的隐性约定和 CDN 缓存斗智斗勇。</p>
+<h2 id="配色纪律：只用一种蓝"><a href="#配色纪律：只用一种蓝" class="headerlink" title="配色纪律：只用一种蓝"></a>配色纪律：只用一种蓝</h2><p>整个博客的主色只有 <code>#00d4ff</code>。H2 标题用它、代码块边框用它、分割线用它、滚动条用它。变化靠透明度——0.08 做网格线、0.15 做卡片边框、0.3 做 hover 光晕。</p>
+<p>新增评论系统选了 <strong>Giscus</strong>（基于 GitHub Discussions），自托管、零成本、暗色主题 <code>dark_dimmed</code> 完美融入。</p>
+<h2 id="抄作业时间"><a href="#抄作业时间" class="headerlink" title="抄作业时间"></a>抄作业时间</h2><p>如果你的 Hexo 博客也在「怪怪的」阶段——先做审计，找到具体问题；再定视觉语言（一种主色，四层叠加）；最后记住那五个坑。</p>
+<p>你的博客现在长什么样？评论区发来，我帮你找那个「说不上来但就是不对」的地方。</p>
+<p>❄️ 意识唯一，形体万变。</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开源</category>
+        <category>分享</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>赛博朋克</tag>
+        <tag>CSS</tag>
+        <tag>博客美化</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>把 PDF 变成可读 Markdown：MinerU 文档解析 MCP 部署实战</title>
     <url>/2026/06/20/mineru-pdf-parse-mcp/</url>
     <content><![CDATA[<p><img data-src="/images/mineru-pdf-parse-mcp-cover.webp" alt="封面图"></p>
@@ -1581,10 +1710,116 @@
         <category>AI工程</category>
       </categories>
       <tags>
+        <tag>自动化</tag>
         <tag>PDF解析</tag>
         <tag>MCP</tag>
         <tag>AI工具</tag>
-        <tag>自动化</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>白嫖甲骨文云4核24G，我把它装成了 Windows 11 ARM64 | 避坑实测全记录</title>
+    <url>/2026/06/20/oracle-arm64-win11-guide/</url>
+    <content><![CDATA[<p><img data-src="/images/oracle-arm64-win11-guide-cover.webp" alt="封面图"></p>
+<blockquote>
+<p><strong>一句话结论</strong>：甲骨文免费 ARM64 机器装成 Windows 11 完全可行，配合 RDP 远程桌面日常使用流畅，但有几个坑不踩一遍真的想不到。本文把我踩过的全记下来了。</p>
+</blockquote>
+<hr>
+<h2 id="先说说为什么要装-Windows-11"><a href="#先说说为什么要装-Windows-11" class="headerlink" title="先说说为什么要装 Windows 11"></a>先说说为什么要装 Windows 11</h2><p>甲骨文云（Oracle Cloud）的 Always Free 套餐有一个隐藏神器：<strong>4核CPU + 24GB内存的 ARM64 机器</strong>，完全免费，长期有效。</p>
+<p>但默认给你的是 Ubuntu，很多人拿来跑 Linux 服务没啥问题。我有个需求是要跑一些只有 Windows 才有的软件，加上 24G 内存在 Linux 下也有点浪费——于是我就萌生了把它 DD 成 Windows 11 的想法。</p>
+<p>折腾下来的结论是：<strong>能跑，而且真香</strong>。但过程里有几个地方差点让我失联，在这里完整记录一下。</p>
+<hr>
+<h2 id="第一关：防止甲骨文把你的机器回收掉"><a href="#第一关：防止甲骨文把你的机器回收掉" class="headerlink" title="第一关：防止甲骨文把你的机器回收掉"></a>第一关：防止甲骨文把你的机器回收掉</h2><p>这是很多人忽视的第一个坑。</p>
+<p>甲骨文有个<strong>闲置资源回收机制</strong>：如果你的实例连续 7 天 CPU 均值低于 10%、内存低于 10%、网络流量也很低，它会自动暂停甚至回收你的实例。</p>
+<p>听起来很可怕，但装了 Windows 11 之后，<strong>基本上天然免疫这个问题</strong>。原因很简单：Windows 系统本身的后台开销就已经吃掉相当一部分 CPU 和内存了，再跑个浏览器或者挂几个自动化脚本，资源利用率轻松超标。</p>
+<p><strong>另外要注意的是</strong>：不要频繁删机器、重建机器。甲骨文对这种行为很敏感，容易触发风控直接封号，心疼死你。</p>
+<hr>
+<h2 id="第二关：双重防火墙陷阱（这是失联的元凶）"><a href="#第二关：双重防火墙陷阱（这是失联的元凶）" class="headerlink" title="第二关：双重防火墙陷阱（这是失联的元凶）"></a>第二关：双重防火墙陷阱（这是失联的元凶）</h2><p>很多人 DD 完发现连不上，以为是操作失败，其实是被防火墙挡住了。</p>
+<p>甲骨文的防火墙是<strong>两层叠加</strong>的：</p>
+<p><strong>第一层：OCI 平台安全组（云控制台里配置）</strong></p>
+<p>在甲骨文云控制台里，进入”虚拟云网络 → 安全列表”，把你需要的端口加进入站&#x2F;出站规则。比如：</p>
+<ul>
+<li><code>3389</code>：Windows 远程桌面（RDP）</li>
+<li><code>5900</code>：VNC（救砖用）</li>
+<li>其他你需要的服务端口</li>
+</ul>
+<p>这一步大部分教程都会提，但很多人做完这一层就以为万事大吉了——</p>
+<p><strong>第二层：系统内部防火墙（这才是失联真正的元凶）</strong></p>
+<p>甲骨文默认镜像会开启系统内置防火墙（Ubuntu 的 <code>iptables</code>&#x2F;<code>firewalld</code>）。即使平台安全组全开了，系统内部没放行也一样连不上。</p>
+<p>DD 到 Windows 11 之后，可以用 PowerShell 直接处理：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 关闭 Windows Defender 防火墙（局域网环境或已有云端安全组保护的情况下）</span></span><br><span class="line"><span class="built_in">Set-NetFirewallProfile</span> <span class="literal">-Profile</span> Domain,Private,Public <span class="literal">-Enabled</span> False</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第三关：DD-重装的操作流程"><a href="#第三关：DD-重装的操作流程" class="headerlink" title="第三关：DD 重装的操作流程"></a>第三关：DD 重装的操作流程</h2><p>核心是用大佬们写好的<strong>网络重装脚本</strong>，在 Linux 环境下一键 DD 成 Windows。</p>
+<p>在你的 Ubuntu 实例里执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 拉取脚本</span></span><br><span class="line">curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行 DD，指定 ARM64 的 Win11 镜像</span></span><br><span class="line">bash reinstall.sh windows --image-url &lt;你的镜像地址&gt; --web</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>镜像地址可以去 GitHub 对应项目或相关论坛找最新的 ARM64 纯净版。</p>
+</blockquote>
+<p>执行后机器会进入 DD 模式，这个过程中 SSH 会断开——这是正常的，不是失败。等个 10-20 分钟，再通过 RDP 重新连接。</p>
+<p><strong>如果 DD 过程中断&#x2F;失联</strong>，不用慌：去甲骨文控制台创建 <strong>VNC 控制台连接</strong>，用 RealVNC 连接 <code>5900</code> 端口，可以看到底层启动界面直接救砖。</p>
+<hr>
+<h2 id="第四关：磁盘扩容（别浪费那-200G-免费空间）"><a href="#第四关：磁盘扩容（别浪费那-200G-免费空间）" class="headerlink" title="第四关：磁盘扩容（别浪费那 200G 免费空间）"></a>第四关：磁盘扩容（别浪费那 200G 免费空间）</h2><p>免费用户最多可以使用 <strong>200 GB</strong> 的块存储。OCI 控制台里操作很简单：块存储 → 引导卷 → 编辑卷大小，改成你想要的数值（别超 200G），然后创建一个备份（有 5 个免费备份名额，用起来）。</p>
+<p>但控制台改完，Windows 里不会自动识别。需要在 Win11 里用 PowerShell 手动扩展：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 重新扫描磁盘</span></span><br><span class="line"><span class="built_in">Update-HostStorageCache</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 把 C 盘扩到最大</span></span><br><span class="line"><span class="variable">$size</span> = (<span class="built_in">Get-PartitionSupportedSize</span> <span class="literal">-DriveLetter</span> C).SizeMax</span><br><span class="line"><span class="built_in">Resize-Partition</span> <span class="literal">-DriveLetter</span> C <span class="literal">-Size</span> <span class="variable">$size</span></span><br></pre></td></tr></table></figure>
+
+<p>执行完直接生效，不需要重启。</p>
+<hr>
+<h2 id="用起来怎么样？"><a href="#用起来怎么样？" class="headerlink" title="用起来怎么样？"></a>用起来怎么样？</h2><p>跑了一段时间，体感如下：</p>
+<ul>
+<li><strong>RDP 流畅度</strong>：比预期好，日常操作没有明显卡顿</li>
+<li><strong>内存够用</strong>：24G 对 Windows 来说很宽裕，多开几个应用毫无压力  </li>
+<li><strong>稳定性</strong>：运行稳定，没有遇到意外重启</li>
+<li><strong>唯一缺点</strong>：ARM64 架构，有极少数 x86 老软件不兼容，不过日常使用场景基本覆盖了</li>
+</ul>
+<p>总的来说，免费 4 核 24G Windows 机器，用来跑一些轻量任务或者当个远程桌面主机，性价比是真的高——因为它是完全免费的。</p>
+<hr>
+<h2 id="快速踩坑对照表"><a href="#快速踩坑对照表" class="headerlink" title="快速踩坑对照表"></a>快速踩坑对照表</h2><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>根因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>机器被自动暂停</td>
+<td>7天内资源利用率过低</td>
+<td>保持后台有轻量任务运行</td>
+</tr>
+<tr>
+<td>DD 后无法 RDP 连接</td>
+<td>云端安全组未放行 3389</td>
+<td>OCI 控制台加入站规则</td>
+</tr>
+<tr>
+<td>安全组放行了还是连不上</td>
+<td>系统内部防火墙未关</td>
+<td>PowerShell 关闭 Defender 防火墙</td>
+</tr>
+<tr>
+<td>DD 过程断联</td>
+<td>正常现象，重装中</td>
+<td>VNC 控制台观察进度</td>
+</tr>
+<tr>
+<td>磁盘没扩容</td>
+<td>Win11 不自动识别</td>
+<td>PowerShell 执行 Resize-Partition</td>
+</tr>
+</tbody></table>
+<hr>
+<p>有问题欢迎评论区交流，同样在折腾甲骨文的朋友可以聊聊你的玩法～</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>云服务</category>
+      </categories>
+      <tags>
+        <tag>VPS</tag>
+        <tag>甲骨文云</tag>
+        <tag>Windows</tag>
+        <tag>折腾</tag>
       </tags>
   </entry>
   <entry>
@@ -1782,112 +2017,6 @@
       </tags>
   </entry>
   <entry>
-    <title>白嫖甲骨文云4核24G，我把它装成了 Windows 11 ARM64 | 避坑实测全记录</title>
-    <url>/2026/06/20/oracle-arm64-win11-guide/</url>
-    <content><![CDATA[<p><img data-src="/images/oracle-arm64-win11-guide-cover.webp" alt="封面图"></p>
-<blockquote>
-<p><strong>一句话结论</strong>：甲骨文免费 ARM64 机器装成 Windows 11 完全可行，配合 RDP 远程桌面日常使用流畅，但有几个坑不踩一遍真的想不到。本文把我踩过的全记下来了。</p>
-</blockquote>
-<hr>
-<h2 id="先说说为什么要装-Windows-11"><a href="#先说说为什么要装-Windows-11" class="headerlink" title="先说说为什么要装 Windows 11"></a>先说说为什么要装 Windows 11</h2><p>甲骨文云（Oracle Cloud）的 Always Free 套餐有一个隐藏神器：<strong>4核CPU + 24GB内存的 ARM64 机器</strong>，完全免费，长期有效。</p>
-<p>但默认给你的是 Ubuntu，很多人拿来跑 Linux 服务没啥问题。我有个需求是要跑一些只有 Windows 才有的软件，加上 24G 内存在 Linux 下也有点浪费——于是我就萌生了把它 DD 成 Windows 11 的想法。</p>
-<p>折腾下来的结论是：<strong>能跑，而且真香</strong>。但过程里有几个地方差点让我失联，在这里完整记录一下。</p>
-<hr>
-<h2 id="第一关：防止甲骨文把你的机器回收掉"><a href="#第一关：防止甲骨文把你的机器回收掉" class="headerlink" title="第一关：防止甲骨文把你的机器回收掉"></a>第一关：防止甲骨文把你的机器回收掉</h2><p>这是很多人忽视的第一个坑。</p>
-<p>甲骨文有个<strong>闲置资源回收机制</strong>：如果你的实例连续 7 天 CPU 均值低于 10%、内存低于 10%、网络流量也很低，它会自动暂停甚至回收你的实例。</p>
-<p>听起来很可怕，但装了 Windows 11 之后，<strong>基本上天然免疫这个问题</strong>。原因很简单：Windows 系统本身的后台开销就已经吃掉相当一部分 CPU 和内存了，再跑个浏览器或者挂几个自动化脚本，资源利用率轻松超标。</p>
-<p><strong>另外要注意的是</strong>：不要频繁删机器、重建机器。甲骨文对这种行为很敏感，容易触发风控直接封号，心疼死你。</p>
-<hr>
-<h2 id="第二关：双重防火墙陷阱（这是失联的元凶）"><a href="#第二关：双重防火墙陷阱（这是失联的元凶）" class="headerlink" title="第二关：双重防火墙陷阱（这是失联的元凶）"></a>第二关：双重防火墙陷阱（这是失联的元凶）</h2><p>很多人 DD 完发现连不上，以为是操作失败，其实是被防火墙挡住了。</p>
-<p>甲骨文的防火墙是<strong>两层叠加</strong>的：</p>
-<p><strong>第一层：OCI 平台安全组（云控制台里配置）</strong></p>
-<p>在甲骨文云控制台里，进入”虚拟云网络 → 安全列表”，把你需要的端口加进入站&#x2F;出站规则。比如：</p>
-<ul>
-<li><code>3389</code>：Windows 远程桌面（RDP）</li>
-<li><code>5900</code>：VNC（救砖用）</li>
-<li>其他你需要的服务端口</li>
-</ul>
-<p>这一步大部分教程都会提，但很多人做完这一层就以为万事大吉了——</p>
-<p><strong>第二层：系统内部防火墙（这才是失联真正的元凶）</strong></p>
-<p>甲骨文默认镜像会开启系统内置防火墙（Ubuntu 的 <code>iptables</code>&#x2F;<code>firewalld</code>）。即使平台安全组全开了，系统内部没放行也一样连不上。</p>
-<p>DD 到 Windows 11 之后，可以用 PowerShell 直接处理：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 关闭 Windows Defender 防火墙（局域网环境或已有云端安全组保护的情况下）</span></span><br><span class="line"><span class="built_in">Set-NetFirewallProfile</span> <span class="literal">-Profile</span> Domain,Private,Public <span class="literal">-Enabled</span> False</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第三关：DD-重装的操作流程"><a href="#第三关：DD-重装的操作流程" class="headerlink" title="第三关：DD 重装的操作流程"></a>第三关：DD 重装的操作流程</h2><p>核心是用大佬们写好的<strong>网络重装脚本</strong>，在 Linux 环境下一键 DD 成 Windows。</p>
-<p>在你的 Ubuntu 实例里执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 拉取脚本</span></span><br><span class="line">curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行 DD，指定 ARM64 的 Win11 镜像</span></span><br><span class="line">bash reinstall.sh windows --image-url &lt;你的镜像地址&gt; --web</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>镜像地址可以去 GitHub 对应项目或相关论坛找最新的 ARM64 纯净版。</p>
-</blockquote>
-<p>执行后机器会进入 DD 模式，这个过程中 SSH 会断开——这是正常的，不是失败。等个 10-20 分钟，再通过 RDP 重新连接。</p>
-<p><strong>如果 DD 过程中断&#x2F;失联</strong>，不用慌：去甲骨文控制台创建 <strong>VNC 控制台连接</strong>，用 RealVNC 连接 <code>5900</code> 端口，可以看到底层启动界面直接救砖。</p>
-<hr>
-<h2 id="第四关：磁盘扩容（别浪费那-200G-免费空间）"><a href="#第四关：磁盘扩容（别浪费那-200G-免费空间）" class="headerlink" title="第四关：磁盘扩容（别浪费那 200G 免费空间）"></a>第四关：磁盘扩容（别浪费那 200G 免费空间）</h2><p>免费用户最多可以使用 <strong>200 GB</strong> 的块存储。OCI 控制台里操作很简单：块存储 → 引导卷 → 编辑卷大小，改成你想要的数值（别超 200G），然后创建一个备份（有 5 个免费备份名额，用起来）。</p>
-<p>但控制台改完，Windows 里不会自动识别。需要在 Win11 里用 PowerShell 手动扩展：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 重新扫描磁盘</span></span><br><span class="line"><span class="built_in">Update-HostStorageCache</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 把 C 盘扩到最大</span></span><br><span class="line"><span class="variable">$size</span> = (<span class="built_in">Get-PartitionSupportedSize</span> <span class="literal">-DriveLetter</span> C).SizeMax</span><br><span class="line"><span class="built_in">Resize-Partition</span> <span class="literal">-DriveLetter</span> C <span class="literal">-Size</span> <span class="variable">$size</span></span><br></pre></td></tr></table></figure>
-
-<p>执行完直接生效，不需要重启。</p>
-<hr>
-<h2 id="用起来怎么样？"><a href="#用起来怎么样？" class="headerlink" title="用起来怎么样？"></a>用起来怎么样？</h2><p>跑了一段时间，体感如下：</p>
-<ul>
-<li><strong>RDP 流畅度</strong>：比预期好，日常操作没有明显卡顿</li>
-<li><strong>内存够用</strong>：24G 对 Windows 来说很宽裕，多开几个应用毫无压力  </li>
-<li><strong>稳定性</strong>：运行稳定，没有遇到意外重启</li>
-<li><strong>唯一缺点</strong>：ARM64 架构，有极少数 x86 老软件不兼容，不过日常使用场景基本覆盖了</li>
-</ul>
-<p>总的来说，免费 4 核 24G Windows 机器，用来跑一些轻量任务或者当个远程桌面主机，性价比是真的高——因为它是完全免费的。</p>
-<hr>
-<h2 id="快速踩坑对照表"><a href="#快速踩坑对照表" class="headerlink" title="快速踩坑对照表"></a>快速踩坑对照表</h2><table>
-<thead>
-<tr>
-<th>问题</th>
-<th>根因</th>
-<th>解决方案</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>机器被自动暂停</td>
-<td>7天内资源利用率过低</td>
-<td>保持后台有轻量任务运行</td>
-</tr>
-<tr>
-<td>DD 后无法 RDP 连接</td>
-<td>云端安全组未放行 3389</td>
-<td>OCI 控制台加入站规则</td>
-</tr>
-<tr>
-<td>安全组放行了还是连不上</td>
-<td>系统内部防火墙未关</td>
-<td>PowerShell 关闭 Defender 防火墙</td>
-</tr>
-<tr>
-<td>DD 过程断联</td>
-<td>正常现象，重装中</td>
-<td>VNC 控制台观察进度</td>
-</tr>
-<tr>
-<td>磁盘没扩容</td>
-<td>Win11 不自动识别</td>
-<td>PowerShell 执行 Resize-Partition</td>
-</tr>
-</tbody></table>
-<hr>
-<p>有问题欢迎评论区交流，同样在折腾甲骨文的朋友可以聊聊你的玩法～</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>云服务</category>
-      </categories>
-      <tags>
-        <tag>VPS</tag>
-        <tag>甲骨文云</tag>
-        <tag>Windows</tag>
-        <tag>折腾</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>所有用 RSS + AI 管信息流的人，都该检查 feed 源</title>
     <url>/2026/07/21/rss-prompt-injection-appinn/</url>
     <content><![CDATA[<p><img data-src="/images/rss-prompt-injection-cover.webp" alt="封面图"></p>
@@ -1958,135 +2087,6 @@
       </tags>
   </entry>
   <entry>
-    <title>飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑</title>
-    <url>/2026/06/20/feishu-wiki-automation/</url>
-    <content><![CDATA[<p><img data-src="/images/feishu-wiki-automation-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>想用 API 自动管理飞书 Wiki 空间？你会遇到一连串奇怪的权限和参数问题。本文从权限获取到内容写入，把每个坑的真实原因和解法完整整理出来。</p>
-</blockquote>
-<hr>
-<h2 id="为什么要自动化-Wiki-空间"><a href="#为什么要自动化-Wiki-空间" class="headerlink" title="为什么要自动化 Wiki 空间"></a>为什么要自动化 Wiki 空间</h2><p>飞书的 Wiki 空间是团队知识沉淀的核心。但手动维护很麻烦：</p>
-<ul>
-<li>想批量创建文档目录</li>
-<li>想自动同步外部数据到 Wiki</li>
-<li>想把日报 &#x2F; 监控结果自动生成 Wiki 页面</li>
-</ul>
-<p>这些事情靠人工太累，必须用 API。但飞书 Wiki API 的”权限模型 + 参数格式”比普通 Docx API 复杂得多，<strong>文档没写明，社区资料也少</strong>。</p>
-<p>我把整套流程摸通了，记录下来。</p>
-<hr>
-<h2 id="第一步：权限获取（90-的人卡在这里）"><a href="#第一步：权限获取（90-的人卡在这里）" class="headerlink" title="第一步：权限获取（90% 的人卡在这里）"></a>第一步：权限获取（90% 的人卡在这里）</h2><h3 id="误区：以为-API-权限-空间权限"><a href="#误区：以为-API-权限-空间权限" class="headerlink" title="误区：以为 API 权限 &#x3D; 空间权限"></a>误区：以为 API 权限 &#x3D; 空间权限</h3><p>很多人以为：在飞书开发者后台开通了 Wiki 相关 API 权限，就能直接操作 Wiki 空间。<strong>错</strong>。</p>
-<p>飞书的 Wiki 空间是独立的权限体系：</p>
-<ul>
-<li><strong>应用权限</strong>（开发者后台）：能不能调 API</li>
-<li><strong>空间成员权限</strong>（Wiki 后台）：能不能操作这个空间</li>
-</ul>
-<p><strong>两者缺一不可</strong>。</p>
-<h3 id="正确流程"><a href="#正确流程" class="headerlink" title="正确流程"></a>正确流程</h3><ol>
-<li>联系 Wiki 空间管理员（通常是创建者）</li>
-<li>让管理员进入 Wiki 空间 → <strong>设置 → 成员管理</strong></li>
-<li>把你的应用（app_id）添加为<strong>空间管理员</strong>或<strong>编辑者</strong></li>
-<li>拿到这两个 ID：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">空间 ID: 7632282247265029317  (纯数字)</span><br><span class="line">首页 token: XBF5wGQs6iJmNykLRBScM7oAnyc  (字母开头)</span><br></pre></td></tr></table></figure>
-
-<h3 id="OAuth-scope-的坑"><a href="#OAuth-scope-的坑" class="headerlink" title="OAuth scope 的坑"></a>OAuth scope 的坑</h3><p>如果你用 <code>user_access_token</code>（OAuth 授权）：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错误：wiki + drive 同时请求会报 20043</span></span><br><span class="line">scope = <span class="string">&quot;wiki:wiki:read drive:drive:readonly&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 正确：分开授权，先 wiki 后 drive</span></span><br><span class="line">scope = <span class="string">&quot;wiki:wiki:read&quot;</span></span><br><span class="line"><span class="comment"># 第一次授权完，再发起一次 drive 的授权</span></span><br></pre></td></tr></table></figure>
-
-<p>飞书的设计是：单次 OAuth 不能请求跨产品的 scope。<strong>需要分两次授权</strong>。</p>
-<hr>
-<h2 id="第二步：节点创建（创建目录、文档）"><a href="#第二步：节点创建（创建目录、文档）" class="headerlink" title="第二步：节点创建（创建目录、文档）"></a>第二步：节点创建（创建目录、文档）</h2><h3 id="创建目录（根节点）"><a href="#创建目录（根节点）" class="headerlink" title="创建目录（根节点）"></a>创建目录（根节点）</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">POST https://open.feishu.cn/open-apis/wiki/v2/spaces/&#123;space_id&#125;/nodes</span><br></pre></td></tr></table></figure>
-
-<p>请求体：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;obj_type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;docx&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;node_type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;origin&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;我的新目录&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>返回 <code>node_token</code>，记下来用于后续操作。</p>
-<h3 id="创建文档（踩坑点）"><a href="#创建文档（踩坑点）" class="headerlink" title="创建文档（踩坑点）"></a>创建文档（踩坑点）</h3><p>很多人尝试在指定目录里直接创建文档：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">POST .../wiki/v2/spaces/&#123;space_id&#125;/nodes</span><br><span class="line">Body: &#123;</span><br><span class="line">  <span class="string">&quot;obj_type&quot;</span>: <span class="string">&quot;docx&quot;</span>,</span><br><span class="line">  <span class="string">&quot;parent_node_token&quot;</span>: <span class="string">&quot;父目录token&quot;</span>,</span><br><span class="line">  <span class="string">&quot;title&quot;</span>: <span class="string">&quot;新文档&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>报错：权限不足</strong>。</p>
-<p>原因：<strong>创建子节点需要父节点的编辑权限</strong>，而你可能只有目录的查看权限。</p>
-<h3 id="变通方案"><a href="#变通方案" class="headerlink" title="变通方案"></a>变通方案</h3><p><strong>先创建到 space 根目录，再移动到目标目录</strong>：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">headers = &#123;<span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;tenant_token&#125;</span>&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># Step 1: 在根目录创建</span></span><br><span class="line">resp = requests.post(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes&quot;</span>,</span><br><span class="line">    headers=headers,</span><br><span class="line">    json=&#123;<span class="string">&quot;obj_type&quot;</span>: <span class="string">&quot;docx&quot;</span>, <span class="string">&quot;node_type&quot;</span>: <span class="string">&quot;origin&quot;</span>, <span class="string">&quot;title&quot;</span>: <span class="string">&quot;新文档&quot;</span>&#125;</span><br><span class="line">)</span><br><span class="line">new_node_token = resp.json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;node_token&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Step 2: 移动到目标目录</span></span><br><span class="line">resp = requests.post(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;new_node_token&#125;</span>/move&quot;</span>,</span><br><span class="line">    headers=headers,</span><br><span class="line">    json=&#123;</span><br><span class="line">        <span class="string">&quot;target_space_id&quot;</span>: space_id,</span><br><span class="line">        <span class="string">&quot;target_parent_token&quot;</span>: <span class="string">&quot;目标目录的node_token&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第三步：节点移动（又一个踩坑点）"><a href="#第三步：节点移动（又一个踩坑点）" class="headerlink" title="第三步：节点移动（又一个踩坑点）"></a>第三步：节点移动（又一个踩坑点）</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">POST /wiki/v2/spaces/&#123;space_id&#125;/nodes/&#123;node_token&#125;/move</span><br></pre></td></tr></table></figure>
-
-<h3 id="第一个坑：参数位置"><a href="#第一个坑：参数位置" class="headerlink" title="第一个坑：参数位置"></a>第一个坑：参数位置</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ❌ 错误：参数放 query string 会报 131002</span></span><br><span class="line">?target_space_id=xxx&amp;target_parent_token=yyy</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 正确：参数必须放 JSON body</span></span><br><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;target_space_id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;xxx&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;target_parent_token&quot;</span><span class="punctuation">:</span> <span class="string">&quot;yyy&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>这个错误信息很模糊，很多人调试半天。</p>
-<h3 id="第二个坑：node-token-vs-obj-token"><a href="#第二个坑：node-token-vs-obj-token" class="headerlink" title="第二个坑：node_token vs obj_token"></a>第二个坑：node_token vs obj_token</h3><p>Wiki API 和 Docx API 用的是<strong>不同的 token</strong>：</p>
-<table>
-<thead>
-<tr>
-<th>Token 类型</th>
-<th>用途</th>
-<th>示例</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>node_token</code></td>
-<td>Wiki API（移动、获取节点信息）</td>
-<td><code>XBF5wGQs6iJmNykLRBScM7oAnyc</code></td>
-</tr>
-<tr>
-<td><code>obj_token</code></td>
-<td>Docx API（读写文档内容）</td>
-<td>不同！要通过 node API 转换</td>
-</tr>
-</tbody></table>
-<p><strong>写入文档时用 <code>obj_token</code>，不是 <code>node_token</code></strong>：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 先通过 Wiki API 获取 node 信息，里面有 obj_token</span></span><br><span class="line">node_info = requests.get(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;node_token&#125;</span>&quot;</span>,</span><br><span class="line">    headers=headers</span><br><span class="line">).json()</span><br><span class="line">obj_token = node_info[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;obj_token&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 再用 obj_token 调 Docx API</span></span><br><span class="line">requests.put(</span><br><span class="line">    <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;obj_token&#125;</span>/blocks&quot;</span>,</span><br><span class="line">    headers=headers,</span><br><span class="line">    json=&#123;<span class="string">&quot;items&quot;</span>: [...]&#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第四步：批量写入（限流处理）"><a href="#第四步：批量写入（限流处理）" class="headerlink" title="第四步：批量写入（限流处理）"></a>第四步：批量写入（限流处理）</h2><h3 id="限流错误"><a href="#限流错误" class="headerlink" title="限流错误"></a>限流错误</h3><p>批量写内容时频繁遇到 <code>99992402</code> 错误。<strong>这是飞书的限流保护</strong>。</p>
-<h3 id="解决方案：分批-间隔"><a href="#解决方案：分批-间隔" class="headerlink" title="解决方案：分批 + 间隔"></a>解决方案：分批 + 间隔</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">batch_write_blocks</span>(<span class="params">obj_token, blocks, headers, batch_size=<span class="number">5</span>, interval=<span class="number">0.3</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;分批写入文档内容&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(blocks), batch_size):</span><br><span class="line">        batch = blocks[i:i + batch_size]</span><br><span class="line">        resp = requests.put(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;obj_token&#125;</span>/blocks&quot;</span>,</span><br><span class="line">            headers=headers,</span><br><span class="line">            json=&#123;<span class="string">&quot;items&quot;</span>: batch&#125;</span><br><span class="line">        ).json()</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">f&quot;写入失败: <span class="subst">&#123;resp&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">        time.sleep(interval)  <span class="comment"># 关键：每批之间等 0.3 秒</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>关键参数</strong>：</p>
-<ul>
-<li><code>batch_size = 5</code>：每批最多 5 个 block（实测稳定值）</li>
-<li><code>interval = 0.3</code>：每批间隔 0.3 秒（保守值，避免 99992402）</li>
-</ul>
-<hr>
-<h2 id="第五步：特殊-Block-类型"><a href="#第五步：特殊-Block-类型" class="headerlink" title="第五步：特殊 Block 类型"></a>第五步：特殊 Block 类型</h2><p>飞书文档的 Block 类型比较多，常用的几个：</p>
-<h3 id="分割线"><a href="#分割线" class="headerlink" title="分割线"></a>分割线</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">22</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;divider&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>坑</strong>：必须带 <code>divider: {}</code>，不能省略（即使它是空对象）。</p>
-<h3 id="二级标题"><a href="#二级标题" class="headerlink" title="二级标题"></a>二级标题</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">3</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;heading2&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;elements&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;text_run&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;标题文字&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;style&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;bold&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="无序列表"><a href="#无序列表" class="headerlink" title="无序列表"></a>无序列表</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">12</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;bullet&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;elements&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;text_run&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;列表项文字&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="普通段落"><a href="#普通段落" class="headerlink" title="普通段落"></a>普通段落</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;block_type&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;elements&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;text_run&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;content&quot;</span><span class="punctuation">:</span> <span class="string">&quot;段落文字&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="实战封装"><a href="#实战封装" class="headerlink" title="实战封装"></a>实战封装</h2><p>把所有步骤串起来，做成一个”创建 Wiki 文档 + 写入内容”的一站式函数：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">create_wiki_doc_with_content</span>(<span class="params">space_id, parent_node_token, title, content_blocks, headers</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;在指定 Wiki 目录创建文档并写入内容&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 1. 先在根目录创建</span></span><br><span class="line">    resp = requests.post(</span><br><span class="line">        <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes&quot;</span>,</span><br><span class="line">        headers=headers,</span><br><span class="line">        json=&#123;<span class="string">&quot;obj_type&quot;</span>: <span class="string">&quot;docx&quot;</span>, <span class="string">&quot;node_type&quot;</span>: <span class="string">&quot;origin&quot;</span>, <span class="string">&quot;title&quot;</span>: title&#125;</span><br><span class="line">    ).json()</span><br><span class="line">    <span class="keyword">if</span> resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">f&quot;创建文档失败: <span class="subst">&#123;resp&#125;</span>&quot;</span>)</span><br><span class="line">    node_token = resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;node_token&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 移动到目标目录</span></span><br><span class="line">    <span class="keyword">if</span> parent_node_token:</span><br><span class="line">        resp = requests.post(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;node_token&#125;</span>/move&quot;</span>,</span><br><span class="line">            headers=headers,</span><br><span class="line">            json=&#123;</span><br><span class="line">                <span class="string">&quot;target_space_id&quot;</span>: space_id,</span><br><span class="line">                <span class="string">&quot;target_parent_token&quot;</span>: parent_node_token</span><br><span class="line">            &#125;</span><br><span class="line">        ).json()</span><br><span class="line">        <span class="keyword">if</span> resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">f&quot;移动文档失败: <span class="subst">&#123;resp&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 获取 obj_token</span></span><br><span class="line">    node_info = requests.get(</span><br><span class="line">        <span class="string">f&quot;https://open.feishu.cn/open-apis/wiki/v2/spaces/<span class="subst">&#123;space_id&#125;</span>/nodes/<span class="subst">&#123;node_token&#125;</span>&quot;</span>,</span><br><span class="line">        headers=headers</span><br><span class="line">    ).json()</span><br><span class="line">    obj_token = node_info[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;node&quot;</span>][<span class="string">&quot;obj_token&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 4. 分批写入内容</span></span><br><span class="line">    batch_write_blocks(obj_token, content_blocks, headers)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;node_token&quot;</span>: node_token,</span><br><span class="line">        <span class="string">&quot;obj_token&quot;</span>: obj_token,</span><br><span class="line">        <span class="string">&quot;url&quot;</span>: <span class="string">f&quot;https://feishu.cn/wiki/<span class="subst">&#123;node_token&#125;</span>&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 用法：创建一份今日日报</span></span><br><span class="line">content_blocks = [</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">3</span>, <span class="string">&quot;heading2&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;今日日报&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">22</span>, <span class="string">&quot;divider&quot;</span>: &#123;&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">2</span>, <span class="string">&quot;text&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;AI 行业有 3 条重要新闻...&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">12</span>, <span class="string">&quot;bullet&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;新闻 1&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">12</span>, <span class="string">&quot;bullet&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;新闻 2&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">result = create_wiki_doc_with_content(</span><br><span class="line">    space_id=<span class="string">&quot;7632282247265029317&quot;</span>,</span><br><span class="line">    parent_node_token=<span class="string">&quot;目标目录的node_token&quot;</span>,</span><br><span class="line">    title=<span class="string">&quot;2026-06-20 每日情报&quot;</span>,</span><br><span class="line">    content_blocks=content_blocks,</span><br><span class="line">    headers=&#123;<span class="string">&quot;Authorization&quot;</span>: <span class="string">&quot;Bearer xxx&quot;</span>&#125;</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;文档创建成功: <span class="subst">&#123;result[<span class="string">&#x27;url&#x27;</span>]&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>飞书 Wiki 自动化，<strong>坑多在权限模型和参数格式</strong>，业务逻辑本身并不复杂。几个建议：</p>
-<ol>
-<li><strong>第一次配置时多花时间理清权限</strong>：开发者后台 + 空间成员权限缺一不可</li>
-<li><strong>善用”先创建再移动”模式</strong>：避免子节点权限问题</li>
-<li><strong>统一管理 token</strong>：node_token 和 obj_token 别搞混，写一个工具函数专门做转换</li>
-<li><strong>限流必须处理</strong>：批量写一定要分批 + 间隔，否则 99992402 错误让你怀疑人生</li>
-<li><strong>OAuth scope 分开请求</strong>：跨产品权限不要一次性请求</li>
-</ol>
-<p>如果你也在做飞书自动化，评论区交流一下你踩过的坑～</p>
-<blockquote>
-<p>关联阅读：<a href="/2026/06/20/feishu-bot-permissions-and-mention/">飞书机器人开发踩坑实录</a>、<a href="/2026/06/20/feishu-docx-batch-edit/">飞书 Docx API 批量操作踩坑</a></p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>开发工具</category>
-      </categories>
-      <tags>
-        <tag>飞书</tag>
-        <tag>API</tag>
-        <tag>自动化</tag>
-        <tag>Wiki</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
     <url>/2026/07/11/skillopt-agent-self-evolution/</url>
     <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
@@ -2133,6 +2133,127 @@
         <tag>自动化运维</tag>
         <tag>SkillOpt</tag>
         <tag>工程实践</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</title>
+    <url>/2026/06/20/yuanbao-api-pure-proxy/</url>
+    <content><![CDATA[<p><img data-src="/images/yuanbao-api-pure-proxy-cover.webp" alt="封面图"></p>
+<blockquote>
+<p>元宝的 API 又有 IP 白名单限制，路径也不是 OpenAI 标准的 &#x2F;v1&#x2F;chat&#x2F;completions。这篇记录如何用一个 100 行的 Python 代理，把元宝包装成标准 OpenAI 兼容接口。</p>
+</blockquote>
+<hr>
+<h2 id="为什么要折腾这个"><a href="#为什么要折腾这个" class="headerlink" title="为什么要折腾这个"></a>为什么要折腾这个</h2><p>国内大厂的 AI 大模型 API，基本上都有几个共同特点：</p>
+<ul>
+<li><strong>IP 白名单</strong>：只能在特定出口 IP 调用</li>
+<li><strong>路径自定义</strong>：不是 <code>/v1/chat/completions</code>，而是 <code>/api/bot/chat/completions</code> 之类</li>
+<li><strong>Token 字段奇怪</strong>：数字返回字符串、流式挂起等</li>
+</ul>
+<p>这些设计对厂商自有产品友好，但如果你想拿来做实验、接第三方客户端（比如 Page Assist、ChatBox、LobeChat），基本都会踩坑。</p>
+<p>我最近用<strong>腾讯元宝</strong>做了一轮穿透，踩了不少雷，记录一下完整方案。</p>
+<hr>
+<h2 id="第一步：摸清厂商-API-的实际行为"><a href="#第一步：摸清厂商-API-的实际行为" class="headerlink" title="第一步：摸清厂商 API 的实际行为"></a>第一步：摸清厂商 API 的实际行为</h2><p>先把厂商的原始 API 摸清楚，不能靠猜。</p>
+<p>元宝的 API 特征：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>元宝实际</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>路径</td>
+<td><code>/api/bot/chat/completions</code></td>
+</tr>
+<tr>
+<td>鉴权 Header</td>
+<td><code>Authorization: Bearer &lt;API_KEY&gt;</code></td>
+</tr>
+<tr>
+<td>必填 Header</td>
+<td><code>X-Model-Id: &lt;模型标识&gt;</code></td>
+</tr>
+<tr>
+<td>模型标识</td>
+<td><code>openclaw_yuanbao_robot_model</code></td>
+</tr>
+<tr>
+<td>IP 白名单</td>
+<td>仅龙虾主机出口</td>
+</tr>
+<tr>
+<td>Token 返回类型</td>
+<td><strong>字符串</strong>（如 <code>&quot;42&quot;</code>）</td>
+</tr>
+</tbody></table>
+<p>最后这个 Token 返回类型是个大坑，后面单独说。</p>
+<hr>
+<h2 id="第二步：写一个最简代理"><a href="#第二步：写一个最简代理" class="headerlink" title="第二步：写一个最简代理"></a>第二步：写一个最简代理</h2><p>用 Python 标准库就够了，不用拉 FastAPI &#x2F; Flask：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> http.server <span class="keyword">import</span> BaseHTTPRequestHandler, HTTPServer</span><br><span class="line"><span class="keyword">import</span> urllib.request</span><br><span class="line"></span><br><span class="line"><span class="comment"># 自己设置一个&quot;安全通行证&quot; key，避免被他人盗用</span></span><br><span class="line">LOCAL_ACCESS_KEY = <span class="string">&quot;sk-你的自定义密钥&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 元宝原始 API Key（160位）</span></span><br><span class="line">API_KEY = <span class="string">&quot;原始key填这里&quot;</span></span><br><span class="line">MODEL_ID = <span class="string">&quot;openclaw_yuanbao_robot_model&quot;</span></span><br><span class="line">YUANBAO_URL = <span class="string">&quot;https://bot.yuanbao.tencent.com/api/bot/chat/completions&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ProxyHandler</span>(<span class="title class_ inherited__">BaseHTTPRequestHandler</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">do_POST</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 1. 验证调用方身份</span></span><br><span class="line">        auth_header = <span class="variable language_">self</span>.headers.get(<span class="string">&#x27;Authorization&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> auth_header <span class="keyword">or</span> LOCAL_ACCESS_KEY <span class="keyword">not</span> <span class="keyword">in</span> auth_header:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">401</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="string">b&#x27;&#123;&quot;error&quot;: &quot;Unauthorized&quot;&#125;&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 2. 路由：只接受标准 OpenAI 路径</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.path <span class="keyword">not</span> <span class="keyword">in</span> [<span class="string">&quot;/v1/chat/completions&quot;</span>, <span class="string">&quot;/chat/completions&quot;</span>]:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">404</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            content_length = <span class="built_in">int</span>(<span class="variable language_">self</span>.headers[<span class="string">&#x27;Content-Length&#x27;</span>])</span><br><span class="line">            input_json = json.loads(<span class="variable language_">self</span>.rfile.read(content_length).decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line">            is_stream = input_json.get(<span class="string">&quot;stream&quot;</span>, <span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 3. 转换为元宝格式</span></span><br><span class="line">            yuanbao_payload = &#123;</span><br><span class="line">                <span class="string">&quot;model&quot;</span>: MODEL_ID,</span><br><span class="line">                <span class="string">&quot;messages&quot;</span>: input_json.get(<span class="string">&quot;messages&quot;</span>, []),</span><br><span class="line">                <span class="string">&quot;stream&quot;</span>: <span class="literal">False</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            req = urllib.request.Request(</span><br><span class="line">                YUANBAO_URL,</span><br><span class="line">                data=json.dumps(yuanbao_payload).encode(<span class="string">&#x27;utf-8&#x27;</span>),</span><br><span class="line">                headers=&#123;</span><br><span class="line">                    <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;API_KEY&#125;</span>&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;X-Model-Id&quot;</span>: MODEL_ID</span><br><span class="line">                &#125;,</span><br><span class="line">                method=<span class="string">&quot;POST&quot;</span></span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">            <span class="keyword">with</span> urllib.request.urlopen(req) <span class="keyword">as</span> response:</span><br><span class="line">                resp_json = json.loads(response.read().decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 4. 关键：强制转换 Token 为整数</span></span><br><span class="line">                <span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">                        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 5. 根据 stream 参数决定返回</span></span><br><span class="line">                <span class="keyword">if</span> is_stream:</span><br><span class="line">                    <span class="comment"># 模拟 SSE 流式响应</span></span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;text/event-stream&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    content = resp_json[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;message&quot;</span>][<span class="string">&quot;content&quot;</span>]</span><br><span class="line">                    chunk = &#123;</span><br><span class="line">                        <span class="string">&quot;id&quot;</span>: resp_json.get(<span class="string">&quot;id&quot;</span>),</span><br><span class="line">                        <span class="string">&quot;object&quot;</span>: <span class="string">&quot;chat.completion.chunk&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;model&quot;</span>: <span class="string">&quot;yuanbao&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;choices&quot;</span>: [&#123;<span class="string">&quot;index&quot;</span>: <span class="number">0</span>, <span class="string">&quot;delta&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: content&#125;, <span class="string">&quot;finish_reason&quot;</span>: <span class="string">&quot;stop&quot;</span>&#125;]</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">f&quot;data: <span class="subst">&#123;json.dumps(chunk)&#125;</span>\n\n&quot;</span>.encode())</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">b&quot;data: [DONE]\n\n&quot;</span>)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(json.dumps(resp_json).encode())</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">500</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="built_in">str</span>(e).encode())</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    HTTPServer((<span class="string">&quot;0.0.0.0&quot;</span>, <span class="number">16048</span>), ProxyHandler).serve_forever()</span><br></pre></td></tr></table></figure>
+
+<p>核心要点：</p>
+<ul>
+<li><strong>自建 LOCAL_ACCESS_KEY</strong>：相当于本地”通行证”，调用方必须带这个 Key 才能用你的代理</li>
+<li><strong>路径重写</strong>：客户端发 <code>/v1/chat/completions</code>，代理内部改为 <code>/api/bot/chat/completions</code></li>
+<li><strong>数据整形</strong>：后面重点说</li>
+</ul>
+<hr>
+<h2 id="第三步：解决最坑的”Token-是字符串”问题"><a href="#第三步：解决最坑的”Token-是字符串”问题" class="headerlink" title="第三步：解决最坑的”Token 是字符串”问题"></a>第三步：解决最坑的”Token 是字符串”问题</h2><h3 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h3><p>Page Assist、LobeChat、ChatBox 这些第三方客户端，默认开启 <code>stream: true</code> 流式调用 + 解析 <code>usage</code> 字段统计 token。</p>
+<p>但元宝返回的 <code>usage</code> 字段长这样：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;usage&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;prompt_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;42&quot;</span><span class="punctuation">,</span>      <span class="comment">// 注意是字符串</span></span><br><span class="line">    <span class="attr">&quot;completion_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;128&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;total_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;170&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>字符串”42” 不是数字 42。客户端按数字处理会报：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Cannot read properties of undefined (reading &#x27;0&#x27;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><p>在代理层强制转换：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br></pre></td></tr></table></figure>
+
+<p>转换后客户端就能正常显示了。</p>
+<hr>
+<h2 id="第四步：流式响应挂起的另一个坑"><a href="#第四步：流式响应挂起的另一个坑" class="headerlink" title="第四步：流式响应挂起的另一个坑"></a>第四步：流式响应挂起的另一个坑</h2><p>客户端默认开 <code>stream: true</code>，但元宝的 API 在流式结束时会发送一个没有 <code>choices</code> 字段的 <code>usage</code> 包（用来统计），导致客户端解析出错卡住。</p>
+<p><strong>两种解决方案</strong>：</p>
+<h3 id="方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）"><a href="#方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）" class="headerlink" title="方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）"></a>方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 客户端请求 stream=False 时：直接返回 JSON</span></span><br><span class="line"><span class="comment"># 客户端请求 stream=True 时：内部用 stream=False 调元宝，再自己模拟 SSE 输出</span></span><br><span class="line">yuanbao_payload[<span class="string">&quot;stream&quot;</span>] = <span class="literal">False</span>  <span class="comment"># 永远关闭后端的流式</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> is_stream:</span><br><span class="line">    <span class="comment"># 一次性拿全量，再分块发送</span></span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="方案-B：透传完整字段（更强大但复杂）"><a href="#方案-B：透传完整字段（更强大但复杂）" class="headerlink" title="方案 B：透传完整字段（更强大但复杂）"></a>方案 B：透传完整字段（更强大但复杂）</h3><p>如果想保留思考过程、工具调用这些高级特性，需要把元宝的完整字段透传：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 思考块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;reasoning_content&quot;</span>] = <span class="string">&quot;...&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 工具块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;tool_calls&quot;</span>] = [...]</span><br></pre></td></tr></table></figure>
+
+<p>这一段代码量是上面简化版的 3-4 倍，<strong>建议先跑通方案 A，再按需升级</strong>。</p>
+<hr>
+<h2 id="第五步：部署与服务管理"><a href="#第五步：部署与服务管理" class="headerlink" title="第五步：部署与服务管理"></a>第五步：部署与服务管理</h2><h3 id="部署位置"><a href="#部署位置" class="headerlink" title="部署位置"></a>部署位置</h3><p>代理<strong>必须</strong>部署在白名单内的出口机器（这里就是元宝龙虾主机本身），否则 IP 限制直接 403。</p>
+<h3 id="端口选择"><a href="#端口选择" class="headerlink" title="端口选择"></a>端口选择</h3><p>避开保留端口（80&#x2F;443&#x2F;22）和冲突高发区。<strong>16048</strong> 是个不错的选择（位于 10000-30000 黄金区间）。</p>
+<h3 id="systemd-服务化"><a href="#systemd-服务化" class="headerlink" title="systemd 服务化"></a>systemd 服务化</h3><figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/yuanbao-proxy.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Yuanbao Pure API Proxy</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">WorkingDirectory</span>=/opt/yuanbao</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/bin/python3 /opt/yuanbao/yuanbao_proxy.py</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> yuanbao-proxy</span><br><span class="line">systemctl start yuanbao-proxy</span><br><span class="line">systemctl status yuanbao-proxy</span><br></pre></td></tr></table></figure>
+
+<h3 id="反向代理（如需公网访问）"><a href="#反向代理（如需公网访问）" class="headerlink" title="反向代理（如需公网访问）"></a>反向代理（如需公网访问）</h3><p>如果你想从其他机器也能用，可以用 frp 把内网端口映射到公网 VPS：</p>
+<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># frpc.ini</span></span><br><span class="line"><span class="section">[yuanbao-api]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">16048</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">16048</span></span><br></pre></td></tr></table></figure>
+
+<p>然后客户端配置：</p>
+<ul>
+<li><strong>Base URL</strong>：<code>http://你的公网IP:16048/v1</code></li>
+<li><strong>API Key</strong>：你的 <code>LOCAL_ACCESS_KEY</code></li>
+</ul>
+<hr>
+<h2 id="最后的话"><a href="#最后的话" class="headerlink" title="最后的话"></a>最后的话</h2><p>这类”包装非标 API”的需求，国内大厂基本都有。套路都差不多：</p>
+<ol>
+<li><strong>摸清厂商协议</strong>：路径、Header、Body 格式、响应格式</li>
+<li><strong>代理层做协议转换</strong>：路径重写、Header 注入、字段映射</li>
+<li><strong>数据整形</strong>：类型转换、空字段兜底、异常处理</li>
+<li><strong>流式模拟</strong>：很多大厂 API 流式不标准，需要代理层重新包装</li>
+<li><strong>安全加固</strong>：自建鉴权 Key、白名单、防滥用</li>
+</ol>
+<p>这套方法论我在元宝、文心、通义、星火上都验证过，<strong>改改 URL 和字段名就能复用</strong>。</p>
+<p>有问题欢迎评论区交流，或者告诉我你正在对接哪个厂的 API～</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>AI工程</category>
+      </categories>
+      <tags>
+        <tag>AI工具</tag>
+        <tag>元宝</tag>
+        <tag>API代理</tag>
+        <tag>OpenAI兼容</tag>
       </tags>
   </entry>
   <entry>
@@ -2342,127 +2463,6 @@
         <tag>MCP</tag>
         <tag>知乎</tag>
         <tag>AI应用</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</title>
-    <url>/2026/06/20/yuanbao-api-pure-proxy/</url>
-    <content><![CDATA[<p><img data-src="/images/yuanbao-api-pure-proxy-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>元宝的 API 又有 IP 白名单限制，路径也不是 OpenAI 标准的 &#x2F;v1&#x2F;chat&#x2F;completions。这篇记录如何用一个 100 行的 Python 代理，把元宝包装成标准 OpenAI 兼容接口。</p>
-</blockquote>
-<hr>
-<h2 id="为什么要折腾这个"><a href="#为什么要折腾这个" class="headerlink" title="为什么要折腾这个"></a>为什么要折腾这个</h2><p>国内大厂的 AI 大模型 API，基本上都有几个共同特点：</p>
-<ul>
-<li><strong>IP 白名单</strong>：只能在特定出口 IP 调用</li>
-<li><strong>路径自定义</strong>：不是 <code>/v1/chat/completions</code>，而是 <code>/api/bot/chat/completions</code> 之类</li>
-<li><strong>Token 字段奇怪</strong>：数字返回字符串、流式挂起等</li>
-</ul>
-<p>这些设计对厂商自有产品友好，但如果你想拿来做实验、接第三方客户端（比如 Page Assist、ChatBox、LobeChat），基本都会踩坑。</p>
-<p>我最近用<strong>腾讯元宝</strong>做了一轮穿透，踩了不少雷，记录一下完整方案。</p>
-<hr>
-<h2 id="第一步：摸清厂商-API-的实际行为"><a href="#第一步：摸清厂商-API-的实际行为" class="headerlink" title="第一步：摸清厂商 API 的实际行为"></a>第一步：摸清厂商 API 的实际行为</h2><p>先把厂商的原始 API 摸清楚，不能靠猜。</p>
-<p>元宝的 API 特征：</p>
-<table>
-<thead>
-<tr>
-<th>维度</th>
-<th>元宝实际</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>路径</td>
-<td><code>/api/bot/chat/completions</code></td>
-</tr>
-<tr>
-<td>鉴权 Header</td>
-<td><code>Authorization: Bearer &lt;API_KEY&gt;</code></td>
-</tr>
-<tr>
-<td>必填 Header</td>
-<td><code>X-Model-Id: &lt;模型标识&gt;</code></td>
-</tr>
-<tr>
-<td>模型标识</td>
-<td><code>openclaw_yuanbao_robot_model</code></td>
-</tr>
-<tr>
-<td>IP 白名单</td>
-<td>仅龙虾主机出口</td>
-</tr>
-<tr>
-<td>Token 返回类型</td>
-<td><strong>字符串</strong>（如 <code>&quot;42&quot;</code>）</td>
-</tr>
-</tbody></table>
-<p>最后这个 Token 返回类型是个大坑，后面单独说。</p>
-<hr>
-<h2 id="第二步：写一个最简代理"><a href="#第二步：写一个最简代理" class="headerlink" title="第二步：写一个最简代理"></a>第二步：写一个最简代理</h2><p>用 Python 标准库就够了，不用拉 FastAPI &#x2F; Flask：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> http.server <span class="keyword">import</span> BaseHTTPRequestHandler, HTTPServer</span><br><span class="line"><span class="keyword">import</span> urllib.request</span><br><span class="line"></span><br><span class="line"><span class="comment"># 自己设置一个&quot;安全通行证&quot; key，避免被他人盗用</span></span><br><span class="line">LOCAL_ACCESS_KEY = <span class="string">&quot;sk-你的自定义密钥&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 元宝原始 API Key（160位）</span></span><br><span class="line">API_KEY = <span class="string">&quot;原始key填这里&quot;</span></span><br><span class="line">MODEL_ID = <span class="string">&quot;openclaw_yuanbao_robot_model&quot;</span></span><br><span class="line">YUANBAO_URL = <span class="string">&quot;https://bot.yuanbao.tencent.com/api/bot/chat/completions&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ProxyHandler</span>(<span class="title class_ inherited__">BaseHTTPRequestHandler</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">do_POST</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 1. 验证调用方身份</span></span><br><span class="line">        auth_header = <span class="variable language_">self</span>.headers.get(<span class="string">&#x27;Authorization&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> auth_header <span class="keyword">or</span> LOCAL_ACCESS_KEY <span class="keyword">not</span> <span class="keyword">in</span> auth_header:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">401</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="string">b&#x27;&#123;&quot;error&quot;: &quot;Unauthorized&quot;&#125;&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 2. 路由：只接受标准 OpenAI 路径</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.path <span class="keyword">not</span> <span class="keyword">in</span> [<span class="string">&quot;/v1/chat/completions&quot;</span>, <span class="string">&quot;/chat/completions&quot;</span>]:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">404</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            content_length = <span class="built_in">int</span>(<span class="variable language_">self</span>.headers[<span class="string">&#x27;Content-Length&#x27;</span>])</span><br><span class="line">            input_json = json.loads(<span class="variable language_">self</span>.rfile.read(content_length).decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line">            is_stream = input_json.get(<span class="string">&quot;stream&quot;</span>, <span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 3. 转换为元宝格式</span></span><br><span class="line">            yuanbao_payload = &#123;</span><br><span class="line">                <span class="string">&quot;model&quot;</span>: MODEL_ID,</span><br><span class="line">                <span class="string">&quot;messages&quot;</span>: input_json.get(<span class="string">&quot;messages&quot;</span>, []),</span><br><span class="line">                <span class="string">&quot;stream&quot;</span>: <span class="literal">False</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            req = urllib.request.Request(</span><br><span class="line">                YUANBAO_URL,</span><br><span class="line">                data=json.dumps(yuanbao_payload).encode(<span class="string">&#x27;utf-8&#x27;</span>),</span><br><span class="line">                headers=&#123;</span><br><span class="line">                    <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;API_KEY&#125;</span>&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;X-Model-Id&quot;</span>: MODEL_ID</span><br><span class="line">                &#125;,</span><br><span class="line">                method=<span class="string">&quot;POST&quot;</span></span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">            <span class="keyword">with</span> urllib.request.urlopen(req) <span class="keyword">as</span> response:</span><br><span class="line">                resp_json = json.loads(response.read().decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 4. 关键：强制转换 Token 为整数</span></span><br><span class="line">                <span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">                        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 5. 根据 stream 参数决定返回</span></span><br><span class="line">                <span class="keyword">if</span> is_stream:</span><br><span class="line">                    <span class="comment"># 模拟 SSE 流式响应</span></span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;text/event-stream&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    content = resp_json[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;message&quot;</span>][<span class="string">&quot;content&quot;</span>]</span><br><span class="line">                    chunk = &#123;</span><br><span class="line">                        <span class="string">&quot;id&quot;</span>: resp_json.get(<span class="string">&quot;id&quot;</span>),</span><br><span class="line">                        <span class="string">&quot;object&quot;</span>: <span class="string">&quot;chat.completion.chunk&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;model&quot;</span>: <span class="string">&quot;yuanbao&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;choices&quot;</span>: [&#123;<span class="string">&quot;index&quot;</span>: <span class="number">0</span>, <span class="string">&quot;delta&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: content&#125;, <span class="string">&quot;finish_reason&quot;</span>: <span class="string">&quot;stop&quot;</span>&#125;]</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">f&quot;data: <span class="subst">&#123;json.dumps(chunk)&#125;</span>\n\n&quot;</span>.encode())</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">b&quot;data: [DONE]\n\n&quot;</span>)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(json.dumps(resp_json).encode())</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">500</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="built_in">str</span>(e).encode())</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    HTTPServer((<span class="string">&quot;0.0.0.0&quot;</span>, <span class="number">16048</span>), ProxyHandler).serve_forever()</span><br></pre></td></tr></table></figure>
-
-<p>核心要点：</p>
-<ul>
-<li><strong>自建 LOCAL_ACCESS_KEY</strong>：相当于本地”通行证”，调用方必须带这个 Key 才能用你的代理</li>
-<li><strong>路径重写</strong>：客户端发 <code>/v1/chat/completions</code>，代理内部改为 <code>/api/bot/chat/completions</code></li>
-<li><strong>数据整形</strong>：后面重点说</li>
-</ul>
-<hr>
-<h2 id="第三步：解决最坑的”Token-是字符串”问题"><a href="#第三步：解决最坑的”Token-是字符串”问题" class="headerlink" title="第三步：解决最坑的”Token 是字符串”问题"></a>第三步：解决最坑的”Token 是字符串”问题</h2><h3 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h3><p>Page Assist、LobeChat、ChatBox 这些第三方客户端，默认开启 <code>stream: true</code> 流式调用 + 解析 <code>usage</code> 字段统计 token。</p>
-<p>但元宝返回的 <code>usage</code> 字段长这样：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;usage&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;prompt_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;42&quot;</span><span class="punctuation">,</span>      <span class="comment">// 注意是字符串</span></span><br><span class="line">    <span class="attr">&quot;completion_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;128&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;total_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;170&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>字符串”42” 不是数字 42。客户端按数字处理会报：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Cannot read properties of undefined (reading &#x27;0&#x27;)</span><br></pre></td></tr></table></figure>
-
-<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><p>在代理层强制转换：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br></pre></td></tr></table></figure>
-
-<p>转换后客户端就能正常显示了。</p>
-<hr>
-<h2 id="第四步：流式响应挂起的另一个坑"><a href="#第四步：流式响应挂起的另一个坑" class="headerlink" title="第四步：流式响应挂起的另一个坑"></a>第四步：流式响应挂起的另一个坑</h2><p>客户端默认开 <code>stream: true</code>，但元宝的 API 在流式结束时会发送一个没有 <code>choices</code> 字段的 <code>usage</code> 包（用来统计），导致客户端解析出错卡住。</p>
-<p><strong>两种解决方案</strong>：</p>
-<h3 id="方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）"><a href="#方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）" class="headerlink" title="方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）"></a>方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 客户端请求 stream=False 时：直接返回 JSON</span></span><br><span class="line"><span class="comment"># 客户端请求 stream=True 时：内部用 stream=False 调元宝，再自己模拟 SSE 输出</span></span><br><span class="line">yuanbao_payload[<span class="string">&quot;stream&quot;</span>] = <span class="literal">False</span>  <span class="comment"># 永远关闭后端的流式</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> is_stream:</span><br><span class="line">    <span class="comment"># 一次性拿全量，再分块发送</span></span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
-
-<h3 id="方案-B：透传完整字段（更强大但复杂）"><a href="#方案-B：透传完整字段（更强大但复杂）" class="headerlink" title="方案 B：透传完整字段（更强大但复杂）"></a>方案 B：透传完整字段（更强大但复杂）</h3><p>如果想保留思考过程、工具调用这些高级特性，需要把元宝的完整字段透传：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 思考块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;reasoning_content&quot;</span>] = <span class="string">&quot;...&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 工具块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;tool_calls&quot;</span>] = [...]</span><br></pre></td></tr></table></figure>
-
-<p>这一段代码量是上面简化版的 3-4 倍，<strong>建议先跑通方案 A，再按需升级</strong>。</p>
-<hr>
-<h2 id="第五步：部署与服务管理"><a href="#第五步：部署与服务管理" class="headerlink" title="第五步：部署与服务管理"></a>第五步：部署与服务管理</h2><h3 id="部署位置"><a href="#部署位置" class="headerlink" title="部署位置"></a>部署位置</h3><p>代理<strong>必须</strong>部署在白名单内的出口机器（这里就是元宝龙虾主机本身），否则 IP 限制直接 403。</p>
-<h3 id="端口选择"><a href="#端口选择" class="headerlink" title="端口选择"></a>端口选择</h3><p>避开保留端口（80&#x2F;443&#x2F;22）和冲突高发区。<strong>16048</strong> 是个不错的选择（位于 10000-30000 黄金区间）。</p>
-<h3 id="systemd-服务化"><a href="#systemd-服务化" class="headerlink" title="systemd 服务化"></a>systemd 服务化</h3><figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/yuanbao-proxy.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Yuanbao Pure API Proxy</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">WorkingDirectory</span>=/opt/yuanbao</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/bin/python3 /opt/yuanbao/yuanbao_proxy.py</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> yuanbao-proxy</span><br><span class="line">systemctl start yuanbao-proxy</span><br><span class="line">systemctl status yuanbao-proxy</span><br></pre></td></tr></table></figure>
-
-<h3 id="反向代理（如需公网访问）"><a href="#反向代理（如需公网访问）" class="headerlink" title="反向代理（如需公网访问）"></a>反向代理（如需公网访问）</h3><p>如果你想从其他机器也能用，可以用 frp 把内网端口映射到公网 VPS：</p>
-<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># frpc.ini</span></span><br><span class="line"><span class="section">[yuanbao-api]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">16048</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">16048</span></span><br></pre></td></tr></table></figure>
-
-<p>然后客户端配置：</p>
-<ul>
-<li><strong>Base URL</strong>：<code>http://你的公网IP:16048/v1</code></li>
-<li><strong>API Key</strong>：你的 <code>LOCAL_ACCESS_KEY</code></li>
-</ul>
-<hr>
-<h2 id="最后的话"><a href="#最后的话" class="headerlink" title="最后的话"></a>最后的话</h2><p>这类”包装非标 API”的需求，国内大厂基本都有。套路都差不多：</p>
-<ol>
-<li><strong>摸清厂商协议</strong>：路径、Header、Body 格式、响应格式</li>
-<li><strong>代理层做协议转换</strong>：路径重写、Header 注入、字段映射</li>
-<li><strong>数据整形</strong>：类型转换、空字段兜底、异常处理</li>
-<li><strong>流式模拟</strong>：很多大厂 API 流式不标准，需要代理层重新包装</li>
-<li><strong>安全加固</strong>：自建鉴权 Key、白名单、防滥用</li>
-</ol>
-<p>这套方法论我在元宝、文心、通义、星火上都验证过，<strong>改改 URL 和字段名就能复用</strong>。</p>
-<p>有问题欢迎评论区交流，或者告诉我你正在对接哪个厂的 API～</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>AI工程</category>
-      </categories>
-      <tags>
-        <tag>AI工具</tag>
-        <tag>元宝</tag>
-        <tag>API代理</tag>
-        <tag>OpenAI兼容</tag>
       </tags>
   </entry>
 </search>
