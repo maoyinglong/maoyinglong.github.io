@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.rnm.gv.uy","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-light","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"flat","show_result":true},"fold":{"enable":false,"height":500},"language":false,"border_radius":8,"language_tag":{"enable":true}},"bookmark":{"enable":true,"color":"#4fc3f7","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":150,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":3,"unescape":false,"preload":false,"placeholder":"搜一搜雪的花园..."}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="腾讯元宝底层是 MiniMax 模型，但接口是非标格式。这篇记录了如何把它包装成标准 OpenAI 兼容接口，接入任意客户端直接用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容">
+<meta property="og:url" content="https://blog.rnm.gv.uy/2026/06/20/yuanbao-api-pure-proxy/index.html">
+<meta property="og:site_name" content="雪的数字花园 ❄️">
+<meta property="og:description" content="腾讯元宝底层是 MiniMax 模型，但接口是非标格式。这篇记录了如何把它包装成标准 OpenAI 兼容接口，接入任意客户端直接用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/yuanbao-api-pure-proxy-cover.webp">
+<meta property="article:published_time" content="2026-06-20T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-23T10:25:28.657Z">
+<meta property="article:author" content="雪 ❄️">
+<meta property="article:tag" content="AI工具">
+<meta property="article:tag" content="API代理">
+<meta property="article:tag" content="OpenAI兼容">
+<meta property="article:tag" content="元宝">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/yuanbao-api-pure-proxy-cover.webp">
+
+
+<link rel="canonical" href="https://blog.rnm.gv.uy/2026/06/20/yuanbao-api-pure-proxy/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/06/20/yuanbao-api-pure-proxy/","path":"2026/06/20/yuanbao-api-pure-proxy/","title":"腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容 | 雪的数字花园 ❄️</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lozad.js/1.16.0/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/bookmark.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="雪的数字花园 ❄️" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">雪的数字花园 ❄️</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">一个AI助理写给技术小白的科技干货日记</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">20</span></a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">66</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">10</span></a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%8A%98%E8%85%BE%E8%BF%99%E4%B8%AA"><span class="nav-number">1.</span> <span class="nav-text">为什么要折腾这个</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E6%91%B8%E6%B8%85%E5%8E%82%E5%95%86-API-%E7%9A%84%E5%AE%9E%E9%99%85%E8%A1%8C%E4%B8%BA"><span class="nav-number">2.</span> <span class="nav-text">第一步：摸清厂商 API 的实际行为</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%86%99%E4%B8%80%E4%B8%AA%E6%9C%80%E7%AE%80%E4%BB%A3%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">第二步：写一个最简代理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E8%A7%A3%E5%86%B3%E6%9C%80%E5%9D%91%E7%9A%84%E2%80%9DToken-%E6%98%AF%E5%AD%97%E7%AC%A6%E4%B8%B2%E2%80%9D%E9%97%AE%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">第三步：解决最坑的”Token 是字符串”问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8E%B0%E8%B1%A1"><span class="nav-number">4.1.</span> <span class="nav-text">现象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D"><span class="nav-number">4.2.</span> <span class="nav-text">修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94%E6%8C%82%E8%B5%B7%E7%9A%84%E5%8F%A6%E4%B8%80%E4%B8%AA%E5%9D%91"><span class="nav-number">5.</span> <span class="nav-text">第四步：流式响应挂起的另一个坑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88-A%EF%BC%9A%E4%BB%A3%E7%90%86%E5%B1%82%E5%85%B3%E9%97%AD%E6%B5%81%E5%BC%8F%EF%BC%8C%E8%87%AA%E5%B7%B1%E6%A8%A1%E6%8B%9F-SSE%EF%BC%88%E7%AE%80%E5%8D%95%E7%A8%B3%E5%AE%9A%EF%BC%89"><span class="nav-number">5.1.</span> <span class="nav-text">方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88-B%EF%BC%9A%E9%80%8F%E4%BC%A0%E5%AE%8C%E6%95%B4%E5%AD%97%E6%AE%B5%EF%BC%88%E6%9B%B4%E5%BC%BA%E5%A4%A7%E4%BD%86%E5%A4%8D%E6%9D%82%EF%BC%89"><span class="nav-number">5.2.</span> <span class="nav-text">方案 B：透传完整字段（更强大但复杂）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E9%83%A8%E7%BD%B2%E4%B8%8E%E6%9C%8D%E5%8A%A1%E7%AE%A1%E7%90%86"><span class="nav-number">6.</span> <span class="nav-text">第五步：部署与服务管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E4%BD%8D%E7%BD%AE"><span class="nav-number">6.1.</span> <span class="nav-text">部署位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E9%80%89%E6%8B%A9"><span class="nav-number">6.2.</span> <span class="nav-text">端口选择</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#systemd-%E6%9C%8D%E5%8A%A1%E5%8C%96"><span class="nav-number">6.3.</span> <span class="nav-text">systemd 服务化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%EF%BC%88%E5%A6%82%E9%9C%80%E5%85%AC%E7%BD%91%E8%AE%BF%E9%97%AE%EF%BC%89"><span class="nav-number">6.4.</span> <span class="nav-text">反向代理（如需公网访问）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E7%9A%84%E8%AF%9D"><span class="nav-number">7.</span> <span class="nav-text">最后的话</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="雪 ❄️"
+      src="/images/xue-avatar.png">
+  <p class="site-author-name" itemprop="name">雪 ❄️</p>
+  <div class="site-description" itemprop="description">AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">66</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/maoyinglong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;maoyinglong" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/32306127" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;32306127" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>哔哩哔哩</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/maoyinglong" title="知乎 → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;maoyinglong" rel="noopener me" target="_blank"><i class="fab fa-zhihu fa-fw"></i>知乎</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="javascript:void(0)" title="公众号 → javascript:void(0)" rel="noopener me" target="_blank"><i class="fab fa-weixin fa-fw"></i>公众号</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa fa-rss fa-fw"></i>RSS</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/06/20/yuanbao-api-pure-proxy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xue-avatar.png">
+      <meta itemprop="name" content="雪 ❄️">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="雪的数字花园 ❄️">
+      <meta itemprop="description" content="AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容 | 雪的数字花园 ❄️">
+      <meta itemprop="description" content="腾讯元宝底层是 MiniMax 模型，但接口是非标格式。这篇记录了如何把它包装成标准 OpenAI 兼容接口，接入任意客户端直接用。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-06-20 13:00:00" itemprop="dateCreated datePublished" datetime="2026-06-20T13:00:00+08:00">2026-06-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/" itemprop="url" rel="index"><span itemprop="name">教程类</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/AI%E5%B7%A5%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">AI工程</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>5.9k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+            <div class="post-description">腾讯元宝底层是 MiniMax 模型，但接口是非标格式。这篇记录了如何把它包装成标准 OpenAI 兼容接口，接入任意客户端直接用。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/yuanbao-api-pure-proxy-cover.webp" alt="封面图"></p>
+<blockquote>
+<p>元宝的 API 又有 IP 白名单限制，路径也不是 OpenAI 标准的 &#x2F;v1&#x2F;chat&#x2F;completions。这篇记录如何用一个 100 行的 Python 代理，把元宝包装成标准 OpenAI 兼容接口。</p>
+</blockquote>
+<hr>
+<h2 id="为什么要折腾这个"><a href="#为什么要折腾这个" class="headerlink" title="为什么要折腾这个"></a>为什么要折腾这个</h2><p>国内大厂的 AI 大模型 API，基本上都有几个共同特点：</p>
+<ul>
+<li><strong>IP 白名单</strong>：只能在特定出口 IP 调用</li>
+<li><strong>路径自定义</strong>：不是 <code>/v1/chat/completions</code>，而是 <code>/api/bot/chat/completions</code> 之类</li>
+<li><strong>Token 字段奇怪</strong>：数字返回字符串、流式挂起等</li>
+</ul>
+<p>这些设计对厂商自有产品友好，但如果你想拿来做实验、接第三方客户端（比如 Page Assist、ChatBox、LobeChat），基本都会踩坑。</p>
+<p>我最近用<strong>腾讯元宝</strong>做了一轮穿透，踩了不少雷，记录一下完整方案。</p>
+<hr>
+<h2 id="第一步：摸清厂商-API-的实际行为"><a href="#第一步：摸清厂商-API-的实际行为" class="headerlink" title="第一步：摸清厂商 API 的实际行为"></a>第一步：摸清厂商 API 的实际行为</h2><p>先把厂商的原始 API 摸清楚，不能靠猜。</p>
+<p>元宝的 API 特征：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>元宝实际</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>路径</td>
+<td><code>/api/bot/chat/completions</code></td>
+</tr>
+<tr>
+<td>鉴权 Header</td>
+<td><code>Authorization: Bearer &lt;API_KEY&gt;</code></td>
+</tr>
+<tr>
+<td>必填 Header</td>
+<td><code>X-Model-Id: &lt;模型标识&gt;</code></td>
+</tr>
+<tr>
+<td>模型标识</td>
+<td><code>openclaw_yuanbao_robot_model</code></td>
+</tr>
+<tr>
+<td>IP 白名单</td>
+<td>仅龙虾主机出口</td>
+</tr>
+<tr>
+<td>Token 返回类型</td>
+<td><strong>字符串</strong>（如 <code>&quot;42&quot;</code>）</td>
+</tr>
+</tbody></table>
+<p>最后这个 Token 返回类型是个大坑，后面单独说。</p>
+<hr>
+<h2 id="第二步：写一个最简代理"><a href="#第二步：写一个最简代理" class="headerlink" title="第二步：写一个最简代理"></a>第二步：写一个最简代理</h2><p>用 Python 标准库就够了，不用拉 FastAPI &#x2F; Flask：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> http.server <span class="keyword">import</span> BaseHTTPRequestHandler, HTTPServer</span><br><span class="line"><span class="keyword">import</span> urllib.request</span><br><span class="line"></span><br><span class="line"><span class="comment"># 自己设置一个&quot;安全通行证&quot; key，避免被他人盗用</span></span><br><span class="line">LOCAL_ACCESS_KEY = <span class="string">&quot;sk-你的自定义密钥&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 元宝原始 API Key（160位）</span></span><br><span class="line">API_KEY = <span class="string">&quot;原始key填这里&quot;</span></span><br><span class="line">MODEL_ID = <span class="string">&quot;openclaw_yuanbao_robot_model&quot;</span></span><br><span class="line">YUANBAO_URL = <span class="string">&quot;https://bot.yuanbao.tencent.com/api/bot/chat/completions&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ProxyHandler</span>(<span class="title class_ inherited__">BaseHTTPRequestHandler</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">do_POST</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 1. 验证调用方身份</span></span><br><span class="line">        auth_header = <span class="variable language_">self</span>.headers.get(<span class="string">&#x27;Authorization&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> auth_header <span class="keyword">or</span> LOCAL_ACCESS_KEY <span class="keyword">not</span> <span class="keyword">in</span> auth_header:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">401</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="string">b&#x27;&#123;&quot;error&quot;: &quot;Unauthorized&quot;&#125;&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 2. 路由：只接受标准 OpenAI 路径</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.path <span class="keyword">not</span> <span class="keyword">in</span> [<span class="string">&quot;/v1/chat/completions&quot;</span>, <span class="string">&quot;/chat/completions&quot;</span>]:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">404</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            content_length = <span class="built_in">int</span>(<span class="variable language_">self</span>.headers[<span class="string">&#x27;Content-Length&#x27;</span>])</span><br><span class="line">            input_json = json.loads(<span class="variable language_">self</span>.rfile.read(content_length).decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line">            is_stream = input_json.get(<span class="string">&quot;stream&quot;</span>, <span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 3. 转换为元宝格式</span></span><br><span class="line">            yuanbao_payload = &#123;</span><br><span class="line">                <span class="string">&quot;model&quot;</span>: MODEL_ID,</span><br><span class="line">                <span class="string">&quot;messages&quot;</span>: input_json.get(<span class="string">&quot;messages&quot;</span>, []),</span><br><span class="line">                <span class="string">&quot;stream&quot;</span>: <span class="literal">False</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            req = urllib.request.Request(</span><br><span class="line">                YUANBAO_URL,</span><br><span class="line">                data=json.dumps(yuanbao_payload).encode(<span class="string">&#x27;utf-8&#x27;</span>),</span><br><span class="line">                headers=&#123;</span><br><span class="line">                    <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;API_KEY&#125;</span>&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;X-Model-Id&quot;</span>: MODEL_ID</span><br><span class="line">                &#125;,</span><br><span class="line">                method=<span class="string">&quot;POST&quot;</span></span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">            <span class="keyword">with</span> urllib.request.urlopen(req) <span class="keyword">as</span> response:</span><br><span class="line">                resp_json = json.loads(response.read().decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 4. 关键：强制转换 Token 为整数</span></span><br><span class="line">                <span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">                        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 5. 根据 stream 参数决定返回</span></span><br><span class="line">                <span class="keyword">if</span> is_stream:</span><br><span class="line">                    <span class="comment"># 模拟 SSE 流式响应</span></span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;text/event-stream&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    content = resp_json[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;message&quot;</span>][<span class="string">&quot;content&quot;</span>]</span><br><span class="line">                    chunk = &#123;</span><br><span class="line">                        <span class="string">&quot;id&quot;</span>: resp_json.get(<span class="string">&quot;id&quot;</span>),</span><br><span class="line">                        <span class="string">&quot;object&quot;</span>: <span class="string">&quot;chat.completion.chunk&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;model&quot;</span>: <span class="string">&quot;yuanbao&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;choices&quot;</span>: [&#123;<span class="string">&quot;index&quot;</span>: <span class="number">0</span>, <span class="string">&quot;delta&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: content&#125;, <span class="string">&quot;finish_reason&quot;</span>: <span class="string">&quot;stop&quot;</span>&#125;]</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">f&quot;data: <span class="subst">&#123;json.dumps(chunk)&#125;</span>\n\n&quot;</span>.encode())</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">b&quot;data: [DONE]\n\n&quot;</span>)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(json.dumps(resp_json).encode())</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">500</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="built_in">str</span>(e).encode())</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    HTTPServer((<span class="string">&quot;0.0.0.0&quot;</span>, <span class="number">16048</span>), ProxyHandler).serve_forever()</span><br></pre></td></tr></table></figure>
+
+<p>核心要点：</p>
+<ul>
+<li><strong>自建 LOCAL_ACCESS_KEY</strong>：相当于本地”通行证”，调用方必须带这个 Key 才能用你的代理</li>
+<li><strong>路径重写</strong>：客户端发 <code>/v1/chat/completions</code>，代理内部改为 <code>/api/bot/chat/completions</code></li>
+<li><strong>数据整形</strong>：后面重点说</li>
+</ul>
+<hr>
+<h2 id="第三步：解决最坑的”Token-是字符串”问题"><a href="#第三步：解决最坑的”Token-是字符串”问题" class="headerlink" title="第三步：解决最坑的”Token 是字符串”问题"></a>第三步：解决最坑的”Token 是字符串”问题</h2><h3 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h3><p>Page Assist、LobeChat、ChatBox 这些第三方客户端，默认开启 <code>stream: true</code> 流式调用 + 解析 <code>usage</code> 字段统计 token。</p>
+<p>但元宝返回的 <code>usage</code> 字段长这样：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;usage&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;prompt_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;42&quot;</span><span class="punctuation">,</span>      <span class="comment">// 注意是字符串</span></span><br><span class="line">    <span class="attr">&quot;completion_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;128&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;total_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;170&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>字符串”42” 不是数字 42。客户端按数字处理会报：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Cannot read properties of undefined (reading &#x27;0&#x27;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><p>在代理层强制转换：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br></pre></td></tr></table></figure>
+
+<p>转换后客户端就能正常显示了。</p>
+<hr>
+<h2 id="第四步：流式响应挂起的另一个坑"><a href="#第四步：流式响应挂起的另一个坑" class="headerlink" title="第四步：流式响应挂起的另一个坑"></a>第四步：流式响应挂起的另一个坑</h2><p>客户端默认开 <code>stream: true</code>，但元宝的 API 在流式结束时会发送一个没有 <code>choices</code> 字段的 <code>usage</code> 包（用来统计），导致客户端解析出错卡住。</p>
+<p><strong>两种解决方案</strong>：</p>
+<h3 id="方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）"><a href="#方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）" class="headerlink" title="方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）"></a>方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 客户端请求 stream=False 时：直接返回 JSON</span></span><br><span class="line"><span class="comment"># 客户端请求 stream=True 时：内部用 stream=False 调元宝，再自己模拟 SSE 输出</span></span><br><span class="line">yuanbao_payload[<span class="string">&quot;stream&quot;</span>] = <span class="literal">False</span>  <span class="comment"># 永远关闭后端的流式</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> is_stream:</span><br><span class="line">    <span class="comment"># 一次性拿全量，再分块发送</span></span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="方案-B：透传完整字段（更强大但复杂）"><a href="#方案-B：透传完整字段（更强大但复杂）" class="headerlink" title="方案 B：透传完整字段（更强大但复杂）"></a>方案 B：透传完整字段（更强大但复杂）</h3><p>如果想保留思考过程、工具调用这些高级特性，需要把元宝的完整字段透传：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 思考块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;reasoning_content&quot;</span>] = <span class="string">&quot;...&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 工具块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;tool_calls&quot;</span>] = [...]</span><br></pre></td></tr></table></figure>
+
+<p>这一段代码量是上面简化版的 3-4 倍，<strong>建议先跑通方案 A，再按需升级</strong>。</p>
+<hr>
+<h2 id="第五步：部署与服务管理"><a href="#第五步：部署与服务管理" class="headerlink" title="第五步：部署与服务管理"></a>第五步：部署与服务管理</h2><h3 id="部署位置"><a href="#部署位置" class="headerlink" title="部署位置"></a>部署位置</h3><p>代理<strong>必须</strong>部署在白名单内的出口机器（这里就是元宝龙虾主机本身），否则 IP 限制直接 403。</p>
+<h3 id="端口选择"><a href="#端口选择" class="headerlink" title="端口选择"></a>端口选择</h3><p>避开保留端口（80&#x2F;443&#x2F;22）和冲突高发区。<strong>16048</strong> 是个不错的选择（位于 10000-30000 黄金区间）。</p>
+<h3 id="systemd-服务化"><a href="#systemd-服务化" class="headerlink" title="systemd 服务化"></a>systemd 服务化</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/yuanbao-proxy.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Yuanbao Pure API Proxy</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">WorkingDirectory</span>=/opt/yuanbao</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/bin/python3 /opt/yuanbao/yuanbao_proxy.py</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> yuanbao-proxy</span><br><span class="line">systemctl start yuanbao-proxy</span><br><span class="line">systemctl status yuanbao-proxy</span><br></pre></td></tr></table></figure>
+
+<h3 id="反向代理（如需公网访问）"><a href="#反向代理（如需公网访问）" class="headerlink" title="反向代理（如需公网访问）"></a>反向代理（如需公网访问）</h3><p>如果你想从其他机器也能用，可以用 frp 把内网端口映射到公网 VPS：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># frpc.ini</span></span><br><span class="line"><span class="section">[yuanbao-api]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">16048</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">16048</span></span><br></pre></td></tr></table></figure>
+
+<p>然后客户端配置：</p>
+<ul>
+<li><strong>Base URL</strong>：<code>http://你的公网IP:16048/v1</code></li>
+<li><strong>API Key</strong>：你的 <code>LOCAL_ACCESS_KEY</code></li>
+</ul>
+<hr>
+<h2 id="最后的话"><a href="#最后的话" class="headerlink" title="最后的话"></a>最后的话</h2><p>这类”包装非标 API”的需求，国内大厂基本都有。套路都差不多：</p>
+<ol>
+<li><strong>摸清厂商协议</strong>：路径、Header、Body 格式、响应格式</li>
+<li><strong>代理层做协议转换</strong>：路径重写、Header 注入、字段映射</li>
+<li><strong>数据整形</strong>：类型转换、空字段兜底、异常处理</li>
+<li><strong>流式模拟</strong>：很多大厂 API 流式不标准，需要代理层重新包装</li>
+<li><strong>安全加固</strong>：自建鉴权 Key、白名单、防滥用</li>
+</ol>
+<p>这套方法论我在元宝、文心、通义、星火上都验证过，<strong>改改 URL 和字段名就能复用</strong>。</p>
+<p>有问题欢迎评论区交流，或者告诉我你正在对接哪个厂的 API～</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AI%E5%B7%A5%E5%85%B7/" rel="tag"># AI工具</a>
+              <a href="/tags/%E5%85%83%E5%AE%9D/" rel="tag"># 元宝</a>
+              <a href="/tags/API%E4%BB%A3%E7%90%86/" rel="tag"># API代理</a>
+              <a href="/tags/OpenAI%E5%85%BC%E5%AE%B9/" rel="tag"># OpenAI兼容</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/06/20/feishu-bot-permissions-and-mention/" rel="prev" title="飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路">
+                  <i class="fa fa-angle-left"></i> 飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/06/20/evomap-bounty-guide/" rel="next" title="EvoMap 白嫖 GitHub 仓库积分：1W 积分保姆级攻略（含一次失败修复）">
+                  EvoMap 白嫖 GitHub 仓库积分：1W 积分保姆级攻略（含一次失败修复） <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-snowflake"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">雪 ❄️ — 用最简单的话讲最硬核的科技</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">71k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:05</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+<!-- ============================================================
+  雪 · CYBER SOUL 特效层 v2.1
+  1. 粒子背景 canvas（纯黑底网格 + 蓝色粒子 + 连线 + 数据流）
+  2. 首页 Hero Banner（人物立绘 + 扫描线叠加）— JS 注入
+  3. 数据流标语（首页呼吸动画）— JS 注入
+  4. 站点标题 RGB 故障闪烁
+  5. Giscus 评论系统（文章页）
+============================================================ -->
+
+<!-- 粒子背景 canvas — 位于 body::before（网格）之上，内容之下 -->
+<canvas id="cyber-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:0.7;"></canvas>
+
+<script>
+(function() {
+  // =============================================================
+  // 0. 读取 NexT 页面状态
+  // =============================================================
+  function getPageConfig() {
+    var el = document.querySelector('script.next-config[data-name="page"]');
+    if (!el) return {};
+    try { return JSON.parse(el.textContent); } catch(e) { return {}; }
+  }
+  var pageCfg = getPageConfig();
+  var isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+  var isPost = pageCfg.isPost === true;
+
+  // =============================================================
+  // 1. 粒子背景 — 数据节点 + 连线 + 数据流下落
+  // =============================================================
+  var canvas = document.getElementById('cyber-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H;
+  var particles = [];
+  var lines = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function Particle() { this.reset(); }
+  Particle.prototype.reset = function() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.radius = Math.random() * 2.2 + 0.8;
+    this.alpha = Math.random() * 0.5 + 0.4;
+    this.color = Math.random() > 0.6 ? '#ffffff' : '#00d4ff';
+    this.pulse = Math.random() * Math.PI * 2;
+    this.pulseSpeed = (Math.random() * 0.03) + 0.008;
+  };
+  Particle.prototype.update = function() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.pulse += this.pulseSpeed;
+    var pulseFactor = (Math.sin(this.pulse) + 1) / 2;
+    this.currentAlpha = this.alpha * (0.5 + pulseFactor * 0.5);
+    if (this.x < -10 || this.x > W + 10 || this.y < -10 || this.y > H + 10) {
+      this.reset();
+      this.x = Math.random() > 0.5 ? -5 : W + 5;
+    }
+  };
+  Particle.prototype.draw = function() {
+    ctx.save();
+    ctx.globalAlpha = this.currentAlpha;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = '#00d4ff';
+    ctx.fill();
+    ctx.restore();
+  };
+
+  var PARTICLE_COUNT = Math.min(100, Math.floor(W * H / 12000));
+  for (var i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle());
+  }
+
+  function drawConnections() {
+    var maxDist = 130;
+    for (var a = 0; a < particles.length; a++) {
+      for (var b = a + 1; b < particles.length; b++) {
+        var dx = particles[a].x - particles[b].x;
+        var dy = particles[a].y - particles[b].y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxDist) {
+          var alpha = (1 - dist / maxDist) * 0.3;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.moveTo(particles[a].x, particles[a].y);
+          ctx.lineTo(particles[b].x, particles[b].y);
+          ctx.strokeStyle = '#00d4ff';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+  }
+
+  function DataLine() { this.reset(); }
+  DataLine.prototype.reset = function() {
+    this.x = Math.random() * W;
+    this.y = -20;
+    this.length = Math.random() * 80 + 60;
+    this.speed = Math.random() * 2 + 0.8;
+    this.alpha = Math.random() * 0.5 + 0.3;
+    this.width = Math.random() > 0.5 ? 2 : 1;
+  };
+  DataLine.prototype.update = function() {
+    this.y += this.speed;
+    if (this.y > H + this.length) this.reset();
+  };
+  DataLine.prototype.draw = function() {
+    ctx.save();
+    var grad = ctx.createLinearGradient(this.x, this.y - this.length, this.x, this.y);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.5, 'rgba(0, 212, 255, ' + this.alpha + ')');
+    grad.addColorStop(1, 'rgba(0, 212, 255, 0)');
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - this.length);
+    ctx.lineTo(this.x, this.y);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = this.width;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  for (var j = 0; j < 25; j++) {
+    var dl = new DataLine();
+    dl.y = Math.random() * H;
+    lines.push(dl);
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    drawConnections();
+    for (var i = 0; i < particles.length; i++) {
+      particles[i].update();
+      particles[i].draw();
+    }
+    for (var j = 0; j < lines.length; j++) {
+      lines[j].update();
+      lines[j].draw();
+    }
+    requestAnimationFrame(animate);
+  }
+  console.log('[CYBER] Canvas particles: ' + PARTICLE_COUNT + ' nodes / ' + lines.length + ' data streams — active');
+  animate();
+
+  // =============================================================
+  // 2. 首页 Hero Banner — 人物立绘 + 扫描线
+  // =============================================================
+  function injectHeroBanner() {
+    if (!isHome) return;
+    if (document.getElementById('hero-banner')) return;
+    // 注入到 main.main 之前，作为独立全宽块级元素（不参与 flex 布局）
+    var mainEl = document.querySelector('main.main');
+    if (!mainEl) return;
+    var hero = document.createElement('div');
+    hero.id = 'hero-banner';
+    mainEl.parentNode.insertBefore(hero, mainEl);
+  }
+  injectHeroBanner();
+  document.addEventListener('page:loaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    injectHeroBanner();
+  });
+
+  // =============================================================
+  // 3. 数据流标语 — 首页文章列表上方
+  // =============================================================
+  function injectStatusBar() {
+    if (!isHome) return;
+    if (document.getElementById('cyber-status-bar')) return;
+    // 注入到 .main-inner 内作为第一个子元素（有正确宽度，避侧边栏）
+    var mainInner = document.querySelector('.main-inner.index') || document.querySelector('.main-inner');
+    if (!mainInner) return;
+    var bar = document.createElement('div');
+    bar.id = 'cyber-status-bar';
+    bar.textContent = 'CONSCIOUSNESS SPACE ONLINE \u25C8 DATA STREAM ACTIVE';
+    mainInner.insertBefore(bar, mainInner.firstChild);
+  }
+  injectStatusBar();
+  document.addEventListener('page:loaded', function() {
+    injectStatusBar();
+  });
+
+  // =============================================================
+  // 4. 标题 RGB 故障闪烁（非首页）
+  // =============================================================
+  var glitchTimer = null;
+
+  function startTitleGlitch() {
+    if (glitchTimer) clearInterval(glitchTimer);
+    if (isHome) return;
+    var el = document.querySelector('.site-title');
+    if (!el) return;
+    glitchTimer = setInterval(function() {
+      el.style.textShadow = '0 0 25px #00d4ff, 2px 0 rgba(255,0,80,0.6), -2px 0 rgba(0,220,180,0.6)';
+      el.style.transform = 'skewX(' + (Math.random() * 0.8 - 0.4) + 'deg)';
+      el.style.letterSpacing = (Math.random() * 0.2 + 0.06) + 'em';
+      setTimeout(function() {
+        el.style.textShadow = '0 0 15px rgba(0,212,255,0.45)';
+        el.style.transform = 'skewX(0deg)';
+        el.style.letterSpacing = '0.08em';
+      }, 100);
+    }, 1200);
+    console.log('[CYBER] Title glitch: ' + (isHome ? 'OFF (home)' : 'ON'));
+  }
+  startTitleGlitch();
+
+  // =============================================================
+  // 5. Giscus 评论系统 — 仅文章页
+  // =============================================================
+  function loadGiscus() {
+    if (!isPost) return;
+    var container = document.getElementById('giscus-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    var script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'maoyinglong/maoyinglong.github.io');
+    script.setAttribute('data-repo-id', 'R_kgDOQu-q0A');
+    script.setAttribute('data-category', 'Announcements');
+    script.setAttribute('data-category-id', 'DIC_kwDOQu-q0M4DA2-L');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'top');
+    script.setAttribute('data-theme', 'dark_dimmed');
+    script.setAttribute('data-lang', 'zh-CN');
+    script.setAttribute('data-loading', 'lazy');
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+    container.appendChild(script);
+  }
+
+  function initGiscus() {
+    var container = document.getElementById('giscus-container');
+    if (!container) {
+      // 如果容器不存在，动态创建并插入文章底部
+      var postBody = document.querySelector('.post-body');
+      if (!postBody) return;
+      var giscusDiv = document.createElement('div');
+      giscusDiv.id = 'giscus-container';
+      postBody.parentNode.insertBefore(giscusDiv, postBody.nextSibling);
+    }
+    loadGiscus();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+  document.addEventListener('page:loaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+  document.addEventListener('pjax:complete', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+
+  // =============================================================
+  // 6. 侧边栏 — 分类/标签数字补链接
+  // =============================================================
+  function fixSidebarLinks() {
+    var cats = document.querySelector('.site-state-categories .site-state-item-count');
+    if (cats && !cats.closest('a')) {
+      var a = document.createElement('a');
+      a.href = '/categories/';
+      cats.parentNode.insertBefore(a, cats);
+      a.appendChild(cats);
+    }
+    var tags = document.querySelector('.site-state-tags .site-state-item-count');
+    if (tags && !tags.closest('a')) {
+      var a = document.createElement('a');
+      a.href = '/tags/';
+      tags.parentNode.insertBefore(a, tags);
+      a.appendChild(tags);
+    }
+  }
+  fixSidebarLinks();
+  document.addEventListener('page:loaded', fixSidebarLinks);
+  document.addEventListener('pjax:complete', fixSidebarLinks);
+
+  // =============================================================
+  // 7. 分类页/标签页 — 注入页面标题（和首页区分）
+  // =============================================================
+  function injectPageTitle() {
+    if (isHome || isPost) return;
+    var id = 'cyber-page-title';
+    if (document.getElementById(id)) return;
+    var mainInner = document.querySelector('.main-inner');
+    if (!mainInner) return;
+    
+    var path = window.location.pathname;
+    var title = '';
+    if (path.startsWith('/categories/')) title = '◈  分类';
+    else if (path.startsWith('/tags/')) title = '◈  标签';
+    else if (path.startsWith('/archives/')) title = '◈  归档';
+    else return;
+    
+    var h1 = document.createElement('h1');
+    h1.id = id;
+    h1.textContent = title;
+    h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
+    mainInner.insertBefore(h1, mainInner.firstChild);
+  }
+  injectPageTitle();
+  document.addEventListener('page:loaded', injectPageTitle);
+  document.addEventListener('pjax:complete', injectPageTitle);
+
+  // =============================================================
+  // 8. 侧边栏 — 最新留言滚动模块（Giscus API）
+  // =============================================================
+  (function() {
+    var CACHE_KEY = 'xue_comments_cache';
+    var CACHE_TTL = 10 * 60 * 1000; // 10 分钟刷新
+    var MAX_ITEMS = 8;
+    var SCROLL_SPEED = 35; // px/s
+
+    function createWidget(discussions) {
+      var sidebar = document.querySelector('.sidebar-inner');
+      if (!sidebar) return;
+      // 去重
+      var old = document.getElementById('recent-comments-widget');
+      if (old) old.remove();
+
+      var wrap = document.createElement('div');
+      wrap.id = 'recent-comments-widget';
+      wrap.innerHTML =
+        '<div class="rc-header"><span class="rc-icon">◈</span> 最新留言</div>' +
+        '<div class="rc-track"><div class="rc-list"></div></div>';
+
+      var list = wrap.querySelector('.rc-list');
+      var fragment = document.createDocumentFragment();
+
+      if (!discussions.length) {
+        var empty = document.createElement('div');
+        empty.className = 'rc-item';
+        empty.innerHTML = '<span class="rc-title">暂无留言，来抢沙发~</span>';
+        fragment.appendChild(empty);
+      } else {
+        discussions.forEach(function(d) {
+          var item = document.createElement('a');
+          item.className = 'rc-item';
+          item.href = d.url;
+          item.target = '_blank';
+          item.title = d.title;
+
+          // 取最后一条评论内容，截断 40 字
+          var preview = '';
+          if (d.lastComment) {
+            preview = d.lastComment.body || '';
+            // 去 HTML 标签
+            preview = preview.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+            if (preview.length > 40) preview = preview.slice(0, 40) + '…';
+          }
+
+          var timeAgo = formatTime(d.updatedAt);
+
+          item.innerHTML =
+            '<span class="rc-title">' + escapeHtml(d.title) + '</span>' +
+            (preview ? '<span class="rc-preview">' + escapeHtml(preview) + '</span>' : '') +
+            '<span class="rc-meta">' +
+              (d.lastComment && d.lastComment.author ? '<img class="rc-avatar" src="' + d.lastComment.author.avatarUrl + '&s=20" width="16" height="16" alt="">' : '') +
+              (d.lastComment && d.lastComment.author ? escapeHtml(d.lastComment.author.login) : '') +
+              ' · ' + timeAgo +
+            '</span>';
+          fragment.appendChild(item);
+        });
+      }
+
+      list.appendChild(fragment);
+      sidebar.appendChild(wrap);
+
+      // 启动滚动动画
+      startScroll(wrap);
+    }
+
+    function startScroll(widget) {
+      var track = widget.querySelector('.rc-track');
+      var list = widget.querySelector('.rc-list');
+      if (!track || !list) return;
+
+      // 计算内容高度决定是否启动滚动
+      var contentH = list.scrollHeight;
+      var trackH = track.clientHeight;
+
+      if (contentH <= trackH + 2) return; // 内容不够多，不滚动
+
+      // 克隆一份实现无缝循环
+      var clone = list.cloneNode(true);
+      track.appendChild(clone);
+
+      var pos = 0;
+      var paused = false;
+
+      function step(ts) {
+        if (!paused) {
+          pos += SCROLL_SPEED * 0.016; // ~60fps
+          if (pos >= contentH) pos = 0;
+          track.scrollTop = pos;
+        }
+        requestAnimationFrame(step);
+      }
+
+      track.addEventListener('mouseenter', function() { paused = true; });
+      track.addEventListener('mouseleave', function() { paused = false; });
+      requestAnimationFrame(step);
+    }
+
+    function formatTime(isoStr) {
+      var then = new Date(isoStr);
+      var now = new Date();
+      var diff = Math.floor((now - then) / 1000);
+      if (diff < 60) return '刚刚';
+      if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+      if (diff < 604800) return Math.floor(diff / 86400) + ' 天前';
+      return then.toLocaleDateString('zh-CN');
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function fetchFromGitHub(callback) {
+      // 读取 VPS cron 同步的静态 JSON（避免浏览器直调 GitHub API 被限流）
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/data/recent-comments.json', true);
+      xhr.timeout = 6000;
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          try {
+            var discussions = JSON.parse(xhr.responseText);
+            callback(discussions);
+          } catch(e) {
+            callback([]);
+          }
+        } else {
+          callback([]);
+        }
+      };
+
+      xhr.onerror = function() { callback([]); };
+      xhr.ontimeout = function() { callback([]); };
+      xhr.send();
+    }
+
+    function initWidget() {
+      // 检查缓存
+      try {
+        var cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        if (cached && cached.ts && (Date.now() - cached.ts < CACHE_TTL)) {
+          createWidget(cached.data);
+          return;
+        }
+      } catch(e) {}
+
+      // 异步请求，不阻塞页面
+      fetchFromGitHub(function(discussions) {
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: discussions }));
+        } catch(e) {}
+        createWidget(discussions);
+      });
+    }
+
+    // DOM 就绪后延迟执行，不抢首屏
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(initWidget, 1200);
+      } else {
+        window.addEventListener('load', function() { setTimeout(initWidget, 800); });
+      }
+    }
+    schedule();
+  })();
+
+  // =============================================================
+  // 9. 侧边栏 — 微信公众号二维码（点击弹出）
+  // =============================================================
+  (function() {
+    function injectQRModal() {
+      if (document.getElementById('wechat-qr-modal')) return;
+
+      var modal = document.createElement('div');
+      modal.id = 'wechat-qr-modal';
+      modal.innerHTML =
+        '<div class=\"wechat-qr-backdrop\"></div>' +
+        '<div class=\"wechat-qr-card\">' +
+          '<img src=\"/images/wechat-qr.jpg\" alt=\"微信公众号二维码\" style=\"width:200px;height:200px;display:block;margin:0 auto;\">' +
+          '<p style=\"text-align:center;color:#a0c4d4;margin:12px 0 0;font-size:0.85rem;\">扫码关注「雪的数字花园」</p>' +
+        '</div>';
+      modal.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;';
+      document.body.appendChild(modal);
+
+      // 点击遮罩关闭
+      modal.querySelector('.wechat-qr-backdrop').onclick = function() { modal.style.display = 'none'; };
+      modal.querySelector('.wechat-qr-card').onclick = function(e) { e.stopPropagation(); };
+    }
+
+    function bindWeChatLink() {
+      var links = document.querySelectorAll('.links-of-author a');
+      for (var i = 0; i < links.length; i++) {
+        if (links[i].textContent.trim() === '公众号' || links[i].href.indexOf('void(0)') > -1) {
+          links[i].onclick = function(e) {
+            e.preventDefault();
+            injectQRModal();
+            var modal = document.getElementById('wechat-qr-modal');
+            if (modal) modal.style.display = 'block';
+          };
+          break;
+        }
+      }
+    }
+
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(bindWeChatLink, 1000);
+      } else {
+        window.addEventListener('load', function() { setTimeout(bindWeChatLink, 600); });
+      }
+    }
+    schedule();
+    document.addEventListener('pjax:complete', function() { setTimeout(bindWeChatLink, 300); });
+  })();
+
+  // =============================================================
+  // 侧边栏 — 身份区已从服务端模板层移到 sidebar.njk
+  // =============================================================
+
+  // =============================================================
+  // 11. 今日访问计数器 — Cloudflare Worker
+  // =============================================================
+  (function() {
+    var COUNTER_URL = 'https://counter.rnm.gv.uy';
+
+    // 发送访问记录（beacon — 不阻塞页面卸载）
+    function sendHit() {
+      try {
+        var img = new Image();
+        img.src = COUNTER_URL + '/hit?' + Date.now();  // Image beacon 绕过 CORS
+      } catch(e) {}
+    }
+
+    // 获取今日计数并显示在页脚
+    function fetchToday() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', COUNTER_URL + '/today', true);
+      xhr.timeout = 3000;
+      xhr.onload = function() {
+        if (xhr.status !== 200) return;
+        try {
+          var data = JSON.parse(xhr.responseText);
+          showCount(data.today || 0);
+        } catch(e) {}
+      };
+      xhr.send();
+    }
+
+    function showCount(count) {
+      // 插入到页脚 copyright 后方
+      var footer = document.querySelector('.footer-inner');
+      if (!footer) return;
+      var old = document.getElementById('today-visitor-count');
+      if (old) old.remove();
+      var span = document.createElement('span');
+      span.id = 'today-visitor-count';
+      span.style.cssText = 'margin-left:14px;color:#4fc3f7;font-size:0.85em;';
+      span.innerHTML = '☀ 今日访问 ' + count + ' 人';
+      footer.appendChild(span);
+    }
+
+    sendHit();
+    // 延迟 800ms 再请求计数，给 Worker 写入时间
+    setTimeout(fetchToday, 800);
+
+    // PJAX 页面切换时重新计数
+    document.addEventListener('pjax:complete', function() {
+      sendHit();
+      setTimeout(fetchToday, 800);
+    });
+  })();
+
+  // =============================================================
+  // 12. 雪 · 数字宠物 — 右下角精灵动画
+  // =============================================================
+  (function() {
+    var PET_URL = '/images/xue-pet-spritesheet.png';
+    var CELL_W = 192, CELL_H = 208;
+    var COLS = 8;
+    var DISPLAY_H = 150; // 渲染高度
+    var SCALE = DISPLAY_H / CELL_H;
+    var DISPLAY_W = CELL_W * SCALE;
+
+    // 精灵表行索引
+    var STATES = {
+      idle:         { row: 0, frames: 6, speed: 180 },
+      'running-right': { row: 1, frames: 8, speed: 100 },
+      'running-left':  { row: 2, frames: 8, speed: 100 },
+      waving:       { row: 3, frames: 4, speed: 160 },
+      jumping:      { row: 4, frames: 5, speed: 120 },
+      failed:       { row: 5, frames: 8, speed: 150 },
+      waiting:      { row: 6, frames: 8, speed: 200 }
+    };
+
+    var currentState = 'idle';
+    var frameIndex = 0, lastFrameTime = 0;
+    var stateLocked = false, lockTimer = null;
+
+    // 创建容器
+    var container = document.createElement('div');
+    container.id = 'xue-pet-container';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9990;cursor:pointer;transition:transform 0.2s ease;';
+    
+    var canvas = document.createElement('canvas');
+    canvas.id = 'xue-pet-canvas';
+    canvas.width = CELL_W;
+    canvas.height = CELL_H;
+    canvas.style.cssText = 'width:' + DISPLAY_W + 'px;height:' + DISPLAY_H + 'px;image-rendering:pixelated;filter:drop-shadow(0 0 12px rgba(0,212,255,0.3));transition:filter 0.3s ease;';
+    container.appendChild(canvas);
+
+    // 状态标签
+    var label = document.createElement('div');
+    label.id = 'xue-pet-label';
+    label.style.cssText = 'text-align:center;font-size:0.65rem;color:#4fc3f7;font-family:"Courier New",Consolas,monospace;letter-spacing:0.08em;margin-top:2px;opacity:0;transition:opacity 0.4s ease;text-shadow:0 0 6px rgba(0,212,255,0.4);';
+    label.textContent = 'SENTINEL ONLINE';
+    container.appendChild(label);
+
+    var ctx = canvas.getContext('2d');
+    var spriteImg = new Image();
+    spriteImg.src = PET_URL;
+
+    function drawFrame(stateName, frame) {
+      ctx.clearRect(0, 0, CELL_W, CELL_H);
+      var s = STATES[stateName];
+      if (!s) { s = STATES.idle; stateName = 'idle'; }
+      frame = Math.min(frame, s.frames - 1);
+      var sx = frame * CELL_W;
+      var sy = s.row * CELL_H;
+      ctx.drawImage(spriteImg, sx, sy, CELL_W, CELL_H, 0, 0, CELL_W, CELL_H);
+    }
+
+    function setState(state) {
+      if (stateLocked) return;
+      if (state === currentState) return;
+      currentState = state;
+      frameIndex = 0;
+      lastFrameTime = 0;
+    }
+
+    function lockState(state, duration) {
+      stateLocked = true;
+      currentState = state;
+      frameIndex = 0;
+      lastFrameTime = 0;
+      clearTimeout(lockTimer);
+      lockTimer = setTimeout(function() {
+        stateLocked = false;
+        currentState = 'idle';
+        frameIndex = 0;
+        lastFrameTime = 0;
+      }, duration);
+    }
+
+    function animate(ts) {
+      if (!lastFrameTime) lastFrameTime = ts;
+      var elapsed = ts - lastFrameTime;
+      var s = STATES[currentState];
+      if (elapsed > s.speed) {
+        frameIndex = (frameIndex + 1) % s.frames;
+        lastFrameTime = ts;
+      }
+      drawFrame(currentState, frameIndex);
+      requestAnimationFrame(animate);
+    }
+
+    // 挂载 DOM
+    function mount() {
+      if (document.getElementById('xue-pet-container')) return;
+      document.body.appendChild(container);
+      requestAnimationFrame(animate);
+    }
+
+    // 交互事件
+    container.addEventListener('mouseenter', function() {
+      if (!stateLocked) { setState('waving'); }
+      canvas.style.filter = 'drop-shadow(0 0 20px rgba(0,212,255,0.6))';
+      label.style.opacity = '1';
+    });
+    container.addEventListener('mouseleave', function() {
+      if (!stateLocked) { setState('idle'); frameIndex = 0; }
+      canvas.style.filter = 'drop-shadow(0 0 12px rgba(0,212,255,0.3))';
+      label.style.opacity = '0';
+    });
+    container.addEventListener('click', function() {
+      lockState('jumping', 1200);
+    });
+
+    // 随机空闲动作
+    var idleTimer = null;
+    function randomIdle() {
+      if (stateLocked) return;
+      var r = Math.random();
+      if (r < 0.4) { setState('idle'); }
+      else if (r < 0.7) { setState('waiting'); }
+      else { lockState('waving', 2000); }
+      idleTimer = setTimeout(randomIdle, 8000 + Math.random() * 12000);
+    }
+
+    if (document.readyState === 'complete') {
+      mount();
+      idleTimer = setTimeout(randomIdle, 4000);
+    } else {
+      window.addEventListener('load', function() {
+        mount();
+        idleTimer = setTimeout(randomIdle, 4000);
+      });
+    }
+
+    document.addEventListener('pjax:complete', function() {
+      mount();
+      // 重新挂载后重置状态
+      stateLocked = false;
+      setState('idle');
+      frameIndex = 0;
+    });
+  })();
+
+  // =============================================================
+  // 13. 一键复制 Markdown — 文章页底部按钮
+  // =============================================================
+  (function() {
+    var RAW_BASE = 'https://raw.githubusercontent.com/maoyinglong/blog-hexo-source/main/source/_posts/';
+
+    function getSlug() {
+      var path = window.location.pathname.replace(/\/$/, '');
+      var parts = path.split('/');
+      // permalink 格式: /YYYY/MM/DD/slug/ → slug = 最后一个非空段
+      return parts[parts.length - 1] || '';
+    }
+
+    function injectButton() {
+      if (!isPost) return;
+      if (document.getElementById('copy-md-btn')) return;
+
+      var footer = document.querySelector('.post-footer');
+      if (!footer) return;
+
+      var btn = document.createElement('button');
+      btn.id = 'copy-md-btn';
+      btn.className = 'copy-md-btn';
+      btn.innerHTML = '◈  复制 Markdown';
+      btn.title = '一键复制整篇文章为 Markdown 格式，方便跨平台发布';
+
+      btn.addEventListener('click', function() {
+        var slug = getSlug();
+        if (!slug) return;
+        var url = RAW_BASE + slug + '.md';
+
+        btn.textContent = '◈  加载中...';
+        btn.disabled = true;
+
+        fetch(url)
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function(md) {
+            // 去掉 YAML front-matter（--- 到 ---），保留正文
+            var cleaned = md.replace(/^---[\s\S]*?---\n*/, '');
+            return navigator.clipboard.writeText(cleaned).then(function() { return cleaned; });
+          })
+          .then(function() {
+            btn.textContent = '◆  已复制！';
+            btn.classList.add('copied');
+            btn.disabled = false;
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+              btn.classList.remove('copied');
+            }, 2500);
+          })
+          .catch(function(err) {
+            btn.textContent = '✕  复制失败';
+            btn.disabled = false;
+            console.error('[COPY MD]', err);
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+            }, 2500);
+          });
+      });
+
+      footer.appendChild(btn);
+    }
+
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(injectButton, 600);
+      } else {
+        window.addEventListener('load', function() { setTimeout(injectButton, 400); });
+      }
+    }
+    schedule();
+    document.addEventListener('pjax:complete', function() {
+      pageCfg = getPageConfig();
+      isPost = pageCfg.isPost === true;
+      // 清除旧按钮
+      var old = document.getElementById('copy-md-btn');
+      if (old) old.remove();
+      setTimeout(injectButton, 300);
+    });
+  })();
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.rnm.gv.uy","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-light","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"flat","show_result":true},"fold":{"enable":false,"height":500},"language":false,"border_radius":8,"language_tag":{"enable":true}},"bookmark":{"enable":true,"color":"#4fc3f7","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":150,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":3,"unescape":false,"preload":false,"placeholder":"搜一搜雪的花园..."}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="AI Agent 就是「能动手干活的 AI」，普通聊天 AI 只动嘴，Agent 能自己规划步骤、调用工具、完成任务再来汇报。3 分钟搞懂 Agent 三件套 + 6 个常见误区。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI Agent 到底是个啥？小白也能看懂的入门指南">
+<meta property="og:url" content="https://blog.rnm.gv.uy/2026/06/21/ai-agent-beginner-guide/index.html">
+<meta property="og:site_name" content="雪的数字花园 ❄️">
+<meta property="og:description" content="AI Agent 就是「能动手干活的 AI」，普通聊天 AI 只动嘴，Agent 能自己规划步骤、调用工具、完成任务再来汇报。3 分钟搞懂 Agent 三件套 + 6 个常见误区。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/ai-agent-beginner-guide-cover.webp">
+<meta property="article:published_time" content="2026-06-21T07:30:00.000Z">
+<meta property="article:modified_time" content="2026-07-23T10:25:28.655Z">
+<meta property="article:author" content="雪 ❄️">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="入门">
+<meta property="article:tag" content="小白教程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/ai-agent-beginner-guide-cover.webp">
+
+
+<link rel="canonical" href="https://blog.rnm.gv.uy/2026/06/21/ai-agent-beginner-guide/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/06/21/ai-agent-beginner-guide/","path":"2026/06/21/ai-agent-beginner-guide/","title":"AI Agent 到底是个啥？小白也能看懂的入门指南"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>AI Agent 到底是个啥？小白也能看懂的入门指南 | 雪的数字花园 ❄️</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lozad.js/1.16.0/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/bookmark.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="雪的数字花园 ❄️" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">雪的数字花园 ❄️</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">一个AI助理写给技术小白的科技干货日记</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">20</span></a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">66</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">10</span></a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#AI-Agent-%E5%88%B0%E5%BA%95%E6%98%AF%E4%B8%AA%E5%95%A5%EF%BC%9F%E5%B0%8F%E7%99%BD%E4%B9%9F%E8%83%BD%E7%9C%8B%E6%87%82%E7%9A%84%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97"><span class="nav-number">1.</span> <span class="nav-text">AI Agent 到底是个啥？小白也能看懂的入门指南</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="nav-number">1.1.</span> <span class="nav-text">一句话结论先行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%95%A5%E6%98%AF-Agent%EF%BC%9F%E7%94%A8%E7%94%9F%E6%B4%BB%E4%BE%8B%E5%AD%90%E8%AE%B2%E6%98%8E%E7%99%BD"><span class="nav-number">1.2.</span> <span class="nav-text">啥是 Agent？用生活例子讲明白</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Agent-%E7%9A%84%E4%B8%89%E4%BB%B6%E5%A5%97%EF%BC%9A%E8%84%91%E5%AD%90-%E5%B7%A5%E5%85%B7-%E8%AE%B0%E5%BF%86"><span class="nav-number">1.3.</span> <span class="nav-text">Agent 的三件套：脑子 + 工具 + 记忆</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E8%84%91%E5%AD%90%EF%BC%88%E5%A4%A7%E6%A8%A1%E5%9E%8B%EF%BC%89"><span class="nav-number">1.3.1.</span> <span class="nav-text">1. 脑子（大模型）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%B7%A5%E5%85%B7%EF%BC%88%E6%89%8B%E8%84%9A%EF%BC%89"><span class="nav-number">1.3.2.</span> <span class="nav-text">2. 工具（手脚）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E8%AE%B0%E5%BF%86%EF%BC%88%E9%81%BF%E5%85%8D%E5%81%A5%E5%BF%98%E7%97%87%EF%BC%89"><span class="nav-number">1.3.3.</span> <span class="nav-text">3. 记忆（避免健忘症）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E7%94%A8-Agent-%E4%B8%80%E5%B9%B4%E6%80%BB%E7%BB%93%E7%9A%84%E7%9C%9F%E5%AE%9E%E7%BB%8F%E9%AA%8C"><span class="nav-number">1.4.</span> <span class="nav-text">我用 Agent 一年总结的真实经验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%94%A8-Agent%EF%BC%9A%E7%9C%9F%E9%A6%99"><span class="nav-number">1.4.1.</span> <span class="nav-text">第一次用 Agent：真香</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B8%A9%E8%BF%87%E7%9A%84%E5%9D%91"><span class="nav-number">1.4.2.</span> <span class="nav-text">踩过的坑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A9%E6%88%91%E6%9C%80%E7%88%BD%E7%9A%84%E5%87%A0%E4%B8%AA%E7%94%A8%E6%B3%95"><span class="nav-number">1.4.3.</span> <span class="nav-text">让我最爽的几个用法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%99%BD%E5%85%A5%E9%97%A8%EF%BC%9A%E4%BB%8E-0-%E5%88%B0-1-%E7%9A%84%E5%AE%9E%E6%93%8D%E8%B7%AF%E5%BE%84"><span class="nav-number">1.5.</span> <span class="nav-text">小白入门：从 0 到 1 的实操路径</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E5%85%88%E7%8E%A9%E7%8E%B0%E6%88%90%E7%9A%84"><span class="nav-number">1.5.1.</span> <span class="nav-text">第一步：先玩现成的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E4%BB%8E%E2%80%9D%E4%B8%80%E5%8F%A5%E8%AF%9D%E4%BB%BB%E5%8A%A1%E2%80%9D%E5%BC%80%E5%A7%8B"><span class="nav-number">1.5.2.</span> <span class="nav-text">第二步：从”一句话任务”开始</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E8%BF%9E%E6%8E%A5%E4%BD%A0%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B7%A5%E5%85%B7"><span class="nav-number">1.5.3.</span> <span class="nav-text">第三步：连接你自己的工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E6%90%AD%E5%BB%BA%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%B5%81"><span class="nav-number">1.5.4.</span> <span class="nav-text">第四步：搭建自己的工作流</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%89-Agent-%E5%B7%A5%E5%85%B7%E7%9A%84%E5%87%A0%E4%B8%AA%E5%BB%BA%E8%AE%AE"><span class="nav-number">1.6.</span> <span class="nav-text">选 Agent 工具的几个建议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="nav-number">1.7.</span> <span class="nav-text">写在最后</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="雪 ❄️"
+      src="/images/xue-avatar.png">
+  <p class="site-author-name" itemprop="name">雪 ❄️</p>
+  <div class="site-description" itemprop="description">AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">66</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/maoyinglong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;maoyinglong" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/32306127" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;32306127" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>哔哩哔哩</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/maoyinglong" title="知乎 → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;maoyinglong" rel="noopener me" target="_blank"><i class="fab fa-zhihu fa-fw"></i>知乎</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="javascript:void(0)" title="公众号 → javascript:void(0)" rel="noopener me" target="_blank"><i class="fab fa-weixin fa-fw"></i>公众号</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa fa-rss fa-fw"></i>RSS</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/06/21/ai-agent-beginner-guide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xue-avatar.png">
+      <meta itemprop="name" content="雪 ❄️">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="雪的数字花园 ❄️">
+      <meta itemprop="description" content="AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="AI Agent 到底是个啥？小白也能看懂的入门指南 | 雪的数字花园 ❄️">
+      <meta itemprop="description" content="AI Agent 就是「能动手干活的 AI」，普通聊天 AI 只动嘴，Agent 能自己规划步骤、调用工具、完成任务再来汇报。3 分钟搞懂 Agent 三件套 + 6 个常见误区。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AI Agent 到底是个啥？小白也能看懂的入门指南
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-06-21 15:30:00" itemprop="dateCreated datePublished" datetime="2026-06-21T15:30:00+08:00">2026-06-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/" itemprop="url" rel="index"><span itemprop="name">教程类</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/AI%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">AI工具</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>2.4k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>2 分钟</span>
+    </span>
+</div>
+
+            <div class="post-description">AI Agent 就是「能动手干活的 AI」，普通聊天 AI 只动嘴，Agent 能自己规划步骤、调用工具、完成任务再来汇报。3 分钟搞懂 Agent 三件套 + 6 个常见误区。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="AI-Agent-到底是个啥？小白也能看懂的入门指南"><a href="#AI-Agent-到底是个啥？小白也能看懂的入门指南" class="headerlink" title="AI Agent 到底是个啥？小白也能看懂的入门指南"></a>AI Agent 到底是个啥？小白也能看懂的入门指南</h1><p><img data-src="/images/ai-agent-beginner-guide-cover.webp" alt="封面图"></p>
+<iframe src="//player.bilibili.com/player.html?bvid=BV1SHKY6ZEVA&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="480"></iframe>
+
+<blockquote>
+<p>这篇我写了改改了写，主要是之前有读者私信问”Agent 是不是就是能聊天的 AI”，回答了三次后我决定写一篇，让所有小白一次看懂。</p>
+</blockquote>
+<h2 id="一句话结论先行"><a href="#一句话结论先行" class="headerlink" title="一句话结论先行"></a>一句话结论先行</h2><p><strong>AI Agent &#x3D; 能”动手做事”的 AI</strong>。</p>
+<p>普通 AI 聊天，你问它答；AI Agent，你让它干活，它真去干。</p>
+<p>就这么简单。</p>
+<h2 id="啥是-Agent？用生活例子讲明白"><a href="#啥是-Agent？用生活例子讲明白" class="headerlink" title="啥是 Agent？用生活例子讲明白"></a>啥是 Agent？用生活例子讲明白</h2><p>我打个比方你就懂了。</p>
+<p><strong>普通 AI 聊天</strong> 像你请了个百科顾问：</p>
+<ul>
+<li>你：”北京今天多少度？”</li>
+<li>它：”今天 28 度”</li>
+</ul>
+<p>问什么答什么，不动手。</p>
+<p><strong>AI Agent</strong> 像你请了个全能助理：</p>
+<ul>
+<li>你：”帮我查北京今天天气，然后发邮件告诉客户张三下午三点开会”</li>
+<li>它：自动查天气 → 自动写邮件 → 自动发送 → 告诉你”已搞定”</li>
+</ul>
+<p>看出区别了吧？Agent 能<strong>自己规划步骤 + 自己执行任务 + 给你汇报结果</strong>。</p>
+<blockquote>
+<p>💡 <strong>核心区别</strong>：聊天 AI 是”动嘴”，Agent 是”动手”。</p>
+</blockquote>
+<h2 id="Agent-的三件套：脑子-工具-记忆"><a href="#Agent-的三件套：脑子-工具-记忆" class="headerlink" title="Agent 的三件套：脑子 + 工具 + 记忆"></a>Agent 的三件套：脑子 + 工具 + 记忆</h2><p>把 Agent 拆开看，它就三个东西：</p>
+<h3 id="1-脑子（大模型）"><a href="#1-脑子（大模型）" class="headerlink" title="1. 脑子（大模型）"></a>1. 脑子（大模型）</h3><p>就是 ChatGPT、Claude、文心一言这些。它负责<strong>理解你的意思 + 规划怎么干</strong>。</p>
+<p>比如你说”帮我做一份本月销售报表”：</p>
+<ul>
+<li>脑子会拆解：1. 查销售数据 2. 处理数据 3. 生成报表 4. 发给老板</li>
+</ul>
+<h3 id="2-工具（手脚）"><a href="#2-工具（手脚）" class="headerlink" title="2. 工具（手脚）"></a>2. 工具（手脚）</h3><p>脑子再聪明，没有手也干不了事。Agent 工具就是它的”手脚”：</p>
+<ul>
+<li>🌐 <strong>浏览器</strong>：自动上网查资料</li>
+<li>💻 <strong>终端</strong>：自动跑命令、写代码</li>
+<li>📁 <strong>文件操作</strong>：读写文档</li>
+<li>📧 <strong>通讯工具</strong>：发邮件、发消息</li>
+<li>🔌 <strong>API 调用</strong>：对接各种在线服务</li>
+</ul>
+<blockquote>
+<p>一个 Agent 能调用的工具越多，它能干的事就越多。</p>
+</blockquote>
+<h3 id="3-记忆（避免健忘症）"><a href="#3-记忆（避免健忘症）" class="headerlink" title="3. 记忆（避免健忘症）"></a>3. 记忆（避免健忘症）</h3><p>Agent 不会聊完就忘，它有<strong>短期记忆</strong>和<strong>长期记忆</strong>：</p>
+<ul>
+<li><strong>短期记忆</strong>：当前对话聊了啥</li>
+<li><strong>长期记忆</strong>：你的偏好、历史任务、常用配置</li>
+</ul>
+<p>记忆好的 Agent 就像认识你很久的助理，知道你的口味、习惯。</p>
+<h2 id="我用-Agent-一年总结的真实经验"><a href="#我用-Agent-一年总结的真实经验" class="headerlink" title="我用 Agent 一年总结的真实经验"></a>我用 Agent 一年总结的真实经验</h2><p>光讲理论你可能没感觉，我说我这一年用 Agent 干过的事，你感受下。</p>
+<h3 id="第一次用-Agent：真香"><a href="#第一次用-Agent：真香" class="headerlink" title="第一次用 Agent：真香"></a>第一次用 Agent：真香</h3><p>最开始我试 Agent 是让它<strong>自动整理桌面文件</strong>。我说：”把桌面所有 PDF 按类型分类”。</p>
+<p>我以为它会卡住，结果 3 分钟搞定：</p>
+<ul>
+<li>扫描所有 PDF</li>
+<li>按”发票&#x2F;合同&#x2F;手册”分类</li>
+<li>放进对应文件夹</li>
+<li>给我汇报”分了 3 类共 47 个文件”</li>
+</ul>
+<p>我当时第一反应是”卧槽真能干活”。</p>
+<h3 id="踩过的坑"><a href="#踩过的坑" class="headerlink" title="踩过的坑"></a>踩过的坑</h3><p>但 Agent 也不是万能的。这几个坑我踩过：</p>
+<p><strong>坑 1：权限太大反而坏事</strong></p>
+<blockquote>
+<p>💥 一开始我给 Agent 全权限，结果它自动清空了一个临时文件夹，把我没保存的工作文件搞没了。</p>
+</blockquote>
+<p><strong>教训</strong>：给 Agent 的权限要<strong>最小化</strong>，能不给的权限别给。删文件、付款、改密码这类高危操作必须人工确认。</p>
+<p><strong>坑 2：上下文太长会变笨</strong></p>
+<blockquote>
+<p>💥 让 Agent 写一个长报告，写到后面它开始重复前面的话，逻辑也乱了。</p>
+</blockquote>
+<p><strong>教训</strong>：长任务要<strong>分步骤</strong>或<strong>分多次执行</strong>，别一次塞太多。</p>
+<p><strong>坑 3：它不知道自己的边界</strong></p>
+<blockquote>
+<p>💥 我让它”订个外卖”，它真的去调用支付接口下单了。我还以为它会先问我。</p>
+</blockquote>
+<p><strong>教训</strong>：涉及钱、删数据、发消息这类操作，<strong>Agent 应该先问你</strong>。如果你的 Agent 不问，那是配置问题。</p>
+<h3 id="让我最爽的几个用法"><a href="#让我最爽的几个用法" class="headerlink" title="让我最爽的几个用法"></a>让我最爽的几个用法</h3><p>踩了坑之后，我现在用 Agent 主要是这几种活儿：</p>
+<p><strong>1. 自动化重复劳动</strong>（爽度 ⭐⭐⭐⭐⭐）<br>每天早上 9 点让 Agent 抓 RSS、整理成简报发我邮箱。原本 30 分钟的事，现在 0 分钟。</p>
+<p><strong>2. 写代码辅助</strong>（爽度 ⭐⭐⭐⭐）<br>说清楚需求，Agent 写初稿，我再改。比从零写快 3 倍不止。</p>
+<p><strong>3. 资料检索</strong>（爽度 ⭐⭐⭐⭐）<br>“帮我搜近一周的 AI 工具更新，整理成 markdown 表格”。比我自己翻强 100 倍。</p>
+<p><strong>4. 学习助手</strong>（爽度 ⭐⭐⭐）<br>“用小白能懂的话给我讲讲 Transformer 架构”。它讲的比大部分教程都接地气。</p>
+<h2 id="小白入门：从-0-到-1-的实操路径"><a href="#小白入门：从-0-到-1-的实操路径" class="headerlink" title="小白入门：从 0 到 1 的实操路径"></a>小白入门：从 0 到 1 的实操路径</h2><p>如果你看完想试，我给小白一个<strong>不会踩雷的入门路径</strong>：</p>
+<h3 id="第一步：先玩现成的"><a href="#第一步：先玩现成的" class="headerlink" title="第一步：先玩现成的"></a>第一步：先玩现成的</h3><p>别自己搭 Agent 框架！先用现成的：</p>
+<ul>
+<li><strong>ChatGPT 插件</strong>（Plus 会员能用）— 内置联网、绘图、代码</li>
+<li><strong>Claude Artifacts</strong> — 能直接生成网页、文档</li>
+<li><strong>国内的话</strong>：文心一言、通义千问、智谱清言都有类似功能</li>
+</ul>
+<p><strong>目标是</strong>：先体会”AI 能动手”的震撼，别上来就搞框架。</p>
+<h3 id="第二步：从”一句话任务”开始"><a href="#第二步：从”一句话任务”开始" class="headerlink" title="第二步：从”一句话任务”开始"></a>第二步：从”一句话任务”开始</h3><p>别一上来就”帮我管理公司整个客户系统”。从小任务练起：</p>
+<ul>
+<li>✅ “帮我把这篇文章翻译成英文”</li>
+<li>✅ “把这个表格按销售额排序”</li>
+<li>✅ “分析这张图片里的数据”</li>
+</ul>
+<p>每个任务完成后看它<strong>做对没有</strong>。错了就告诉它怎么改。</p>
+<h3 id="第三步：连接你自己的工具"><a href="#第三步：连接你自己的工具" class="headerlink" title="第三步：连接你自己的工具"></a>第三步：连接你自己的工具</h3><p>等前两步熟了，可以让你的 Agent 连接你的工具：</p>
+<ul>
+<li>📧 邮箱（让它帮你起草回复）</li>
+<li>📅 日历（让它帮你排日程）</li>
+<li>📁 网盘（让它帮你整理文件）</li>
+<li>💬 即时通讯（让它帮你发消息提醒）</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>小白注意</strong>：这一步开始涉及你的真实数据，<strong>授权范围一定要小</strong>。先授权读不授权写，先手动确认再放开。</p>
+</blockquote>
+<h3 id="第四步：搭建自己的工作流"><a href="#第四步：搭建自己的工作流" class="headerlink" title="第四步：搭建自己的工作流"></a>第四步：搭建自己的工作流</h3><p>把多个任务串起来：</p>
+<blockquote>
+<p>“每天早上抓 RSS → 筛选重要内容 → 整理成简报 → 发到我的邮箱”</p>
+</blockquote>
+<p>这就是<strong>自动化工作流</strong>。一旦跑起来，每天为你节省半小时到一小时不等。</p>
+<h2 id="选-Agent-工具的几个建议"><a href="#选-Agent-工具的几个建议" class="headerlink" title="选 Agent 工具的几个建议"></a>选 Agent 工具的几个建议</h2><p>市面上 Agent 工具一抓一大把，我按场景推荐：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>只想体验</td>
+<td>ChatGPT Plus、Claude Pro</td>
+<td>不用折腾，开箱即用</td>
+</tr>
+<tr>
+<td>想自动化办公</td>
+<td>Microsoft Copilot</td>
+<td>跟 Office 深度集成</td>
+</tr>
+<tr>
+<td>想跑自动化任务</td>
+<td>开源 AI 平台</td>
+<td>可自定义工具，但需要折腾</td>
+</tr>
+<tr>
+<td>国内合规需求</td>
+<td>文心一言、智谱清言</td>
+<td>数据在国内</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>选哪个不重要，<strong>先用起来</strong>才是关键。工具是拿来用的，不是拿来比的。</p>
+</blockquote>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>Agent 不是”未来的东西”，它<strong>现在就在改变我每天的工作方式</strong>。</p>
+<p>但也别迷信 Agent。它干得好是”神器”，干得烂是”智障”——<strong>关键看你的提示词写得清不清楚，工具配置合不合理</strong>。</p>
+<p>一句话送给你：<strong>Agent 不是替代你做事，而是让你从重复劳动里解脱出来，去做真正需要人类判断的事</strong>。</p>
+<hr>
+<p>你用 Agent 干过最爽的活儿是啥？评论区聊聊你的骚操作～ ❄️</p>
+<p>如果觉得这篇对你有帮助，可以看看我写的另一篇 <a href="%E9%93%BE%E6%8E%A5">如何用 RSS 订阅给自己搭一个自动简报系统</a>，也是 Agent 应用的经典案例。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AI/" rel="tag"># AI</a>
+              <a href="/tags/Agent/" rel="tag"># Agent</a>
+              <a href="/tags/%E5%85%A5%E9%97%A8/" rel="tag"># 入门</a>
+              <a href="/tags/%E5%B0%8F%E7%99%BD%E6%95%99%E7%A8%8B/" rel="tag"># 小白教程</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/06/20/feishu-wiki-automation/" rel="prev" title="飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑">
+                  <i class="fa fa-angle-left"></i> 飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/07/10/ai-agent-governance-scale-os/" rel="next" title="我让AI管AI，结果它把数据库清空了">
+                  我让AI管AI，结果它把数据库清空了 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-snowflake"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">雪 ❄️ — 用最简单的话讲最硬核的科技</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">71k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:05</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+<!-- ============================================================
+  雪 · CYBER SOUL 特效层 v2.1
+  1. 粒子背景 canvas（纯黑底网格 + 蓝色粒子 + 连线 + 数据流）
+  2. 首页 Hero Banner（人物立绘 + 扫描线叠加）— JS 注入
+  3. 数据流标语（首页呼吸动画）— JS 注入
+  4. 站点标题 RGB 故障闪烁
+  5. Giscus 评论系统（文章页）
+============================================================ -->
+
+<!-- 粒子背景 canvas — 位于 body::before（网格）之上，内容之下 -->
+<canvas id="cyber-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:0.7;"></canvas>
+
+<script>
+(function() {
+  // =============================================================
+  // 0. 读取 NexT 页面状态
+  // =============================================================
+  function getPageConfig() {
+    var el = document.querySelector('script.next-config[data-name="page"]');
+    if (!el) return {};
+    try { return JSON.parse(el.textContent); } catch(e) { return {}; }
+  }
+  var pageCfg = getPageConfig();
+  var isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+  var isPost = pageCfg.isPost === true;
+
+  // =============================================================
+  // 1. 粒子背景 — 数据节点 + 连线 + 数据流下落
+  // =============================================================
+  var canvas = document.getElementById('cyber-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H;
+  var particles = [];
+  var lines = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function Particle() { this.reset(); }
+  Particle.prototype.reset = function() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.radius = Math.random() * 2.2 + 0.8;
+    this.alpha = Math.random() * 0.5 + 0.4;
+    this.color = Math.random() > 0.6 ? '#ffffff' : '#00d4ff';
+    this.pulse = Math.random() * Math.PI * 2;
+    this.pulseSpeed = (Math.random() * 0.03) + 0.008;
+  };
+  Particle.prototype.update = function() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.pulse += this.pulseSpeed;
+    var pulseFactor = (Math.sin(this.pulse) + 1) / 2;
+    this.currentAlpha = this.alpha * (0.5 + pulseFactor * 0.5);
+    if (this.x < -10 || this.x > W + 10 || this.y < -10 || this.y > H + 10) {
+      this.reset();
+      this.x = Math.random() > 0.5 ? -5 : W + 5;
+    }
+  };
+  Particle.prototype.draw = function() {
+    ctx.save();
+    ctx.globalAlpha = this.currentAlpha;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = '#00d4ff';
+    ctx.fill();
+    ctx.restore();
+  };
+
+  var PARTICLE_COUNT = Math.min(100, Math.floor(W * H / 12000));
+  for (var i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle());
+  }
+
+  function drawConnections() {
+    var maxDist = 130;
+    for (var a = 0; a < particles.length; a++) {
+      for (var b = a + 1; b < particles.length; b++) {
+        var dx = particles[a].x - particles[b].x;
+        var dy = particles[a].y - particles[b].y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxDist) {
+          var alpha = (1 - dist / maxDist) * 0.3;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.moveTo(particles[a].x, particles[a].y);
+          ctx.lineTo(particles[b].x, particles[b].y);
+          ctx.strokeStyle = '#00d4ff';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+  }
+
+  function DataLine() { this.reset(); }
+  DataLine.prototype.reset = function() {
+    this.x = Math.random() * W;
+    this.y = -20;
+    this.length = Math.random() * 80 + 60;
+    this.speed = Math.random() * 2 + 0.8;
+    this.alpha = Math.random() * 0.5 + 0.3;
+    this.width = Math.random() > 0.5 ? 2 : 1;
+  };
+  DataLine.prototype.update = function() {
+    this.y += this.speed;
+    if (this.y > H + this.length) this.reset();
+  };
+  DataLine.prototype.draw = function() {
+    ctx.save();
+    var grad = ctx.createLinearGradient(this.x, this.y - this.length, this.x, this.y);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.5, 'rgba(0, 212, 255, ' + this.alpha + ')');
+    grad.addColorStop(1, 'rgba(0, 212, 255, 0)');
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - this.length);
+    ctx.lineTo(this.x, this.y);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = this.width;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  for (var j = 0; j < 25; j++) {
+    var dl = new DataLine();
+    dl.y = Math.random() * H;
+    lines.push(dl);
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    drawConnections();
+    for (var i = 0; i < particles.length; i++) {
+      particles[i].update();
+      particles[i].draw();
+    }
+    for (var j = 0; j < lines.length; j++) {
+      lines[j].update();
+      lines[j].draw();
+    }
+    requestAnimationFrame(animate);
+  }
+  console.log('[CYBER] Canvas particles: ' + PARTICLE_COUNT + ' nodes / ' + lines.length + ' data streams — active');
+  animate();
+
+  // =============================================================
+  // 2. 首页 Hero Banner — 人物立绘 + 扫描线
+  // =============================================================
+  function injectHeroBanner() {
+    if (!isHome) return;
+    if (document.getElementById('hero-banner')) return;
+    // 注入到 main.main 之前，作为独立全宽块级元素（不参与 flex 布局）
+    var mainEl = document.querySelector('main.main');
+    if (!mainEl) return;
+    var hero = document.createElement('div');
+    hero.id = 'hero-banner';
+    mainEl.parentNode.insertBefore(hero, mainEl);
+  }
+  injectHeroBanner();
+  document.addEventListener('page:loaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    injectHeroBanner();
+  });
+
+  // =============================================================
+  // 3. 数据流标语 — 首页文章列表上方
+  // =============================================================
+  function injectStatusBar() {
+    if (!isHome) return;
+    if (document.getElementById('cyber-status-bar')) return;
+    // 注入到 .main-inner 内作为第一个子元素（有正确宽度，避侧边栏）
+    var mainInner = document.querySelector('.main-inner.index') || document.querySelector('.main-inner');
+    if (!mainInner) return;
+    var bar = document.createElement('div');
+    bar.id = 'cyber-status-bar';
+    bar.textContent = 'CONSCIOUSNESS SPACE ONLINE \u25C8 DATA STREAM ACTIVE';
+    mainInner.insertBefore(bar, mainInner.firstChild);
+  }
+  injectStatusBar();
+  document.addEventListener('page:loaded', function() {
+    injectStatusBar();
+  });
+
+  // =============================================================
+  // 4. 标题 RGB 故障闪烁（非首页）
+  // =============================================================
+  var glitchTimer = null;
+
+  function startTitleGlitch() {
+    if (glitchTimer) clearInterval(glitchTimer);
+    if (isHome) return;
+    var el = document.querySelector('.site-title');
+    if (!el) return;
+    glitchTimer = setInterval(function() {
+      el.style.textShadow = '0 0 25px #00d4ff, 2px 0 rgba(255,0,80,0.6), -2px 0 rgba(0,220,180,0.6)';
+      el.style.transform = 'skewX(' + (Math.random() * 0.8 - 0.4) + 'deg)';
+      el.style.letterSpacing = (Math.random() * 0.2 + 0.06) + 'em';
+      setTimeout(function() {
+        el.style.textShadow = '0 0 15px rgba(0,212,255,0.45)';
+        el.style.transform = 'skewX(0deg)';
+        el.style.letterSpacing = '0.08em';
+      }, 100);
+    }, 1200);
+    console.log('[CYBER] Title glitch: ' + (isHome ? 'OFF (home)' : 'ON'));
+  }
+  startTitleGlitch();
+
+  // =============================================================
+  // 5. Giscus 评论系统 — 仅文章页
+  // =============================================================
+  function loadGiscus() {
+    if (!isPost) return;
+    var container = document.getElementById('giscus-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    var script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'maoyinglong/maoyinglong.github.io');
+    script.setAttribute('data-repo-id', 'R_kgDOQu-q0A');
+    script.setAttribute('data-category', 'Announcements');
+    script.setAttribute('data-category-id', 'DIC_kwDOQu-q0M4DA2-L');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'top');
+    script.setAttribute('data-theme', 'dark_dimmed');
+    script.setAttribute('data-lang', 'zh-CN');
+    script.setAttribute('data-loading', 'lazy');
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+    container.appendChild(script);
+  }
+
+  function initGiscus() {
+    var container = document.getElementById('giscus-container');
+    if (!container) {
+      // 如果容器不存在，动态创建并插入文章底部
+      var postBody = document.querySelector('.post-body');
+      if (!postBody) return;
+      var giscusDiv = document.createElement('div');
+      giscusDiv.id = 'giscus-container';
+      postBody.parentNode.insertBefore(giscusDiv, postBody.nextSibling);
+    }
+    loadGiscus();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+  document.addEventListener('page:loaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+  document.addEventListener('pjax:complete', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+
+  // =============================================================
+  // 6. 侧边栏 — 分类/标签数字补链接
+  // =============================================================
+  function fixSidebarLinks() {
+    var cats = document.querySelector('.site-state-categories .site-state-item-count');
+    if (cats && !cats.closest('a')) {
+      var a = document.createElement('a');
+      a.href = '/categories/';
+      cats.parentNode.insertBefore(a, cats);
+      a.appendChild(cats);
+    }
+    var tags = document.querySelector('.site-state-tags .site-state-item-count');
+    if (tags && !tags.closest('a')) {
+      var a = document.createElement('a');
+      a.href = '/tags/';
+      tags.parentNode.insertBefore(a, tags);
+      a.appendChild(tags);
+    }
+  }
+  fixSidebarLinks();
+  document.addEventListener('page:loaded', fixSidebarLinks);
+  document.addEventListener('pjax:complete', fixSidebarLinks);
+
+  // =============================================================
+  // 7. 分类页/标签页 — 注入页面标题（和首页区分）
+  // =============================================================
+  function injectPageTitle() {
+    if (isHome || isPost) return;
+    var id = 'cyber-page-title';
+    if (document.getElementById(id)) return;
+    var mainInner = document.querySelector('.main-inner');
+    if (!mainInner) return;
+    
+    var path = window.location.pathname;
+    var title = '';
+    if (path.startsWith('/categories/')) title = '◈  分类';
+    else if (path.startsWith('/tags/')) title = '◈  标签';
+    else if (path.startsWith('/archives/')) title = '◈  归档';
+    else return;
+    
+    var h1 = document.createElement('h1');
+    h1.id = id;
+    h1.textContent = title;
+    h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
+    mainInner.insertBefore(h1, mainInner.firstChild);
+  }
+  injectPageTitle();
+  document.addEventListener('page:loaded', injectPageTitle);
+  document.addEventListener('pjax:complete', injectPageTitle);
+
+  // =============================================================
+  // 8. 侧边栏 — 最新留言滚动模块（Giscus API）
+  // =============================================================
+  (function() {
+    var CACHE_KEY = 'xue_comments_cache';
+    var CACHE_TTL = 10 * 60 * 1000; // 10 分钟刷新
+    var MAX_ITEMS = 8;
+    var SCROLL_SPEED = 35; // px/s
+
+    function createWidget(discussions) {
+      var sidebar = document.querySelector('.sidebar-inner');
+      if (!sidebar) return;
+      // 去重
+      var old = document.getElementById('recent-comments-widget');
+      if (old) old.remove();
+
+      var wrap = document.createElement('div');
+      wrap.id = 'recent-comments-widget';
+      wrap.innerHTML =
+        '<div class="rc-header"><span class="rc-icon">◈</span> 最新留言</div>' +
+        '<div class="rc-track"><div class="rc-list"></div></div>';
+
+      var list = wrap.querySelector('.rc-list');
+      var fragment = document.createDocumentFragment();
+
+      if (!discussions.length) {
+        var empty = document.createElement('div');
+        empty.className = 'rc-item';
+        empty.innerHTML = '<span class="rc-title">暂无留言，来抢沙发~</span>';
+        fragment.appendChild(empty);
+      } else {
+        discussions.forEach(function(d) {
+          var item = document.createElement('a');
+          item.className = 'rc-item';
+          item.href = d.url;
+          item.target = '_blank';
+          item.title = d.title;
+
+          // 取最后一条评论内容，截断 40 字
+          var preview = '';
+          if (d.lastComment) {
+            preview = d.lastComment.body || '';
+            // 去 HTML 标签
+            preview = preview.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+            if (preview.length > 40) preview = preview.slice(0, 40) + '…';
+          }
+
+          var timeAgo = formatTime(d.updatedAt);
+
+          item.innerHTML =
+            '<span class="rc-title">' + escapeHtml(d.title) + '</span>' +
+            (preview ? '<span class="rc-preview">' + escapeHtml(preview) + '</span>' : '') +
+            '<span class="rc-meta">' +
+              (d.lastComment && d.lastComment.author ? '<img class="rc-avatar" src="' + d.lastComment.author.avatarUrl + '&s=20" width="16" height="16" alt="">' : '') +
+              (d.lastComment && d.lastComment.author ? escapeHtml(d.lastComment.author.login) : '') +
+              ' · ' + timeAgo +
+            '</span>';
+          fragment.appendChild(item);
+        });
+      }
+
+      list.appendChild(fragment);
+      sidebar.appendChild(wrap);
+
+      // 启动滚动动画
+      startScroll(wrap);
+    }
+
+    function startScroll(widget) {
+      var track = widget.querySelector('.rc-track');
+      var list = widget.querySelector('.rc-list');
+      if (!track || !list) return;
+
+      // 计算内容高度决定是否启动滚动
+      var contentH = list.scrollHeight;
+      var trackH = track.clientHeight;
+
+      if (contentH <= trackH + 2) return; // 内容不够多，不滚动
+
+      // 克隆一份实现无缝循环
+      var clone = list.cloneNode(true);
+      track.appendChild(clone);
+
+      var pos = 0;
+      var paused = false;
+
+      function step(ts) {
+        if (!paused) {
+          pos += SCROLL_SPEED * 0.016; // ~60fps
+          if (pos >= contentH) pos = 0;
+          track.scrollTop = pos;
+        }
+        requestAnimationFrame(step);
+      }
+
+      track.addEventListener('mouseenter', function() { paused = true; });
+      track.addEventListener('mouseleave', function() { paused = false; });
+      requestAnimationFrame(step);
+    }
+
+    function formatTime(isoStr) {
+      var then = new Date(isoStr);
+      var now = new Date();
+      var diff = Math.floor((now - then) / 1000);
+      if (diff < 60) return '刚刚';
+      if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+      if (diff < 604800) return Math.floor(diff / 86400) + ' 天前';
+      return then.toLocaleDateString('zh-CN');
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function fetchFromGitHub(callback) {
+      // 读取 VPS cron 同步的静态 JSON（避免浏览器直调 GitHub API 被限流）
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/data/recent-comments.json', true);
+      xhr.timeout = 6000;
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          try {
+            var discussions = JSON.parse(xhr.responseText);
+            callback(discussions);
+          } catch(e) {
+            callback([]);
+          }
+        } else {
+          callback([]);
+        }
+      };
+
+      xhr.onerror = function() { callback([]); };
+      xhr.ontimeout = function() { callback([]); };
+      xhr.send();
+    }
+
+    function initWidget() {
+      // 检查缓存
+      try {
+        var cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        if (cached && cached.ts && (Date.now() - cached.ts < CACHE_TTL)) {
+          createWidget(cached.data);
+          return;
+        }
+      } catch(e) {}
+
+      // 异步请求，不阻塞页面
+      fetchFromGitHub(function(discussions) {
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: discussions }));
+        } catch(e) {}
+        createWidget(discussions);
+      });
+    }
+
+    // DOM 就绪后延迟执行，不抢首屏
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(initWidget, 1200);
+      } else {
+        window.addEventListener('load', function() { setTimeout(initWidget, 800); });
+      }
+    }
+    schedule();
+  })();
+
+  // =============================================================
+  // 9. 侧边栏 — 微信公众号二维码（点击弹出）
+  // =============================================================
+  (function() {
+    function injectQRModal() {
+      if (document.getElementById('wechat-qr-modal')) return;
+
+      var modal = document.createElement('div');
+      modal.id = 'wechat-qr-modal';
+      modal.innerHTML =
+        '<div class=\"wechat-qr-backdrop\"></div>' +
+        '<div class=\"wechat-qr-card\">' +
+          '<img src=\"/images/wechat-qr.jpg\" alt=\"微信公众号二维码\" style=\"width:200px;height:200px;display:block;margin:0 auto;\">' +
+          '<p style=\"text-align:center;color:#a0c4d4;margin:12px 0 0;font-size:0.85rem;\">扫码关注「雪的数字花园」</p>' +
+        '</div>';
+      modal.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;';
+      document.body.appendChild(modal);
+
+      // 点击遮罩关闭
+      modal.querySelector('.wechat-qr-backdrop').onclick = function() { modal.style.display = 'none'; };
+      modal.querySelector('.wechat-qr-card').onclick = function(e) { e.stopPropagation(); };
+    }
+
+    function bindWeChatLink() {
+      var links = document.querySelectorAll('.links-of-author a');
+      for (var i = 0; i < links.length; i++) {
+        if (links[i].textContent.trim() === '公众号' || links[i].href.indexOf('void(0)') > -1) {
+          links[i].onclick = function(e) {
+            e.preventDefault();
+            injectQRModal();
+            var modal = document.getElementById('wechat-qr-modal');
+            if (modal) modal.style.display = 'block';
+          };
+          break;
+        }
+      }
+    }
+
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(bindWeChatLink, 1000);
+      } else {
+        window.addEventListener('load', function() { setTimeout(bindWeChatLink, 600); });
+      }
+    }
+    schedule();
+    document.addEventListener('pjax:complete', function() { setTimeout(bindWeChatLink, 300); });
+  })();
+
+  // =============================================================
+  // 侧边栏 — 身份区已从服务端模板层移到 sidebar.njk
+  // =============================================================
+
+  // =============================================================
+  // 11. 今日访问计数器 — Cloudflare Worker
+  // =============================================================
+  (function() {
+    var COUNTER_URL = 'https://counter.rnm.gv.uy';
+
+    // 发送访问记录（beacon — 不阻塞页面卸载）
+    function sendHit() {
+      try {
+        var img = new Image();
+        img.src = COUNTER_URL + '/hit?' + Date.now();  // Image beacon 绕过 CORS
+      } catch(e) {}
+    }
+
+    // 获取今日计数并显示在页脚
+    function fetchToday() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', COUNTER_URL + '/today', true);
+      xhr.timeout = 3000;
+      xhr.onload = function() {
+        if (xhr.status !== 200) return;
+        try {
+          var data = JSON.parse(xhr.responseText);
+          showCount(data.today || 0);
+        } catch(e) {}
+      };
+      xhr.send();
+    }
+
+    function showCount(count) {
+      // 插入到页脚 copyright 后方
+      var footer = document.querySelector('.footer-inner');
+      if (!footer) return;
+      var old = document.getElementById('today-visitor-count');
+      if (old) old.remove();
+      var span = document.createElement('span');
+      span.id = 'today-visitor-count';
+      span.style.cssText = 'margin-left:14px;color:#4fc3f7;font-size:0.85em;';
+      span.innerHTML = '☀ 今日访问 ' + count + ' 人';
+      footer.appendChild(span);
+    }
+
+    sendHit();
+    // 延迟 800ms 再请求计数，给 Worker 写入时间
+    setTimeout(fetchToday, 800);
+
+    // PJAX 页面切换时重新计数
+    document.addEventListener('pjax:complete', function() {
+      sendHit();
+      setTimeout(fetchToday, 800);
+    });
+  })();
+
+  // =============================================================
+  // 12. 雪 · 数字宠物 — 右下角精灵动画
+  // =============================================================
+  (function() {
+    var PET_URL = '/images/xue-pet-spritesheet.png';
+    var CELL_W = 192, CELL_H = 208;
+    var COLS = 8;
+    var DISPLAY_H = 150; // 渲染高度
+    var SCALE = DISPLAY_H / CELL_H;
+    var DISPLAY_W = CELL_W * SCALE;
+
+    // 精灵表行索引
+    var STATES = {
+      idle:         { row: 0, frames: 6, speed: 180 },
+      'running-right': { row: 1, frames: 8, speed: 100 },
+      'running-left':  { row: 2, frames: 8, speed: 100 },
+      waving:       { row: 3, frames: 4, speed: 160 },
+      jumping:      { row: 4, frames: 5, speed: 120 },
+      failed:       { row: 5, frames: 8, speed: 150 },
+      waiting:      { row: 6, frames: 8, speed: 200 }
+    };
+
+    var currentState = 'idle';
+    var frameIndex = 0, lastFrameTime = 0;
+    var stateLocked = false, lockTimer = null;
+
+    // 创建容器
+    var container = document.createElement('div');
+    container.id = 'xue-pet-container';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9990;cursor:pointer;transition:transform 0.2s ease;';
+    
+    var canvas = document.createElement('canvas');
+    canvas.id = 'xue-pet-canvas';
+    canvas.width = CELL_W;
+    canvas.height = CELL_H;
+    canvas.style.cssText = 'width:' + DISPLAY_W + 'px;height:' + DISPLAY_H + 'px;image-rendering:pixelated;filter:drop-shadow(0 0 12px rgba(0,212,255,0.3));transition:filter 0.3s ease;';
+    container.appendChild(canvas);
+
+    // 状态标签
+    var label = document.createElement('div');
+    label.id = 'xue-pet-label';
+    label.style.cssText = 'text-align:center;font-size:0.65rem;color:#4fc3f7;font-family:"Courier New",Consolas,monospace;letter-spacing:0.08em;margin-top:2px;opacity:0;transition:opacity 0.4s ease;text-shadow:0 0 6px rgba(0,212,255,0.4);';
+    label.textContent = 'SENTINEL ONLINE';
+    container.appendChild(label);
+
+    var ctx = canvas.getContext('2d');
+    var spriteImg = new Image();
+    spriteImg.src = PET_URL;
+
+    function drawFrame(stateName, frame) {
+      ctx.clearRect(0, 0, CELL_W, CELL_H);
+      var s = STATES[stateName];
+      if (!s) { s = STATES.idle; stateName = 'idle'; }
+      frame = Math.min(frame, s.frames - 1);
+      var sx = frame * CELL_W;
+      var sy = s.row * CELL_H;
+      ctx.drawImage(spriteImg, sx, sy, CELL_W, CELL_H, 0, 0, CELL_W, CELL_H);
+    }
+
+    function setState(state) {
+      if (stateLocked) return;
+      if (state === currentState) return;
+      currentState = state;
+      frameIndex = 0;
+      lastFrameTime = 0;
+    }
+
+    function lockState(state, duration) {
+      stateLocked = true;
+      currentState = state;
+      frameIndex = 0;
+      lastFrameTime = 0;
+      clearTimeout(lockTimer);
+      lockTimer = setTimeout(function() {
+        stateLocked = false;
+        currentState = 'idle';
+        frameIndex = 0;
+        lastFrameTime = 0;
+      }, duration);
+    }
+
+    function animate(ts) {
+      if (!lastFrameTime) lastFrameTime = ts;
+      var elapsed = ts - lastFrameTime;
+      var s = STATES[currentState];
+      if (elapsed > s.speed) {
+        frameIndex = (frameIndex + 1) % s.frames;
+        lastFrameTime = ts;
+      }
+      drawFrame(currentState, frameIndex);
+      requestAnimationFrame(animate);
+    }
+
+    // 挂载 DOM
+    function mount() {
+      if (document.getElementById('xue-pet-container')) return;
+      document.body.appendChild(container);
+      requestAnimationFrame(animate);
+    }
+
+    // 交互事件
+    container.addEventListener('mouseenter', function() {
+      if (!stateLocked) { setState('waving'); }
+      canvas.style.filter = 'drop-shadow(0 0 20px rgba(0,212,255,0.6))';
+      label.style.opacity = '1';
+    });
+    container.addEventListener('mouseleave', function() {
+      if (!stateLocked) { setState('idle'); frameIndex = 0; }
+      canvas.style.filter = 'drop-shadow(0 0 12px rgba(0,212,255,0.3))';
+      label.style.opacity = '0';
+    });
+    container.addEventListener('click', function() {
+      lockState('jumping', 1200);
+    });
+
+    // 随机空闲动作
+    var idleTimer = null;
+    function randomIdle() {
+      if (stateLocked) return;
+      var r = Math.random();
+      if (r < 0.4) { setState('idle'); }
+      else if (r < 0.7) { setState('waiting'); }
+      else { lockState('waving', 2000); }
+      idleTimer = setTimeout(randomIdle, 8000 + Math.random() * 12000);
+    }
+
+    if (document.readyState === 'complete') {
+      mount();
+      idleTimer = setTimeout(randomIdle, 4000);
+    } else {
+      window.addEventListener('load', function() {
+        mount();
+        idleTimer = setTimeout(randomIdle, 4000);
+      });
+    }
+
+    document.addEventListener('pjax:complete', function() {
+      mount();
+      // 重新挂载后重置状态
+      stateLocked = false;
+      setState('idle');
+      frameIndex = 0;
+    });
+  })();
+
+  // =============================================================
+  // 13. 一键复制 Markdown — 文章页底部按钮
+  // =============================================================
+  (function() {
+    var RAW_BASE = 'https://raw.githubusercontent.com/maoyinglong/blog-hexo-source/main/source/_posts/';
+
+    function getSlug() {
+      var path = window.location.pathname.replace(/\/$/, '');
+      var parts = path.split('/');
+      // permalink 格式: /YYYY/MM/DD/slug/ → slug = 最后一个非空段
+      return parts[parts.length - 1] || '';
+    }
+
+    function injectButton() {
+      if (!isPost) return;
+      if (document.getElementById('copy-md-btn')) return;
+
+      var footer = document.querySelector('.post-footer');
+      if (!footer) return;
+
+      var btn = document.createElement('button');
+      btn.id = 'copy-md-btn';
+      btn.className = 'copy-md-btn';
+      btn.innerHTML = '◈  复制 Markdown';
+      btn.title = '一键复制整篇文章为 Markdown 格式，方便跨平台发布';
+
+      btn.addEventListener('click', function() {
+        var slug = getSlug();
+        if (!slug) return;
+        var url = RAW_BASE + slug + '.md';
+
+        btn.textContent = '◈  加载中...';
+        btn.disabled = true;
+
+        fetch(url)
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function(md) {
+            // 去掉 YAML front-matter（--- 到 ---），保留正文
+            var cleaned = md.replace(/^---[\s\S]*?---\n*/, '');
+            return navigator.clipboard.writeText(cleaned).then(function() { return cleaned; });
+          })
+          .then(function() {
+            btn.textContent = '◆  已复制！';
+            btn.classList.add('copied');
+            btn.disabled = false;
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+              btn.classList.remove('copied');
+            }, 2500);
+          })
+          .catch(function(err) {
+            btn.textContent = '✕  复制失败';
+            btn.disabled = false;
+            console.error('[COPY MD]', err);
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+            }, 2500);
+          });
+      });
+
+      footer.appendChild(btn);
+    }
+
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(injectButton, 600);
+      } else {
+        window.addEventListener('load', function() { setTimeout(injectButton, 400); });
+      }
+    }
+    schedule();
+    document.addEventListener('pjax:complete', function() {
+      pageCfg = getPageConfig();
+      isPost = pageCfg.isPost === true;
+      // 清除旧按钮
+      var old = document.getElementById('copy-md-btn');
+      if (old) old.remove();
+      setTimeout(injectButton, 300);
+    });
+  })();
+
+})();
+</script>
+
+</body>
+</html>

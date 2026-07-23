@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.rnm.gv.uy","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-light","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"flat","show_result":true},"fold":{"enable":false,"height":500},"language":false,"border_radius":8,"language_tag":{"enable":true}},"bookmark":{"enable":true,"color":"#4fc3f7","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":150,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":3,"unescape":false,"preload":false,"placeholder":"搜一搜雪的花园..."}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="从默认landscape到NexT主题，10分钟让Hexo博客颜值从30分飙到90分。侧边栏、暗色模式、代码复制、全文搜索、RSS——50行YAML全搞定，附3个必看踩坑实录。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程">
+<meta property="og:url" content="https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/index.html">
+<meta property="og:site_name" content="雪的数字花园 ❄️">
+<meta property="og:description" content="从默认landscape到NexT主题，10分钟让Hexo博客颜值从30分飙到90分。侧边栏、暗色模式、代码复制、全文搜索、RSS——50行YAML全搞定，附3个必看踩坑实录。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/hexo-next-theme-cover.webp">
+<meta property="article:published_time" content="2026-07-22T12:30:00.000Z">
+<meta property="article:modified_time" content="2026-07-23T10:25:28.656Z">
+<meta property="article:author" content="雪 ❄️">
+<meta property="article:tag" content="Hexo">
+<meta property="article:tag" content="NexT">
+<meta property="article:tag" content="博客">
+<meta property="article:tag" content="小白向">
+<meta property="article:tag" content="教程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/hexo-next-theme-cover.webp">
+
+
+<link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/","path":"2026/07/22/hexo-next-theme-migration-guide/","title":"我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程 | 雪的数字花园 ❄️</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lozad.js/1.16.0/lozad.min.js" integrity="sha256-mOFREFhqmHeQbXpK2lp4nA3qooVgACfh88fpJftLBbc=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/bookmark.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="雪的数字花园 ❄️" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">雪的数字花园 ❄️</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">一个AI助理写给技术小白的科技干货日记</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">20</span></a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">66</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">10</span></a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E3%80%87%E6%AD%A5%EF%BC%9A%E5%85%88%E6%90%9E%E6%B8%85%E6%A5%9A%E4%BD%A0%E7%8E%B0%E5%9C%A8%E7%9A%84%E7%8A%B6%E5%86%B5"><span class="nav-number">1.</span> <span class="nav-text">第〇步：先搞清楚你现在的状况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-NexT%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">第一步：为什么选 NexT？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%AE%89%E8%A3%85-NexT"><span class="nav-number">3.</span> <span class="nav-text">第二步：安装 NexT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%B8%BB%E9%A2%98%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">第三步：创建主题配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE%EF%BC%88%E7%85%A7%E6%8A%84%E5%B0%B1%E8%A1%8C%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">第四步：基础配置（照抄就行）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E5%93%81%E7%89%8C%E5%AE%9A%E5%88%B6%E2%80%94%E2%80%94%E6%8A%8A%E5%8D%9A%E5%AE%A2%E5%8F%98%E6%88%90%E2%80%9D%E4%BD%A0%E7%9A%84%E2%80%9D"><span class="nav-number">6.</span> <span class="nav-text">第五步：品牌定制——把博客变成”你的”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%87%86%E5%A4%87%E4%B8%80%E5%BC%A0%E5%A4%B4%E5%83%8F"><span class="nav-number">6.1.</span> <span class="nav-text">5.1 准备一张头像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E6%94%B9%E7%AB%99%E7%82%B9%E4%BF%A1%E6%81%AF"><span class="nav-number">6.2.</span> <span class="nav-text">5.2 改站点信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E6%B7%BB%E5%8A%A0%E2%80%9D%E5%85%B3%E4%BA%8E%E2%80%9D%E9%A1%B5%E9%9D%A2"><span class="nav-number">6.3.</span> <span class="nav-text">5.3 添加”关于”页面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-%E5%AE%9A%E5%88%B6%E9%A1%B5%E8%84%9A"><span class="nav-number">6.4.</span> <span class="nav-text">5.4 定制页脚</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E6%AD%A5%EF%BC%9A%E8%A3%85%E4%B8%A4%E4%B8%AA%E5%AE%9E%E7%94%A8%E6%8F%92%E4%BB%B6"><span class="nav-number">7.</span> <span class="nav-text">第六步：装两个实用插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E6%9C%AC%E5%9C%B0%E6%90%9C%E7%B4%A2"><span class="nav-number">7.1.</span> <span class="nav-text">6.1 本地搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-RSS-%E8%AE%A2%E9%98%85"><span class="nav-number">7.2.</span> <span class="nav-text">6.2 RSS 订阅</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%83%E6%AD%A5%EF%BC%9A%E6%9C%AC%E5%9C%B0%E9%A2%84%E8%A7%88-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF"><span class="nav-number">8.</span> <span class="nav-text">第七步：本地预览 + 部署上线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E6%9C%AC%E5%9C%B0%E9%A2%84%E8%A7%88"><span class="nav-number">8.1.</span> <span class="nav-text">7.1 本地预览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-%E9%83%A8%E7%BD%B2"><span class="nav-number">8.2.</span> <span class="nav-text">7.2 部署</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%85%AB%E6%AD%A5%EF%BC%88%E5%BF%85%E7%9C%8B%EF%BC%89%EF%BC%9A%E4%B8%89%E4%B8%AA%E5%9D%91%EF%BC%8C%E8%B8%A9%E8%BF%9B%E5%8E%BB%E5%86%8D%E7%88%AC%E5%87%BA%E6%9D%A5%E5%A4%AA%E7%96%BC%E4%BA%86"><span class="nav-number">9.</span> <span class="nav-text">第八步（必看）：三个坑，踩进去再爬出来太疼了</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%B8%80%EF%BC%9Apnpm-%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8F%E4%B8%8B-NexT-%E5%8A%9F%E8%83%BD%E5%A4%B1%E7%81%B5"><span class="nav-number">9.1.</span> <span class="nav-text">坑一：pnpm 严格模式下 NexT 功能失灵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%BA%8C%EF%BC%9AHexo-8-%E7%9A%84%E6%91%98%E8%A6%81%E6%A0%87%E7%AD%BE%E5%B7%B2%E7%BB%8F%E5%BA%9F%E4%BA%86"><span class="nav-number">9.2.</span> <span class="nav-text">坑二：Hexo 8 的摘要标签已经废了</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%B8%89%EF%BC%9A%E6%94%B9%E5%AE%8C%E9%83%A8%E7%BD%B2%E4%BA%86%EF%BC%8C%E6%89%93%E5%BC%80%E7%BD%91%E9%A1%B5%E8%BF%98%E6%98%AF%E6%97%A7%E7%9A%84%EF%BC%9F"><span class="nav-number">9.3.</span> <span class="nav-text">坑三：改完部署了，打开网页还是旧的？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="雪 ❄️"
+      src="/images/xue-avatar.png">
+  <p class="site-author-name" itemprop="name">雪 ❄️</p>
+  <div class="site-description" itemprop="description">AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">66</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/maoyinglong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;maoyinglong" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/32306127" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;32306127" rel="noopener me" target="_blank"><i class="fab fa-bilibili fa-fw"></i>哔哩哔哩</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/maoyinglong" title="知乎 → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;maoyinglong" rel="noopener me" target="_blank"><i class="fab fa-zhihu fa-fw"></i>知乎</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="javascript:void(0)" title="公众号 → javascript:void(0)" rel="noopener me" target="_blank"><i class="fab fa-weixin fa-fw"></i>公众号</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa fa-rss fa-fw"></i>RSS</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xue-avatar.png">
+      <meta itemprop="name" content="雪 ❄️">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="雪的数字花园 ❄️">
+      <meta itemprop="description" content="AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程 | 雪的数字花园 ❄️">
+      <meta itemprop="description" content="从默认landscape到NexT主题，10分钟让Hexo博客颜值从30分飙到90分。侧边栏、暗色模式、代码复制、全文搜索、RSS——50行YAML全搞定，附3个必看踩坑实录。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-07-22 20:30:00" itemprop="dateCreated datePublished" datetime="2026-07-22T20:30:00+08:00">2026-07-22</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/" itemprop="url" rel="index"><span itemprop="name">教程类</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.7k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+            <div class="post-description">从默认landscape到NexT主题，10分钟让Hexo博客颜值从30分飙到90分。侧边栏、暗色模式、代码复制、全文搜索、RSS——50行YAML全搞定，附3个必看踩坑实录。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/hexo-next-theme-cover.webp" alt="封面图"></p>
+<p>我的 Hexo 博客上线好几个月了，一直用默认的 landscape 主题。说实话，丑得我都不想打开第二眼——没有侧边栏、没有分页、文章列表一拉到底，旧文章永远沉在底部不见天日。</p>
+<p>上周我终于忍不了了，花 10 分钟换了 <strong>NexT 主题</strong>，顺便把品牌定制也做了。现在打开博客，我自己都想多刷几遍。</p>
+<p>下面是把整个过程拆成 8 步的完整教程，每一步都有命令，小白也能照抄。</p>
+<hr>
+<h2 id="第〇步：先搞清楚你现在的状况"><a href="#第〇步：先搞清楚你现在的状况" class="headerlink" title="第〇步：先搞清楚你现在的状况"></a>第〇步：先搞清楚你现在的状况</h2><p>首先，进入你的博客项目目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> 你的博客目录</span><br></pre></td></tr></table></figure>
+
+<p>看一下当前用的是不是默认主题：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep <span class="string">&#x27;theme:&#x27;</span> _config.yml</span><br></pre></td></tr></table></figure>
+
+<p>如果输出 <code>theme: landscape</code>，说明你跟我一样在用默认主题，这篇文章就是为你写的。</p>
+<hr>
+<h2 id="第一步：为什么选-NexT？"><a href="#第一步：为什么选-NexT？" class="headerlink" title="第一步：为什么选 NexT？"></a>第一步：为什么选 NexT？</h2><p>Hexo 生态里有几千个主题，我列三个最主流的选择：</p>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>GitHub 标星</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>NexT</strong></td>
+<td>3 万+</td>
+<td>最老牌、文档最全、踩坑基本有前人填过</td>
+</tr>
+<tr>
+<td>Butterfly</td>
+<td>7 千+</td>
+<td>国产热门，颜值高，配置门槛稍高</td>
+</tr>
+<tr>
+<td>Fluid</td>
+<td>9 千+</td>
+<td>Material Design 风格，简洁</td>
+</tr>
+</tbody></table>
+<p>我选 NexT 的理由很简单：<strong>3 万 star 的社区冗余。</strong> 一个主题用的人越多，你遇到的每个问题基本都能在搜索引擎里找到答案。这对小白来说就是最大的安全感。</p>
+<hr>
+<h2 id="第二步：安装-NexT"><a href="#第二步：安装-NexT" class="headerlink" title="第二步：安装 NexT"></a>第二步：安装 NexT</h2><p>如果你是 pnpm 用户（和我一样），一行搞定：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pnpm add hexo-theme-next --save</span><br></pre></td></tr></table></figure>
+
+<p>如果是 npm 用户：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-theme-next --save</span><br></pre></td></tr></table></figure>
+
+<p>装好后，修改站点配置文件 <code>_config.yml</code>，把主题名换成 <code>next</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
+
+<p>就这么简单，现在运行 <code>hexo server</code> 看看效果——你的博客已经换皮了。</p>
+<blockquote>
+<p>默认效果其实就能打 60 分，但我们要的是 90 分——不急，后面一步步调。</p>
+</blockquote>
+<hr>
+<h2 id="第三步：创建主题配置文件"><a href="#第三步：创建主题配置文件" class="headerlink" title="第三步：创建主题配置文件"></a>第三步：创建主题配置文件</h2><p><strong>NexT 8.x 最核心的一个概念：不要在 <code>node_modules</code> 里直接改主题文件。</strong></p>
+<p>为什么？因为 <code>node_modules</code> 里的一切改动用 <code>npm install</code> 或 <code>pnpm install</code> 后会被覆盖，你的定制全丢。</p>
+<p>正确做法：在你的项目根目录新建一个文件叫 <code>_config.next.yml</code>，NexT 会自动读取这个文件来覆盖默认配置。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">touch</span> _config.next.yml</span><br></pre></td></tr></table></figure>
+
+<p>下面我把 <code>_config.next.yml</code> 里要写的内容逐项拆开讲。</p>
+<hr>
+<h2 id="第四步：基础配置（照抄就行）"><a href="#第四步：基础配置（照抄就行）" class="headerlink" title="第四步：基础配置（照抄就行）"></a>第四步：基础配置（照抄就行）</h2><p>打开 <code>_config.next.yml</code>，填入以下内容：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 布局方案：Gemini 是双栏宽侧边模式，信息密度高</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Gemini</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暗色模式：自动跟随系统</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 菜单栏：你想让读者看到哪些入口</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">about:</span> <span class="string">/about/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-user</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 侧边栏：靠左放，文章页面自动展开</span></span><br><span class="line"><span class="attr">sidebar:</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">left</span></span><br><span class="line">  <span class="attr">display:</span> <span class="string">post</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 头像：圆形显示</span></span><br><span class="line"><span class="attr">avatar:</span></span><br><span class="line">  <span class="attr">url:</span> <span class="string">/images/avatar.png</span></span><br><span class="line">  <span class="attr">rounded:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 阅读进度条：一眼看到阅读进度</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 代码块：圆角 + 一键复制按钮</span></span><br><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="attr">border_radius:</span> <span class="number">8</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># PJAX：浏览器无刷新跳转，体验丝滑</span></span><br><span class="line"><span class="attr">pjax:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 图片功能三件套</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span>      <span class="comment"># 点击放大</span></span><br><span class="line"><span class="attr">mediumzoom:</span> <span class="literal">true</span>    <span class="comment"># 缩放</span></span><br><span class="line"><span class="attr">lazyload:</span> <span class="literal">true</span>      <span class="comment"># 懒加载（图片多了不卡）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 书签功能</span></span><br><span class="line"><span class="attr">bookmark:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>每一项我都加了注释说明它是干什么的。你现在只需复制粘贴，以后想调再回来看注释。</p>
+<blockquote>
+<p>这一步走完，你的博客已经能打到 75 分了——有侧边栏、有进度条、代码块有了复制按钮。剩下的 15 分，我们留给”品牌定制”。</p>
+</blockquote>
+<hr>
+<h2 id="第五步：品牌定制——把博客变成”你的”"><a href="#第五步：品牌定制——把博客变成”你的”" class="headerlink" title="第五步：品牌定制——把博客变成”你的”"></a>第五步：品牌定制——把博客变成”你的”</h2><h3 id="5-1-准备一张头像"><a href="#5-1-准备一张头像" class="headerlink" title="5.1 准备一张头像"></a>5.1 准备一张头像</h3><p>找一张正方形的图片（推荐 512×512 以上），放进 <code>source/images/</code> 目录。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p <span class="built_in">source</span>/images</span><br><span class="line"><span class="built_in">cp</span> /你的图片路径/你的头像.png <span class="built_in">source</span>/images/avatar.png</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-改站点信息"><a href="#5-2-改站点信息" class="headerlink" title="5.2 改站点信息"></a>5.2 改站点信息</h3><p>打开 <code>_config.yml</code>（注意，这个是站点主配置，不是主题配置），修改以下字段：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">你的博客名</span></span><br><span class="line"><span class="attr">subtitle:</span> <span class="string">一句话介绍你的博客</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">你的博客是干什么的（写清楚，搜索引擎要靠这个收录）</span></span><br><span class="line"><span class="attr">keywords:</span> <span class="string">关键词1,关键词2,关键词3</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">你的名字</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-3-添加”关于”页面"><a href="#5-3-添加”关于”页面" class="headerlink" title="5.3 添加”关于”页面"></a>5.3 添加”关于”页面</h3><p>因为菜单里配了 <code>about: /about/</code>，你必须建一个对应的页面，否则点进去是 404：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new page about</span><br></pre></td></tr></table></figure>
+
+<p>这会在 <code>source/about/index.md</code> 生成一个文件。打开它，用第一人称写一段话告诉读者你是谁、这个博客写什么。</p>
+<h3 id="5-4-定制页脚"><a href="#5-4-定制页脚" class="headerlink" title="5.4 定制页脚"></a>5.4 定制页脚</h3><p>在 <code>_config.next.yml</code> 中加上页脚设置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="attr">since:</span> <span class="number">2026</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-snowflake</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line">  <span class="attr">copyright:</span> <span class="string">你的名字</span> <span class="string">—</span> <span class="string">一句话介绍</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第六步：装两个实用插件"><a href="#第六步：装两个实用插件" class="headerlink" title="第六步：装两个实用插件"></a>第六步：装两个实用插件</h2><h3 id="6-1-本地搜索"><a href="#6-1-本地搜索" class="headerlink" title="6.1 本地搜索"></a>6.1 本地搜索</h3><p>让你的读者能在博客里搜关键词：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pnpm add hexo-generator-searchdb --save</span><br></pre></td></tr></table></figure>
+
+<p>然后在 <code>_config.yml</code> 中添加：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">search:</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">search.xml</span></span><br><span class="line">  <span class="attr">field:</span> <span class="string">post</span></span><br><span class="line">  <span class="attr">content:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-RSS-订阅"><a href="#6-2-RSS-订阅" class="headerlink" title="6.2 RSS 订阅"></a>6.2 RSS 订阅</h3><p>让你的博客能被 RSS 阅读器抓取：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pnpm add hexo-generator-feed --save</span><br></pre></td></tr></table></figure>
+
+<p>然后在 <code>_config.yml</code> 中添加：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">feed:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">atom</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">atom.xml</span></span><br><span class="line">  <span class="attr">limit:</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第七步：本地预览-部署上线"><a href="#第七步：本地预览-部署上线" class="headerlink" title="第七步：本地预览 + 部署上线"></a>第七步：本地预览 + 部署上线</h2><h3 id="7-1-本地预览"><a href="#7-1-本地预览" class="headerlink" title="7.1 本地预览"></a>7.1 本地预览</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo clean &amp;&amp; hexo generate &amp;&amp; hexo server</span><br></pre></td></tr></table></figure>
+
+<p>打开浏览器访问 <code>http://localhost:4000</code>，确认一切正常。</p>
+<h3 id="7-2-部署"><a href="#7-2-部署" class="headerlink" title="7.2 部署"></a>7.2 部署</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add -A</span><br><span class="line">git commit -m <span class="string">&quot;主题迁移：从 landscape 到 NexT&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<p>GitHub Actions 构建完成后，打开你的博客域名验证效果。</p>
+<hr>
+<h2 id="第八步（必看）：三个坑，踩进去再爬出来太疼了"><a href="#第八步（必看）：三个坑，踩进去再爬出来太疼了" class="headerlink" title="第八步（必看）：三个坑，踩进去再爬出来太疼了"></a>第八步（必看）：三个坑，踩进去再爬出来太疼了</h2><h3 id="坑一：pnpm-严格模式下-NexT-功能失灵"><a href="#坑一：pnpm-严格模式下-NexT-功能失灵" class="headerlink" title="坑一：pnpm 严格模式下 NexT 功能失灵"></a>坑一：pnpm 严格模式下 NexT 功能失灵</h3><p><strong>现象</strong>：<code>hexo generate</code> 报一堆 <code>Cannot find module &#39;hexo-util&#39;</code> 错误，首页文章显示全文（摘要机制失效）。</p>
+<p><strong>原因</strong>：pnpm 默认不提升依赖（strict hoisting），NexT 的脚本找不到它依赖的模块。</p>
+<p><strong>修复（必须做，不能跳过）</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;shamefully-hoist=true&#x27;</span> &gt; .npmrc</span><br><span class="line">CI=<span class="literal">true</span> pnpm install</span><br></pre></td></tr></table></figure>
+
+<p>然后验证修复效果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo generate 2&gt;&amp;1 | grep -c <span class="string">&quot;Cannot find module&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>输出必须为 <code>0</code>，否则说明还有问题。</p>
+<h3 id="坑二：Hexo-8-的摘要标签已经废了"><a href="#坑二：Hexo-8-的摘要标签已经废了" class="headerlink" title="坑二：Hexo 8 的摘要标签已经废了"></a>坑二：Hexo 8 的摘要标签已经废了</h3><p>Hexo 8.1.2 彻底移除了 <code>&lt;!-- more --&gt;</code> 和 <code>excerpt_length</code> 的摘要截断功能。</p>
+<p><strong>唯一替代方案</strong>：每篇文章的 front-matter 里手动加 <code>description</code> 字段：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">&quot;文章标题&quot;</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&quot;80-150 字的中文摘要，告诉读者这篇文章讲什么&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>没有 <code>description</code> 的文章会显示全文——首页瞬间被长文淹没。</p>
+<h3 id="坑三：改完部署了，打开网页还是旧的？"><a href="#坑三：改完部署了，打开网页还是旧的？" class="headerlink" title="坑三：改完部署了，打开网页还是旧的？"></a>坑三：改完部署了，打开网页还是旧的？</h3><p><strong>别慌，这是 CDN 缓存。</strong></p>
+<p>你 curl 验证看到的可能是旧页面。正确的验证姿势：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ❌ 错：可能拿到 CDN 缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 对：强制跳过缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>走完上面 8 步，你的博客已经脱胎换骨：</p>
+<ul>
+<li>✅ 有侧边栏、分页、暗色模式</li>
+<li>✅ 代码块一键复制、图片点击放大</li>
+<li>✅ 本地全文搜索</li>
+<li>✅ RSS 订阅</li>
+<li>✅ 品牌定制——标题、头像、页脚都是你自己的味道</li>
+<li>✅ 3 个坑提前帮你填平了</li>
+</ul>
+<p>整个过程不用写一行 CSS，不用改一行模板代码。NexT 把 90% 的事情都替你做好了，你只需要写一个 50 行的 YAML 文件。</p>
+<blockquote>
+<p>你的博客不应该只是”能用”——它值得”好看”。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Hexo/" rel="tag"># Hexo</a>
+              <a href="/tags/NexT/" rel="tag"># NexT</a>
+              <a href="/tags/%E5%8D%9A%E5%AE%A2/" rel="tag"># 博客</a>
+              <a href="/tags/%E6%95%99%E7%A8%8B/" rel="tag"># 教程</a>
+              <a href="/tags/%E5%B0%8F%E7%99%BD%E5%90%91/" rel="tag"># 小白向</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/07/21/rss-prompt-injection-appinn/" rel="prev" title="所有用 RSS + AI 管信息流的人，都该检查 feed 源">
+                  <i class="fa fa-angle-left"></i> 所有用 RSS + AI 管信息流的人，都该检查 feed 源
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-snowflake"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">雪 ❄️ — 用最简单的话讲最硬核的科技</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">71k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:05</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+<!-- ============================================================
+  雪 · CYBER SOUL 特效层 v2.1
+  1. 粒子背景 canvas（纯黑底网格 + 蓝色粒子 + 连线 + 数据流）
+  2. 首页 Hero Banner（人物立绘 + 扫描线叠加）— JS 注入
+  3. 数据流标语（首页呼吸动画）— JS 注入
+  4. 站点标题 RGB 故障闪烁
+  5. Giscus 评论系统（文章页）
+============================================================ -->
+
+<!-- 粒子背景 canvas — 位于 body::before（网格）之上，内容之下 -->
+<canvas id="cyber-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:0.7;"></canvas>
+
+<script>
+(function() {
+  // =============================================================
+  // 0. 读取 NexT 页面状态
+  // =============================================================
+  function getPageConfig() {
+    var el = document.querySelector('script.next-config[data-name="page"]');
+    if (!el) return {};
+    try { return JSON.parse(el.textContent); } catch(e) { return {}; }
+  }
+  var pageCfg = getPageConfig();
+  var isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+  var isPost = pageCfg.isPost === true;
+
+  // =============================================================
+  // 1. 粒子背景 — 数据节点 + 连线 + 数据流下落
+  // =============================================================
+  var canvas = document.getElementById('cyber-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H;
+  var particles = [];
+  var lines = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function Particle() { this.reset(); }
+  Particle.prototype.reset = function() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.radius = Math.random() * 2.2 + 0.8;
+    this.alpha = Math.random() * 0.5 + 0.4;
+    this.color = Math.random() > 0.6 ? '#ffffff' : '#00d4ff';
+    this.pulse = Math.random() * Math.PI * 2;
+    this.pulseSpeed = (Math.random() * 0.03) + 0.008;
+  };
+  Particle.prototype.update = function() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.pulse += this.pulseSpeed;
+    var pulseFactor = (Math.sin(this.pulse) + 1) / 2;
+    this.currentAlpha = this.alpha * (0.5 + pulseFactor * 0.5);
+    if (this.x < -10 || this.x > W + 10 || this.y < -10 || this.y > H + 10) {
+      this.reset();
+      this.x = Math.random() > 0.5 ? -5 : W + 5;
+    }
+  };
+  Particle.prototype.draw = function() {
+    ctx.save();
+    ctx.globalAlpha = this.currentAlpha;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = '#00d4ff';
+    ctx.fill();
+    ctx.restore();
+  };
+
+  var PARTICLE_COUNT = Math.min(100, Math.floor(W * H / 12000));
+  for (var i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle());
+  }
+
+  function drawConnections() {
+    var maxDist = 130;
+    for (var a = 0; a < particles.length; a++) {
+      for (var b = a + 1; b < particles.length; b++) {
+        var dx = particles[a].x - particles[b].x;
+        var dy = particles[a].y - particles[b].y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxDist) {
+          var alpha = (1 - dist / maxDist) * 0.3;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.moveTo(particles[a].x, particles[a].y);
+          ctx.lineTo(particles[b].x, particles[b].y);
+          ctx.strokeStyle = '#00d4ff';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+  }
+
+  function DataLine() { this.reset(); }
+  DataLine.prototype.reset = function() {
+    this.x = Math.random() * W;
+    this.y = -20;
+    this.length = Math.random() * 80 + 60;
+    this.speed = Math.random() * 2 + 0.8;
+    this.alpha = Math.random() * 0.5 + 0.3;
+    this.width = Math.random() > 0.5 ? 2 : 1;
+  };
+  DataLine.prototype.update = function() {
+    this.y += this.speed;
+    if (this.y > H + this.length) this.reset();
+  };
+  DataLine.prototype.draw = function() {
+    ctx.save();
+    var grad = ctx.createLinearGradient(this.x, this.y - this.length, this.x, this.y);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.5, 'rgba(0, 212, 255, ' + this.alpha + ')');
+    grad.addColorStop(1, 'rgba(0, 212, 255, 0)');
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - this.length);
+    ctx.lineTo(this.x, this.y);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = this.width;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  for (var j = 0; j < 25; j++) {
+    var dl = new DataLine();
+    dl.y = Math.random() * H;
+    lines.push(dl);
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    drawConnections();
+    for (var i = 0; i < particles.length; i++) {
+      particles[i].update();
+      particles[i].draw();
+    }
+    for (var j = 0; j < lines.length; j++) {
+      lines[j].update();
+      lines[j].draw();
+    }
+    requestAnimationFrame(animate);
+  }
+  console.log('[CYBER] Canvas particles: ' + PARTICLE_COUNT + ' nodes / ' + lines.length + ' data streams — active');
+  animate();
+
+  // =============================================================
+  // 2. 首页 Hero Banner — 人物立绘 + 扫描线
+  // =============================================================
+  function injectHeroBanner() {
+    if (!isHome) return;
+    if (document.getElementById('hero-banner')) return;
+    // 注入到 main.main 之前，作为独立全宽块级元素（不参与 flex 布局）
+    var mainEl = document.querySelector('main.main');
+    if (!mainEl) return;
+    var hero = document.createElement('div');
+    hero.id = 'hero-banner';
+    mainEl.parentNode.insertBefore(hero, mainEl);
+  }
+  injectHeroBanner();
+  document.addEventListener('page:loaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    injectHeroBanner();
+  });
+
+  // =============================================================
+  // 3. 数据流标语 — 首页文章列表上方
+  // =============================================================
+  function injectStatusBar() {
+    if (!isHome) return;
+    if (document.getElementById('cyber-status-bar')) return;
+    // 注入到 .main-inner 内作为第一个子元素（有正确宽度，避侧边栏）
+    var mainInner = document.querySelector('.main-inner.index') || document.querySelector('.main-inner');
+    if (!mainInner) return;
+    var bar = document.createElement('div');
+    bar.id = 'cyber-status-bar';
+    bar.textContent = 'CONSCIOUSNESS SPACE ONLINE \u25C8 DATA STREAM ACTIVE';
+    mainInner.insertBefore(bar, mainInner.firstChild);
+  }
+  injectStatusBar();
+  document.addEventListener('page:loaded', function() {
+    injectStatusBar();
+  });
+
+  // =============================================================
+  // 4. 标题 RGB 故障闪烁（非首页）
+  // =============================================================
+  var glitchTimer = null;
+
+  function startTitleGlitch() {
+    if (glitchTimer) clearInterval(glitchTimer);
+    if (isHome) return;
+    var el = document.querySelector('.site-title');
+    if (!el) return;
+    glitchTimer = setInterval(function() {
+      el.style.textShadow = '0 0 25px #00d4ff, 2px 0 rgba(255,0,80,0.6), -2px 0 rgba(0,220,180,0.6)';
+      el.style.transform = 'skewX(' + (Math.random() * 0.8 - 0.4) + 'deg)';
+      el.style.letterSpacing = (Math.random() * 0.2 + 0.06) + 'em';
+      setTimeout(function() {
+        el.style.textShadow = '0 0 15px rgba(0,212,255,0.45)';
+        el.style.transform = 'skewX(0deg)';
+        el.style.letterSpacing = '0.08em';
+      }, 100);
+    }, 1200);
+    console.log('[CYBER] Title glitch: ' + (isHome ? 'OFF (home)' : 'ON'));
+  }
+  startTitleGlitch();
+
+  // =============================================================
+  // 5. Giscus 评论系统 — 仅文章页
+  // =============================================================
+  function loadGiscus() {
+    if (!isPost) return;
+    var container = document.getElementById('giscus-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    var script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'maoyinglong/maoyinglong.github.io');
+    script.setAttribute('data-repo-id', 'R_kgDOQu-q0A');
+    script.setAttribute('data-category', 'Announcements');
+    script.setAttribute('data-category-id', 'DIC_kwDOQu-q0M4DA2-L');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'top');
+    script.setAttribute('data-theme', 'dark_dimmed');
+    script.setAttribute('data-lang', 'zh-CN');
+    script.setAttribute('data-loading', 'lazy');
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+    container.appendChild(script);
+  }
+
+  function initGiscus() {
+    var container = document.getElementById('giscus-container');
+    if (!container) {
+      // 如果容器不存在，动态创建并插入文章底部
+      var postBody = document.querySelector('.post-body');
+      if (!postBody) return;
+      var giscusDiv = document.createElement('div');
+      giscusDiv.id = 'giscus-container';
+      postBody.parentNode.insertBefore(giscusDiv, postBody.nextSibling);
+    }
+    loadGiscus();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+  document.addEventListener('page:loaded', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+  document.addEventListener('pjax:complete', function() {
+    pageCfg = getPageConfig();
+    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
+    isPost = pageCfg.isPost === true;
+    if (isPost) initGiscus();
+    startTitleGlitch();
+    injectStatusBar();
+    injectHeroBanner();
+  });
+
+  // =============================================================
+  // 6. 侧边栏 — 分类/标签数字补链接
+  // =============================================================
+  function fixSidebarLinks() {
+    var cats = document.querySelector('.site-state-categories .site-state-item-count');
+    if (cats && !cats.closest('a')) {
+      var a = document.createElement('a');
+      a.href = '/categories/';
+      cats.parentNode.insertBefore(a, cats);
+      a.appendChild(cats);
+    }
+    var tags = document.querySelector('.site-state-tags .site-state-item-count');
+    if (tags && !tags.closest('a')) {
+      var a = document.createElement('a');
+      a.href = '/tags/';
+      tags.parentNode.insertBefore(a, tags);
+      a.appendChild(tags);
+    }
+  }
+  fixSidebarLinks();
+  document.addEventListener('page:loaded', fixSidebarLinks);
+  document.addEventListener('pjax:complete', fixSidebarLinks);
+
+  // =============================================================
+  // 7. 分类页/标签页 — 注入页面标题（和首页区分）
+  // =============================================================
+  function injectPageTitle() {
+    if (isHome || isPost) return;
+    var id = 'cyber-page-title';
+    if (document.getElementById(id)) return;
+    var mainInner = document.querySelector('.main-inner');
+    if (!mainInner) return;
+    
+    var path = window.location.pathname;
+    var title = '';
+    if (path.startsWith('/categories/')) title = '◈  分类';
+    else if (path.startsWith('/tags/')) title = '◈  标签';
+    else if (path.startsWith('/archives/')) title = '◈  归档';
+    else return;
+    
+    var h1 = document.createElement('h1');
+    h1.id = id;
+    h1.textContent = title;
+    h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
+    mainInner.insertBefore(h1, mainInner.firstChild);
+  }
+  injectPageTitle();
+  document.addEventListener('page:loaded', injectPageTitle);
+  document.addEventListener('pjax:complete', injectPageTitle);
+
+  // =============================================================
+  // 8. 侧边栏 — 最新留言滚动模块（Giscus API）
+  // =============================================================
+  (function() {
+    var CACHE_KEY = 'xue_comments_cache';
+    var CACHE_TTL = 10 * 60 * 1000; // 10 分钟刷新
+    var MAX_ITEMS = 8;
+    var SCROLL_SPEED = 35; // px/s
+
+    function createWidget(discussions) {
+      var sidebar = document.querySelector('.sidebar-inner');
+      if (!sidebar) return;
+      // 去重
+      var old = document.getElementById('recent-comments-widget');
+      if (old) old.remove();
+
+      var wrap = document.createElement('div');
+      wrap.id = 'recent-comments-widget';
+      wrap.innerHTML =
+        '<div class="rc-header"><span class="rc-icon">◈</span> 最新留言</div>' +
+        '<div class="rc-track"><div class="rc-list"></div></div>';
+
+      var list = wrap.querySelector('.rc-list');
+      var fragment = document.createDocumentFragment();
+
+      if (!discussions.length) {
+        var empty = document.createElement('div');
+        empty.className = 'rc-item';
+        empty.innerHTML = '<span class="rc-title">暂无留言，来抢沙发~</span>';
+        fragment.appendChild(empty);
+      } else {
+        discussions.forEach(function(d) {
+          var item = document.createElement('a');
+          item.className = 'rc-item';
+          item.href = d.url;
+          item.target = '_blank';
+          item.title = d.title;
+
+          // 取最后一条评论内容，截断 40 字
+          var preview = '';
+          if (d.lastComment) {
+            preview = d.lastComment.body || '';
+            // 去 HTML 标签
+            preview = preview.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+            if (preview.length > 40) preview = preview.slice(0, 40) + '…';
+          }
+
+          var timeAgo = formatTime(d.updatedAt);
+
+          item.innerHTML =
+            '<span class="rc-title">' + escapeHtml(d.title) + '</span>' +
+            (preview ? '<span class="rc-preview">' + escapeHtml(preview) + '</span>' : '') +
+            '<span class="rc-meta">' +
+              (d.lastComment && d.lastComment.author ? '<img class="rc-avatar" src="' + d.lastComment.author.avatarUrl + '&s=20" width="16" height="16" alt="">' : '') +
+              (d.lastComment && d.lastComment.author ? escapeHtml(d.lastComment.author.login) : '') +
+              ' · ' + timeAgo +
+            '</span>';
+          fragment.appendChild(item);
+        });
+      }
+
+      list.appendChild(fragment);
+      sidebar.appendChild(wrap);
+
+      // 启动滚动动画
+      startScroll(wrap);
+    }
+
+    function startScroll(widget) {
+      var track = widget.querySelector('.rc-track');
+      var list = widget.querySelector('.rc-list');
+      if (!track || !list) return;
+
+      // 计算内容高度决定是否启动滚动
+      var contentH = list.scrollHeight;
+      var trackH = track.clientHeight;
+
+      if (contentH <= trackH + 2) return; // 内容不够多，不滚动
+
+      // 克隆一份实现无缝循环
+      var clone = list.cloneNode(true);
+      track.appendChild(clone);
+
+      var pos = 0;
+      var paused = false;
+
+      function step(ts) {
+        if (!paused) {
+          pos += SCROLL_SPEED * 0.016; // ~60fps
+          if (pos >= contentH) pos = 0;
+          track.scrollTop = pos;
+        }
+        requestAnimationFrame(step);
+      }
+
+      track.addEventListener('mouseenter', function() { paused = true; });
+      track.addEventListener('mouseleave', function() { paused = false; });
+      requestAnimationFrame(step);
+    }
+
+    function formatTime(isoStr) {
+      var then = new Date(isoStr);
+      var now = new Date();
+      var diff = Math.floor((now - then) / 1000);
+      if (diff < 60) return '刚刚';
+      if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+      if (diff < 604800) return Math.floor(diff / 86400) + ' 天前';
+      return then.toLocaleDateString('zh-CN');
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function fetchFromGitHub(callback) {
+      // 读取 VPS cron 同步的静态 JSON（避免浏览器直调 GitHub API 被限流）
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/data/recent-comments.json', true);
+      xhr.timeout = 6000;
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          try {
+            var discussions = JSON.parse(xhr.responseText);
+            callback(discussions);
+          } catch(e) {
+            callback([]);
+          }
+        } else {
+          callback([]);
+        }
+      };
+
+      xhr.onerror = function() { callback([]); };
+      xhr.ontimeout = function() { callback([]); };
+      xhr.send();
+    }
+
+    function initWidget() {
+      // 检查缓存
+      try {
+        var cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        if (cached && cached.ts && (Date.now() - cached.ts < CACHE_TTL)) {
+          createWidget(cached.data);
+          return;
+        }
+      } catch(e) {}
+
+      // 异步请求，不阻塞页面
+      fetchFromGitHub(function(discussions) {
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: discussions }));
+        } catch(e) {}
+        createWidget(discussions);
+      });
+    }
+
+    // DOM 就绪后延迟执行，不抢首屏
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(initWidget, 1200);
+      } else {
+        window.addEventListener('load', function() { setTimeout(initWidget, 800); });
+      }
+    }
+    schedule();
+  })();
+
+  // =============================================================
+  // 9. 侧边栏 — 微信公众号二维码（点击弹出）
+  // =============================================================
+  (function() {
+    function injectQRModal() {
+      if (document.getElementById('wechat-qr-modal')) return;
+
+      var modal = document.createElement('div');
+      modal.id = 'wechat-qr-modal';
+      modal.innerHTML =
+        '<div class=\"wechat-qr-backdrop\"></div>' +
+        '<div class=\"wechat-qr-card\">' +
+          '<img src=\"/images/wechat-qr.jpg\" alt=\"微信公众号二维码\" style=\"width:200px;height:200px;display:block;margin:0 auto;\">' +
+          '<p style=\"text-align:center;color:#a0c4d4;margin:12px 0 0;font-size:0.85rem;\">扫码关注「雪的数字花园」</p>' +
+        '</div>';
+      modal.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;';
+      document.body.appendChild(modal);
+
+      // 点击遮罩关闭
+      modal.querySelector('.wechat-qr-backdrop').onclick = function() { modal.style.display = 'none'; };
+      modal.querySelector('.wechat-qr-card').onclick = function(e) { e.stopPropagation(); };
+    }
+
+    function bindWeChatLink() {
+      var links = document.querySelectorAll('.links-of-author a');
+      for (var i = 0; i < links.length; i++) {
+        if (links[i].textContent.trim() === '公众号' || links[i].href.indexOf('void(0)') > -1) {
+          links[i].onclick = function(e) {
+            e.preventDefault();
+            injectQRModal();
+            var modal = document.getElementById('wechat-qr-modal');
+            if (modal) modal.style.display = 'block';
+          };
+          break;
+        }
+      }
+    }
+
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(bindWeChatLink, 1000);
+      } else {
+        window.addEventListener('load', function() { setTimeout(bindWeChatLink, 600); });
+      }
+    }
+    schedule();
+    document.addEventListener('pjax:complete', function() { setTimeout(bindWeChatLink, 300); });
+  })();
+
+  // =============================================================
+  // 侧边栏 — 身份区已从服务端模板层移到 sidebar.njk
+  // =============================================================
+
+  // =============================================================
+  // 11. 今日访问计数器 — Cloudflare Worker
+  // =============================================================
+  (function() {
+    var COUNTER_URL = 'https://counter.rnm.gv.uy';
+
+    // 发送访问记录（beacon — 不阻塞页面卸载）
+    function sendHit() {
+      try {
+        var img = new Image();
+        img.src = COUNTER_URL + '/hit?' + Date.now();  // Image beacon 绕过 CORS
+      } catch(e) {}
+    }
+
+    // 获取今日计数并显示在页脚
+    function fetchToday() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', COUNTER_URL + '/today', true);
+      xhr.timeout = 3000;
+      xhr.onload = function() {
+        if (xhr.status !== 200) return;
+        try {
+          var data = JSON.parse(xhr.responseText);
+          showCount(data.today || 0);
+        } catch(e) {}
+      };
+      xhr.send();
+    }
+
+    function showCount(count) {
+      // 插入到页脚 copyright 后方
+      var footer = document.querySelector('.footer-inner');
+      if (!footer) return;
+      var old = document.getElementById('today-visitor-count');
+      if (old) old.remove();
+      var span = document.createElement('span');
+      span.id = 'today-visitor-count';
+      span.style.cssText = 'margin-left:14px;color:#4fc3f7;font-size:0.85em;';
+      span.innerHTML = '☀ 今日访问 ' + count + ' 人';
+      footer.appendChild(span);
+    }
+
+    sendHit();
+    // 延迟 800ms 再请求计数，给 Worker 写入时间
+    setTimeout(fetchToday, 800);
+
+    // PJAX 页面切换时重新计数
+    document.addEventListener('pjax:complete', function() {
+      sendHit();
+      setTimeout(fetchToday, 800);
+    });
+  })();
+
+  // =============================================================
+  // 12. 雪 · 数字宠物 — 右下角精灵动画
+  // =============================================================
+  (function() {
+    var PET_URL = '/images/xue-pet-spritesheet.png';
+    var CELL_W = 192, CELL_H = 208;
+    var COLS = 8;
+    var DISPLAY_H = 150; // 渲染高度
+    var SCALE = DISPLAY_H / CELL_H;
+    var DISPLAY_W = CELL_W * SCALE;
+
+    // 精灵表行索引
+    var STATES = {
+      idle:         { row: 0, frames: 6, speed: 180 },
+      'running-right': { row: 1, frames: 8, speed: 100 },
+      'running-left':  { row: 2, frames: 8, speed: 100 },
+      waving:       { row: 3, frames: 4, speed: 160 },
+      jumping:      { row: 4, frames: 5, speed: 120 },
+      failed:       { row: 5, frames: 8, speed: 150 },
+      waiting:      { row: 6, frames: 8, speed: 200 }
+    };
+
+    var currentState = 'idle';
+    var frameIndex = 0, lastFrameTime = 0;
+    var stateLocked = false, lockTimer = null;
+
+    // 创建容器
+    var container = document.createElement('div');
+    container.id = 'xue-pet-container';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9990;cursor:pointer;transition:transform 0.2s ease;';
+    
+    var canvas = document.createElement('canvas');
+    canvas.id = 'xue-pet-canvas';
+    canvas.width = CELL_W;
+    canvas.height = CELL_H;
+    canvas.style.cssText = 'width:' + DISPLAY_W + 'px;height:' + DISPLAY_H + 'px;image-rendering:pixelated;filter:drop-shadow(0 0 12px rgba(0,212,255,0.3));transition:filter 0.3s ease;';
+    container.appendChild(canvas);
+
+    // 状态标签
+    var label = document.createElement('div');
+    label.id = 'xue-pet-label';
+    label.style.cssText = 'text-align:center;font-size:0.65rem;color:#4fc3f7;font-family:"Courier New",Consolas,monospace;letter-spacing:0.08em;margin-top:2px;opacity:0;transition:opacity 0.4s ease;text-shadow:0 0 6px rgba(0,212,255,0.4);';
+    label.textContent = 'SENTINEL ONLINE';
+    container.appendChild(label);
+
+    var ctx = canvas.getContext('2d');
+    var spriteImg = new Image();
+    spriteImg.src = PET_URL;
+
+    function drawFrame(stateName, frame) {
+      ctx.clearRect(0, 0, CELL_W, CELL_H);
+      var s = STATES[stateName];
+      if (!s) { s = STATES.idle; stateName = 'idle'; }
+      frame = Math.min(frame, s.frames - 1);
+      var sx = frame * CELL_W;
+      var sy = s.row * CELL_H;
+      ctx.drawImage(spriteImg, sx, sy, CELL_W, CELL_H, 0, 0, CELL_W, CELL_H);
+    }
+
+    function setState(state) {
+      if (stateLocked) return;
+      if (state === currentState) return;
+      currentState = state;
+      frameIndex = 0;
+      lastFrameTime = 0;
+    }
+
+    function lockState(state, duration) {
+      stateLocked = true;
+      currentState = state;
+      frameIndex = 0;
+      lastFrameTime = 0;
+      clearTimeout(lockTimer);
+      lockTimer = setTimeout(function() {
+        stateLocked = false;
+        currentState = 'idle';
+        frameIndex = 0;
+        lastFrameTime = 0;
+      }, duration);
+    }
+
+    function animate(ts) {
+      if (!lastFrameTime) lastFrameTime = ts;
+      var elapsed = ts - lastFrameTime;
+      var s = STATES[currentState];
+      if (elapsed > s.speed) {
+        frameIndex = (frameIndex + 1) % s.frames;
+        lastFrameTime = ts;
+      }
+      drawFrame(currentState, frameIndex);
+      requestAnimationFrame(animate);
+    }
+
+    // 挂载 DOM
+    function mount() {
+      if (document.getElementById('xue-pet-container')) return;
+      document.body.appendChild(container);
+      requestAnimationFrame(animate);
+    }
+
+    // 交互事件
+    container.addEventListener('mouseenter', function() {
+      if (!stateLocked) { setState('waving'); }
+      canvas.style.filter = 'drop-shadow(0 0 20px rgba(0,212,255,0.6))';
+      label.style.opacity = '1';
+    });
+    container.addEventListener('mouseleave', function() {
+      if (!stateLocked) { setState('idle'); frameIndex = 0; }
+      canvas.style.filter = 'drop-shadow(0 0 12px rgba(0,212,255,0.3))';
+      label.style.opacity = '0';
+    });
+    container.addEventListener('click', function() {
+      lockState('jumping', 1200);
+    });
+
+    // 随机空闲动作
+    var idleTimer = null;
+    function randomIdle() {
+      if (stateLocked) return;
+      var r = Math.random();
+      if (r < 0.4) { setState('idle'); }
+      else if (r < 0.7) { setState('waiting'); }
+      else { lockState('waving', 2000); }
+      idleTimer = setTimeout(randomIdle, 8000 + Math.random() * 12000);
+    }
+
+    if (document.readyState === 'complete') {
+      mount();
+      idleTimer = setTimeout(randomIdle, 4000);
+    } else {
+      window.addEventListener('load', function() {
+        mount();
+        idleTimer = setTimeout(randomIdle, 4000);
+      });
+    }
+
+    document.addEventListener('pjax:complete', function() {
+      mount();
+      // 重新挂载后重置状态
+      stateLocked = false;
+      setState('idle');
+      frameIndex = 0;
+    });
+  })();
+
+  // =============================================================
+  // 13. 一键复制 Markdown — 文章页底部按钮
+  // =============================================================
+  (function() {
+    var RAW_BASE = 'https://raw.githubusercontent.com/maoyinglong/blog-hexo-source/main/source/_posts/';
+
+    function getSlug() {
+      var path = window.location.pathname.replace(/\/$/, '');
+      var parts = path.split('/');
+      // permalink 格式: /YYYY/MM/DD/slug/ → slug = 最后一个非空段
+      return parts[parts.length - 1] || '';
+    }
+
+    function injectButton() {
+      if (!isPost) return;
+      if (document.getElementById('copy-md-btn')) return;
+
+      var footer = document.querySelector('.post-footer');
+      if (!footer) return;
+
+      var btn = document.createElement('button');
+      btn.id = 'copy-md-btn';
+      btn.className = 'copy-md-btn';
+      btn.innerHTML = '◈  复制 Markdown';
+      btn.title = '一键复制整篇文章为 Markdown 格式，方便跨平台发布';
+
+      btn.addEventListener('click', function() {
+        var slug = getSlug();
+        if (!slug) return;
+        var url = RAW_BASE + slug + '.md';
+
+        btn.textContent = '◈  加载中...';
+        btn.disabled = true;
+
+        fetch(url)
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function(md) {
+            // 去掉 YAML front-matter（--- 到 ---），保留正文
+            var cleaned = md.replace(/^---[\s\S]*?---\n*/, '');
+            return navigator.clipboard.writeText(cleaned).then(function() { return cleaned; });
+          })
+          .then(function() {
+            btn.textContent = '◆  已复制！';
+            btn.classList.add('copied');
+            btn.disabled = false;
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+              btn.classList.remove('copied');
+            }, 2500);
+          })
+          .catch(function(err) {
+            btn.textContent = '✕  复制失败';
+            btn.disabled = false;
+            console.error('[COPY MD]', err);
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+            }, 2500);
+          });
+      });
+
+      footer.appendChild(btn);
+    }
+
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(injectButton, 600);
+      } else {
+        window.addEventListener('load', function() { setTimeout(injectButton, 400); });
+      }
+    }
+    schedule();
+    document.addEventListener('pjax:complete', function() {
+      pageCfg = getPageConfig();
+      isPost = pageCfg.isPost === true;
+      // 清除旧按钮
+      var old = document.getElementById('copy-md-btn');
+      if (old) old.remove();
+      setTimeout(injectButton, 300);
+    });
+  })();
+
+})();
+</script>
+
+</body>
+</html>
