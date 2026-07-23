@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/yuanbao-api-pure-proxy-cover.webp">
 <meta property="article:published_time" content="2026-06-20T05:00:00.000Z">
-<meta property="article:modified_time" content="2026-07-13T20:21:15.738Z">
+<meta property="article:modified_time" content="2026-07-23T10:30:46.423Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="AI工具">
 <meta property="article:tag" content="API代理">
@@ -160,11 +160,6 @@
   <aside class="sidebar">
 
     <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
-      <div class="site-author animated sidebar-author-pinned" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" alt="雪 ❄️" src="/images/xue-avatar.png">
-        <p class="site-author-name" itemprop="name">雪 ❄️</p>
-        <div class="site-description" itemprop="description">AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技</div>
-      </div>
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -182,7 +177,13 @@
         <!--/noindex-->
 
         <div class="site-overview-wrap sidebar-panel">
-          <div class="site-state-wrap animated">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="雪 ❄️"
+      src="/images/xue-avatar.png">
+  <p class="site-author-name" itemprop="name">雪 ❄️</p>
+  <div class="site-description" itemprop="description">AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技</div>
+</div>
+<div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
@@ -1289,6 +1290,90 @@
       stateLocked = false;
       setState('idle');
       frameIndex = 0;
+    });
+  })();
+
+  // =============================================================
+  // 13. 一键复制 Markdown — 文章页底部按钮
+  // =============================================================
+  (function() {
+    var RAW_BASE = 'https://raw.githubusercontent.com/maoyinglong/blog-hexo-source/main/source/_posts/';
+
+    function getSlug() {
+      var path = window.location.pathname.replace(/\/$/, '');
+      var parts = path.split('/');
+      // permalink 格式: /YYYY/MM/DD/slug/ → slug = 最后一个非空段
+      return parts[parts.length - 1] || '';
+    }
+
+    function injectButton() {
+      if (!isPost) return;
+      if (document.getElementById('copy-md-btn')) return;
+
+      var footer = document.querySelector('.post-footer');
+      if (!footer) return;
+
+      var btn = document.createElement('button');
+      btn.id = 'copy-md-btn';
+      btn.className = 'copy-md-btn';
+      btn.innerHTML = '◈  复制 Markdown';
+      btn.title = '一键复制整篇文章为 Markdown 格式，方便跨平台发布';
+
+      btn.addEventListener('click', function() {
+        var slug = getSlug();
+        if (!slug) return;
+        var url = RAW_BASE + slug + '.md';
+
+        btn.textContent = '◈  加载中...';
+        btn.disabled = true;
+
+        fetch(url)
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function(md) {
+            // 去掉 YAML front-matter（--- 到 ---），保留正文
+            var cleaned = md.replace(/^---[\s\S]*?---\n*/, '');
+            return navigator.clipboard.writeText(cleaned).then(function() { return cleaned; });
+          })
+          .then(function() {
+            btn.textContent = '◆  已复制！';
+            btn.classList.add('copied');
+            btn.disabled = false;
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+              btn.classList.remove('copied');
+            }, 2500);
+          })
+          .catch(function(err) {
+            btn.textContent = '✕  复制失败';
+            btn.disabled = false;
+            console.error('[COPY MD]', err);
+            setTimeout(function() {
+              btn.textContent = '◈  复制 Markdown';
+            }, 2500);
+          });
+      });
+
+      footer.appendChild(btn);
+    }
+
+    function schedule() {
+      if (document.readyState === 'complete') {
+        setTimeout(injectButton, 600);
+      } else {
+        window.addEventListener('load', function() { setTimeout(injectButton, 400); });
+      }
+    }
+    schedule();
+    document.addEventListener('pjax:complete', function() {
+      pageCfg = getPageConfig();
+      isPost = pageCfg.isPost === true;
+      // 清除旧按钮
+      var old = document.getElementById('copy-md-btn');
+      if (old) old.remove();
+      setTimeout(injectButton, 300);
     });
   })();
 

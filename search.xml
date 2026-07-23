@@ -1120,350 +1120,6 @@
       </tags>
   </entry>
   <entry>
-    <title>我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程</title>
-    <url>/2026/07/22/hexo-next-theme-migration-guide/</url>
-    <content><![CDATA[<p><img data-src="/images/hexo-next-theme-cover.webp" alt="封面图"></p>
-<p>我的 Hexo 博客上线好几个月了，一直用默认的 landscape 主题。说实话，丑得我都不想打开第二眼——没有侧边栏、没有分页、文章列表一拉到底，旧文章永远沉在底部不见天日。</p>
-<p>上周我终于忍不了了，花 10 分钟换了 <strong>NexT 主题</strong>，顺便把品牌定制也做了。现在打开博客，我自己都想多刷几遍。</p>
-<p>下面是把整个过程拆成 8 步的完整教程，每一步都有命令，小白也能照抄。</p>
-<hr>
-<h2 id="第〇步：先搞清楚你现在的状况"><a href="#第〇步：先搞清楚你现在的状况" class="headerlink" title="第〇步：先搞清楚你现在的状况"></a>第〇步：先搞清楚你现在的状况</h2><p>首先，进入你的博客项目目录：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> 你的博客目录</span><br></pre></td></tr></table></figure>
-
-<p>看一下当前用的是不是默认主题：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">grep <span class="string">&#x27;theme:&#x27;</span> _config.yml</span><br></pre></td></tr></table></figure>
-
-<p>如果输出 <code>theme: landscape</code>，说明你跟我一样在用默认主题，这篇文章就是为你写的。</p>
-<hr>
-<h2 id="第一步：为什么选-NexT？"><a href="#第一步：为什么选-NexT？" class="headerlink" title="第一步：为什么选 NexT？"></a>第一步：为什么选 NexT？</h2><p>Hexo 生态里有几千个主题，我列三个最主流的选择：</p>
-<table>
-<thead>
-<tr>
-<th>主题</th>
-<th>GitHub 标星</th>
-<th>特点</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>NexT</strong></td>
-<td>3 万+</td>
-<td>最老牌、文档最全、踩坑基本有前人填过</td>
-</tr>
-<tr>
-<td>Butterfly</td>
-<td>7 千+</td>
-<td>国产热门，颜值高，配置门槛稍高</td>
-</tr>
-<tr>
-<td>Fluid</td>
-<td>9 千+</td>
-<td>Material Design 风格，简洁</td>
-</tr>
-</tbody></table>
-<p>我选 NexT 的理由很简单：<strong>3 万 star 的社区冗余。</strong> 一个主题用的人越多，你遇到的每个问题基本都能在搜索引擎里找到答案。这对小白来说就是最大的安全感。</p>
-<hr>
-<h2 id="第二步：安装-NexT"><a href="#第二步：安装-NexT" class="headerlink" title="第二步：安装 NexT"></a>第二步：安装 NexT</h2><p>如果你是 pnpm 用户（和我一样），一行搞定：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-theme-next --save</span><br></pre></td></tr></table></figure>
-
-<p>如果是 npm 用户：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next --save</span><br></pre></td></tr></table></figure>
-
-<p>装好后，修改站点配置文件 <code>_config.yml</code>，把主题名换成 <code>next</code>：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
-
-<p>就这么简单，现在运行 <code>hexo server</code> 看看效果——你的博客已经换皮了。</p>
-<blockquote>
-<p>默认效果其实就能打 60 分，但我们要的是 90 分——不急，后面一步步调。</p>
-</blockquote>
-<hr>
-<h2 id="第三步：创建主题配置文件"><a href="#第三步：创建主题配置文件" class="headerlink" title="第三步：创建主题配置文件"></a>第三步：创建主题配置文件</h2><p><strong>NexT 8.x 最核心的一个概念：不要在 <code>node_modules</code> 里直接改主题文件。</strong></p>
-<p>为什么？因为 <code>node_modules</code> 里的一切改动用 <code>npm install</code> 或 <code>pnpm install</code> 后会被覆盖，你的定制全丢。</p>
-<p>正确做法：在你的项目根目录新建一个文件叫 <code>_config.next.yml</code>，NexT 会自动读取这个文件来覆盖默认配置。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">touch</span> _config.next.yml</span><br></pre></td></tr></table></figure>
-
-<p>下面我把 <code>_config.next.yml</code> 里要写的内容逐项拆开讲。</p>
-<hr>
-<h2 id="第四步：基础配置（照抄就行）"><a href="#第四步：基础配置（照抄就行）" class="headerlink" title="第四步：基础配置（照抄就行）"></a>第四步：基础配置（照抄就行）</h2><p>打开 <code>_config.next.yml</code>，填入以下内容：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 布局方案：Gemini 是双栏宽侧边模式，信息密度高</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Gemini</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暗色模式：自动跟随系统</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 菜单栏：你想让读者看到哪些入口</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">about:</span> <span class="string">/about/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-user</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 侧边栏：靠左放，文章页面自动展开</span></span><br><span class="line"><span class="attr">sidebar:</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">left</span></span><br><span class="line">  <span class="attr">display:</span> <span class="string">post</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 头像：圆形显示</span></span><br><span class="line"><span class="attr">avatar:</span></span><br><span class="line">  <span class="attr">url:</span> <span class="string">/images/avatar.png</span></span><br><span class="line">  <span class="attr">rounded:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 阅读进度条：一眼看到阅读进度</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 代码块：圆角 + 一键复制按钮</span></span><br><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="attr">border_radius:</span> <span class="number">8</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># PJAX：浏览器无刷新跳转，体验丝滑</span></span><br><span class="line"><span class="attr">pjax:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 图片功能三件套</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span>      <span class="comment"># 点击放大</span></span><br><span class="line"><span class="attr">mediumzoom:</span> <span class="literal">true</span>    <span class="comment"># 缩放</span></span><br><span class="line"><span class="attr">lazyload:</span> <span class="literal">true</span>      <span class="comment"># 懒加载（图片多了不卡）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 书签功能</span></span><br><span class="line"><span class="attr">bookmark:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>每一项我都加了注释说明它是干什么的。你现在只需复制粘贴，以后想调再回来看注释。</p>
-<blockquote>
-<p>这一步走完，你的博客已经能打到 75 分了——有侧边栏、有进度条、代码块有了复制按钮。剩下的 15 分，我们留给”品牌定制”。</p>
-</blockquote>
-<hr>
-<h2 id="第五步：品牌定制——把博客变成”你的”"><a href="#第五步：品牌定制——把博客变成”你的”" class="headerlink" title="第五步：品牌定制——把博客变成”你的”"></a>第五步：品牌定制——把博客变成”你的”</h2><h3 id="5-1-准备一张头像"><a href="#5-1-准备一张头像" class="headerlink" title="5.1 准备一张头像"></a>5.1 准备一张头像</h3><p>找一张正方形的图片（推荐 512×512 以上），放进 <code>source/images/</code> 目录。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p <span class="built_in">source</span>/images</span><br><span class="line"><span class="built_in">cp</span> /你的图片路径/你的头像.png <span class="built_in">source</span>/images/avatar.png</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-2-改站点信息"><a href="#5-2-改站点信息" class="headerlink" title="5.2 改站点信息"></a>5.2 改站点信息</h3><p>打开 <code>_config.yml</code>（注意，这个是站点主配置，不是主题配置），修改以下字段：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">你的博客名</span></span><br><span class="line"><span class="attr">subtitle:</span> <span class="string">一句话介绍你的博客</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">你的博客是干什么的（写清楚，搜索引擎要靠这个收录）</span></span><br><span class="line"><span class="attr">keywords:</span> <span class="string">关键词1,关键词2,关键词3</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">你的名字</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="5-3-添加”关于”页面"><a href="#5-3-添加”关于”页面" class="headerlink" title="5.3 添加”关于”页面"></a>5.3 添加”关于”页面</h3><p>因为菜单里配了 <code>about: /about/</code>，你必须建一个对应的页面，否则点进去是 404：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo new page about</span><br></pre></td></tr></table></figure>
-
-<p>这会在 <code>source/about/index.md</code> 生成一个文件。打开它，用第一人称写一段话告诉读者你是谁、这个博客写什么。</p>
-<h3 id="5-4-定制页脚"><a href="#5-4-定制页脚" class="headerlink" title="5.4 定制页脚"></a>5.4 定制页脚</h3><p>在 <code>_config.next.yml</code> 中加上页脚设置：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="attr">since:</span> <span class="number">2026</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-snowflake</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line">  <span class="attr">copyright:</span> <span class="string">你的名字</span> <span class="string">—</span> <span class="string">一句话介绍</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第六步：装两个实用插件"><a href="#第六步：装两个实用插件" class="headerlink" title="第六步：装两个实用插件"></a>第六步：装两个实用插件</h2><h3 id="6-1-本地搜索"><a href="#6-1-本地搜索" class="headerlink" title="6.1 本地搜索"></a>6.1 本地搜索</h3><p>让你的读者能在博客里搜关键词：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-searchdb --save</span><br></pre></td></tr></table></figure>
-
-<p>然后在 <code>_config.yml</code> 中添加：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">search:</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">search.xml</span></span><br><span class="line">  <span class="attr">field:</span> <span class="string">post</span></span><br><span class="line">  <span class="attr">content:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="6-2-RSS-订阅"><a href="#6-2-RSS-订阅" class="headerlink" title="6.2 RSS 订阅"></a>6.2 RSS 订阅</h3><p>让你的博客能被 RSS 阅读器抓取：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-feed --save</span><br></pre></td></tr></table></figure>
-
-<p>然后在 <code>_config.yml</code> 中添加：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">feed:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">atom</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">atom.xml</span></span><br><span class="line">  <span class="attr">limit:</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第七步：本地预览-部署上线"><a href="#第七步：本地预览-部署上线" class="headerlink" title="第七步：本地预览 + 部署上线"></a>第七步：本地预览 + 部署上线</h2><h3 id="7-1-本地预览"><a href="#7-1-本地预览" class="headerlink" title="7.1 本地预览"></a>7.1 本地预览</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo clean &amp;&amp; hexo generate &amp;&amp; hexo server</span><br></pre></td></tr></table></figure>
-
-<p>打开浏览器访问 <code>http://localhost:4000</code>，确认一切正常。</p>
-<h3 id="7-2-部署"><a href="#7-2-部署" class="headerlink" title="7.2 部署"></a>7.2 部署</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git add -A</span><br><span class="line">git commit -m <span class="string">&quot;主题迁移：从 landscape 到 NexT&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-
-<p>GitHub Actions 构建完成后，打开你的博客域名验证效果。</p>
-<hr>
-<h2 id="第八步（必看）：三个坑，踩进去再爬出来太疼了"><a href="#第八步（必看）：三个坑，踩进去再爬出来太疼了" class="headerlink" title="第八步（必看）：三个坑，踩进去再爬出来太疼了"></a>第八步（必看）：三个坑，踩进去再爬出来太疼了</h2><h3 id="坑一：pnpm-严格模式下-NexT-功能失灵"><a href="#坑一：pnpm-严格模式下-NexT-功能失灵" class="headerlink" title="坑一：pnpm 严格模式下 NexT 功能失灵"></a>坑一：pnpm 严格模式下 NexT 功能失灵</h3><p><strong>现象</strong>：<code>hexo generate</code> 报一堆 <code>Cannot find module &#39;hexo-util&#39;</code> 错误，首页文章显示全文（摘要机制失效）。</p>
-<p><strong>原因</strong>：pnpm 默认不提升依赖（strict hoisting），NexT 的脚本找不到它依赖的模块。</p>
-<p><strong>修复（必须做，不能跳过）</strong>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;shamefully-hoist=true&#x27;</span> &gt; .npmrc</span><br><span class="line">CI=<span class="literal">true</span> pnpm install</span><br></pre></td></tr></table></figure>
-
-<p>然后验证修复效果：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo generate 2&gt;&amp;1 | grep -c <span class="string">&quot;Cannot find module&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>输出必须为 <code>0</code>，否则说明还有问题。</p>
-<h3 id="坑二：Hexo-8-的摘要标签已经废了"><a href="#坑二：Hexo-8-的摘要标签已经废了" class="headerlink" title="坑二：Hexo 8 的摘要标签已经废了"></a>坑二：Hexo 8 的摘要标签已经废了</h3><p>Hexo 8.1.2 彻底移除了 <code>&lt;!-- more --&gt;</code> 和 <code>excerpt_length</code> 的摘要截断功能。</p>
-<p><strong>唯一替代方案</strong>：每篇文章的 front-matter 里手动加 <code>description</code> 字段：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">&quot;文章标题&quot;</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&quot;80-150 字的中文摘要，告诉读者这篇文章讲什么&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<p>没有 <code>description</code> 的文章会显示全文——首页瞬间被长文淹没。</p>
-<h3 id="坑三：改完部署了，打开网页还是旧的？"><a href="#坑三：改完部署了，打开网页还是旧的？" class="headerlink" title="坑三：改完部署了，打开网页还是旧的？"></a>坑三：改完部署了，打开网页还是旧的？</h3><p><strong>别慌，这是 CDN 缓存。</strong></p>
-<p>你 curl 验证看到的可能是旧页面。正确的验证姿势：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错：可能拿到 CDN 缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 对：强制跳过缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>走完上面 8 步，你的博客已经脱胎换骨：</p>
-<ul>
-<li>✅ 有侧边栏、分页、暗色模式</li>
-<li>✅ 代码块一键复制、图片点击放大</li>
-<li>✅ 本地全文搜索</li>
-<li>✅ RSS 订阅</li>
-<li>✅ 品牌定制——标题、头像、页脚都是你自己的味道</li>
-<li>✅ 3 个坑提前帮你填平了</li>
-</ul>
-<p>整个过程不用写一行 CSS，不用改一行模板代码。NexT 把 90% 的事情都替你做好了，你只需要写一个 50 行的 YAML 文件。</p>
-<blockquote>
-<p>你的博客不应该只是”能用”——它值得”好看”。</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>教程类</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>博客</tag>
-        <tag>教程</tag>
-        <tag>小白向</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白</title>
-    <url>/2026/06/20/magnet-crawler-fallback/</url>
-    <content><![CDATA[<p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>想自己写个磁力搜索的爬虫？看完市面上大大小小的资源站，我总结出一套”分级降级”的实战规约：从纯静态正则到 Headless 浏览器破盾，按需升级，<strong>用最低成本搞定 80% 的网站</strong>。</p>
-</blockquote>
-<hr>
-<h2 id="写在前面：为什么写这篇"><a href="#写在前面：为什么写这篇" class="headerlink" title="写在前面：为什么写这篇"></a>写在前面：为什么写这篇</h2><p>磁力搜索这件事，国内的站基本都活不长，今天能用的站明天就挂；国外的站又普遍有强反爬。<strong>纯靠 requests 写爬虫，十有八九会失败</strong>。</p>
-<p>我摸索了一段时间，把”什么站用什么级别、什么级别用什么技术栈、怎么保护宿主机资源”整理出一套实战规约。这篇不是完整的爬虫教程，而是<strong>一份选型决策树</strong>——让你面对一个新站时，能快速判断该用什么级别去打。</p>
-<hr>
-<h2 id="核心原则：分级降级，按需升级"><a href="#核心原则：分级降级，按需升级" class="headerlink" title="核心原则：分级降级，按需升级"></a>核心原则：分级降级，按需升级</h2><p>爬虫的级别从低到高，开销也越来越大。我设计了 4 个级别：</p>
-<table>
-<thead>
-<tr>
-<th>级别</th>
-<th>适用场景</th>
-<th>资源开销</th>
-<th>技术栈</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>🟢 1 - 静态正则</td>
-<td>上古 HTML 站，无反爬</td>
-<td>极低</td>
-<td>requests + BeautifulSoup + re</td>
-</tr>
-<tr>
-<td>🟡 2 - 复杂静态</td>
-<td>链接在 JS&#x2F;隐藏 input 里</td>
-<td>中等</td>
-<td>requests + Base64 解码</td>
-</tr>
-<tr>
-<td>🟠 3 - Headless 浏览器</td>
-<td>必须点真实 DOM 才出链接</td>
-<td>高</td>
-<td>Playwright</td>
-</tr>
-<tr>
-<td>🔴 4 - 终极破盾</td>
-<td>Cloudflare 5秒盾</td>
-<td>极高</td>
-<td>DrissionPage</td>
-</tr>
-</tbody></table>
-<p><strong>核心原则</strong>：<strong>一旦当前级别能搞定，立刻返回，绝不无故触发下一级</strong>。这是为了最大化保护宿主机——Headless 浏览器一启动就吃 500MB+ 内存，跑 10 个 VPS 就可能把你服务器干爆。</p>
-<hr>
-<h2 id="第一级：纯静态正则（80-的简单站靠这个）"><a href="#第一级：纯静态正则（80-的简单站靠这个）" class="headerlink" title="第一级：纯静态正则（80% 的简单站靠这个）"></a>第一级：纯静态正则（80% 的简单站靠这个）</h2><h3 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>上古时代的论坛、下载站</li>
-<li>HTML 直接把磁力链接写在页面上</li>
-<li>0 反爬措施，没有 Cloudflare、没有 JS 渲染</li>
-</ul>
-<p>典型代表：<code>dygod.net</code>（电影天堂）、各种老 PT 论坛</p>
-<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line">HEADERS = &#123;</span><br><span class="line">    <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MAGNET_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;magnet:\?xt=urn:btih:[a-zA-Z0-9]+&#x27;</span>, re.I)</span><br><span class="line">FTP_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;ftp://[^\s&quot;\&#x27;&lt;&gt;]+&#x27;</span>, re.I)</span><br></pre></td></tr></table></figure>
-
-<h3 id="实战代码"><a href="#实战代码" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level1</span>(<span class="params">search_url, headers=<span class="literal">None</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别1：纯静态正则&quot;&quot;&quot;</span></span><br><span class="line">    h = headers <span class="keyword">or</span> HEADERS</span><br><span class="line">    resp = requests.get(search_url, headers=h, timeout=<span class="number">15</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 老旧网站常用 GB2312 编码，必须显式声明</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;gb2312&#x27;</span> <span class="keyword">in</span> (resp.apparent_encoding <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span>).lower():</span><br><span class="line">        resp.encoding = <span class="string">&#x27;gb2312&#x27;</span></span><br><span class="line"></span><br><span class="line">    html = resp.text</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 一次性提取所有磁力和 FTP</span></span><br><span class="line">    magnets = <span class="built_in">set</span>(MAGNET_RE.findall(html))</span><br><span class="line">    ftps = <span class="built_in">set</span>(FTP_RE.findall(html))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(magnets) + <span class="built_in">list</span>(ftps)</span><br></pre></td></tr></table></figure>
-
-<h3 id="实战经验"><a href="#实战经验" class="headerlink" title="实战经验"></a>实战经验</h3><ol>
-<li><strong>绕开主页</strong>：不要在主页白费力气。先用站内搜索或 Google <code>site:xxx 关键字</code> 定位到具体的<strong>详情页</strong>，详情页的链接密度更高</li>
-<li><strong>编码处理</strong>：老站常用 GB2312，不显式声明会乱码</li>
-<li><strong>去重</strong>：同一页面可能有重复链接，用 <code>set</code> 去重</li>
-<li><strong>资源消耗</strong>：全程不到 50MB 内存，宿主机毫无压力</li>
-</ol>
-<h3 id="提取元数据（重要！）"><a href="#提取元数据（重要！）" class="headerlink" title="提取元数据（重要！）"></a>提取元数据（重要！）</h3><p><strong>不要只返回磁力链接！</strong> 用户需要知道这个链接是什么资源。提取这些信息：</p>
-<ul>
-<li>文件大小（Size）</li>
-<li>清晰度（1080p &#x2F; 4K &#x2F; 720p）</li>
-<li>文件格式（MKV &#x2F; MP4 &#x2F; TS）</li>
-<li>音轨字幕信息</li>
-<li>版本说明（Remux &#x2F; Web-DL &#x2F; BDRip）</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">extract_metadata</span>(<span class="params">context_text</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从磁力链接的上下文文本提取元数据&quot;&quot;&quot;</span></span><br><span class="line">    metadata = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 清晰度</span></span><br><span class="line">    <span class="keyword">if</span> res := re.search(<span class="string">r&#x27;\b(2160p|1080p|720p|4K)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;resolution&#x27;</span>] = res.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 格式</span></span><br><span class="line">    <span class="keyword">if</span> fmt := re.search(<span class="string">r&#x27;\b(BluRay|WEB-DL|HDTV|DVDRip|Remux|BDRip)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;source&#x27;</span>] = fmt.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 文件大小（GB/MB）</span></span><br><span class="line">    <span class="keyword">if</span> size := re.search(<span class="string">r&#x27;(\d+\.?\d*)\s*(GB|MB)&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;size&#x27;</span>] = <span class="string">f&quot;<span class="subst">&#123;size.group(<span class="number">1</span>)&#125;</span> <span class="subst">&#123;size.group(<span class="number">2</span>)&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> metadata</span><br></pre></td></tr></table></figure>
-
-<p>拿到磁力后，在 HTML 里找它的父节点或相邻文本节点，把这些信息一起返回给用户。</p>
-<hr>
-<h2 id="第二级：复杂静态解析"><a href="#第二级：复杂静态解析" class="headerlink" title="第二级：复杂静态解析"></a>第二级：复杂静态解析</h2><h3 id="适用场景-1"><a href="#适用场景-1" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>页面返回 200 OK，但磁力链接被 <strong>Base64 编码</strong>藏在 JS 变量里</li>
-<li>链接放在隐藏的 <code>&lt;input&gt;</code> 或 <code>data-*</code> 属性中</li>
-<li>需要简单的 Token 拼接</li>
-</ul>
-<h3 id="实战代码-1"><a href="#实战代码-1" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level2</span>(<span class="params">html</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别2：从 JS 变量和隐藏 input 提取&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 从 &lt;input&gt; value 提取</span></span><br><span class="line">    soup = BeautifulSoup(html, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> inp <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;input&#x27;</span>, <span class="built_in">type</span>=<span class="string">&#x27;hidden&#x27;</span>):</span><br><span class="line">        value = inp.get(<span class="string">&#x27;value&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> value:</span><br><span class="line">            magnets.append(value)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从 data-* 属性提取</span></span><br><span class="line">    <span class="keyword">for</span> elem <span class="keyword">in</span> soup.find_all(attrs=&#123;<span class="string">&#x27;data-magnet&#x27;</span>: <span class="literal">True</span>&#125;):</span><br><span class="line">        magnets.append(elem[<span class="string">&#x27;data-magnet&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 从 JS 变量 Base64 解码提取</span></span><br><span class="line">    b64_pattern = re.<span class="built_in">compile</span>(<span class="string">r&#x27;[&quot;\&#x27;]([A-Za-z0-9+/=]&#123;40,&#125;)[&quot;\&#x27;]&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> b64_pattern.findall(html):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            decoded = base64.b64decode(<span class="keyword">match</span>).decode(<span class="string">&#x27;utf-8&#x27;</span>, errors=<span class="string">&#x27;ignore&#x27;</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> decoded:</span><br><span class="line">                <span class="comment"># 再用级别1的正则提取</span></span><br><span class="line">                magnets.extend(MAGNET_RE.findall(decoded))</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(<span class="built_in">set</span>(magnets))</span><br></pre></td></tr></table></figure>
-
-<p>这个级别解决 60% 的”看起来很难其实静态”的网站。</p>
-<hr>
-<h2 id="第三级：Headless-浏览器（高开销，按需用）"><a href="#第三级：Headless-浏览器（高开销，按需用）" class="headerlink" title="第三级：Headless 浏览器（高开销，按需用）"></a>第三级：Headless 浏览器（高开销，按需用）</h2><h3 id="适用场景-2"><a href="#适用场景-2" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>必须<strong>点击真实 DOM 节点</strong>（如下载按钮）才会触发 XHR 请求返回链接</li>
-<li>网站用了 React&#x2F;Vue 渲染，纯 HTML 看不到内容</li>
-</ul>
-<h3 id="技术栈-1"><a href="#技术栈-1" class="headerlink" title="技术栈"></a>技术栈</h3><p>Playwright（推荐）或 Puppeteer。</p>
-<h3 id="实战代码-2"><a href="#实战代码-2" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> playwright.sync_api <span class="keyword">import</span> sync_playwright</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level3</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别3：Headless 浏览器模拟点击&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">with</span> sync_playwright() <span class="keyword">as</span> p:</span><br><span class="line">        browser = p.chromium.launch(headless=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            page = browser.new_page()</span><br><span class="line">            page.goto(url, timeout=<span class="number">30000</span>)</span><br><span class="line">            page.wait_for_load_state(<span class="string">&#x27;networkidle&#x27;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 模拟点击下载按钮</span></span><br><span class="line">            page.click(<span class="string">&#x27;a.download-btn&#x27;</span>, timeout=<span class="number">5000</span>)</span><br><span class="line">            page.wait_for_timeout(<span class="number">2000</span>)  <span class="comment"># 等 XHR 回来</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 提取渲染后的 HTML</span></span><br><span class="line">            html = page.content()</span><br><span class="line">            magnets = MAGNET_RE.findall(html)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            browser.close()  <span class="comment"># 🔥 关键：必须 close，否则内存泄露</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
-
-<h3 id="护栏铁律"><a href="#护栏铁律" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p><strong>严禁并发！</strong> 一个浏览器实例吃 500MB+ 内存，开 5 个并发 VPS 直接 OOM。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错误写法</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    tasks = [scrape(url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">    <span class="keyword">await</span> asyncio.gather(*tasks)  <span class="comment"># 并发 5 个 Playwright 直接 OOM</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 正确写法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    <span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">        result = scrape_level3(url)</span><br><span class="line">        <span class="comment"># 串行执行，每个跑完立刻销毁</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第四级：DrissionPage-终极破盾（核武器）"><a href="#第四级：DrissionPage-终极破盾（核武器）" class="headerlink" title="第四级：DrissionPage 终极破盾（核武器）"></a>第四级：DrissionPage 终极破盾（核武器）</h2><h3 id="适用场景-3"><a href="#适用场景-3" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>Cloudflare “Just a moment” 5 秒盾</li>
-<li>521 强力 Anti-Bot 拦截</li>
-<li>eztv.ag、therarbg.com 等重度 CF 站</li>
-</ul>
-<h3 id="技术栈-2"><a href="#技术栈-2" class="headerlink" title="技术栈"></a>技术栈</h3><p>DrissionPage（基于 Chromium，能自动处理 CF 挑战）。</p>
-<h3 id="实战代码-3"><a href="#实战代码-3" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> DrissionPage <span class="keyword">import</span> ChromiumPage, ChromiumOptions</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level4</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别4：DrissionPage 破 CF 盾&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    options = ChromiumOptions()</span><br><span class="line">    options.headless(<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    page = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        page = ChromiumPage(options)</span><br><span class="line">        page.get(url, retry=<span class="number">3</span>, timeout=<span class="number">30</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># CF 盾通常需要 5-8 秒等待</span></span><br><span class="line">        page.wait.load_start()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 等待页面正常加载（CF 挑战完成后页面会有变化）</span></span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">30</span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;just-a-moment&#x27;</span> <span class="keyword">not</span> <span class="keyword">in</span> page.html.lower():</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            page.wait(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">        magnets = MAGNET_RE.findall(page.html)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">if</span> page:</span><br><span class="line">            page.quit()  <span class="comment"># 🔥 关键：销毁 Chromium 内核进程</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
-
-<h3 id="护栏铁律-1"><a href="#护栏铁律-1" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p>DrissionPage 启动的 Chromium 比 Playwright 更重，<strong>必须在 finally 中强制 quit</strong>，否则后台残留进程吃满内存。</p>
-<hr>
-<h2 id="实战决策树"><a href="#实战决策树" class="headerlink" title="实战决策树"></a>实战决策树</h2><p>面对一个新站，按这个顺序试：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">新站 → 用级别1试</span><br><span class="line">  ↓ 成功？搞定</span><br><span class="line">  ↓ 失败</span><br><span class="line">  → 用级别2试</span><br><span class="line">    ↓ 成功？搞定</span><br><span class="line">    ↓ 失败</span><br><span class="line">    → 用级别3试</span><br><span class="line">      ↓ 成功？搞定</span><br><span class="line">      ↓ 失败</span><br><span class="line">      → 用级别4（最后手段）</span><br><span class="line">        ↓ 失败？放弃，换别的站</span><br></pre></td></tr></table></figure>
-
-<p><strong>关键</strong>：每一级都用 <code>try/except</code>，失败了自动降级下一级；不要一上来就 Headless 浏览器，杀鸡用牛刀。</p>
-<hr>
-<h2 id="资源保护红线"><a href="#资源保护红线" class="headerlink" title="资源保护红线"></a>资源保护红线</h2><p>不管用哪一级，<strong>一定要遵守</strong>：</p>
-<ol>
-<li><strong>严禁并发</strong>：Headless 浏览器一启动就吃 500MB+，并发 3 个就可能 OOM</li>
-<li><strong>强制资源释放</strong>：<code>try...finally</code> 块中执行 <code>browser.close()</code> 或 <code>page.quit()</code></li>
-<li><strong>超时必须设</strong>：每个 HTTP 请求必须 <code>timeout=15</code>，否则卡死会拖垮整个流程</li>
-<li><strong>频率限制</strong>：两次请求之间加 <code>time.sleep(1-3)</code>，避免被目标站拉黑</li>
-<li><strong>优先静态</strong>：能静态正则搞定的绝不用浏览器</li>
-</ol>
-<hr>
-<h2 id="站梯队清单（实测）"><a href="#站梯队清单（实测）" class="headerlink" title="站梯队清单（实测）"></a>站梯队清单（实测）</h2><h3 id="🏆-梯队一：影视动漫资源站"><a href="#🏆-梯队一：影视动漫资源站" class="headerlink" title="🏆 梯队一：影视动漫资源站"></a>🏆 梯队一：影视动漫资源站</h3><table>
-<thead>
-<tr>
-<th>站点</th>
-<th>难度</th>
-<th>推荐级别</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>dygod.net</code></td>
-<td>⭐ 极其简单</td>
-<td>级别 1</td>
-</tr>
-<tr>
-<td><code>seedhub.cc</code></td>
-<td>⭐⭐ 需要策略</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>bttwoo.com</code></td>
-<td>⭐⭐ 需要策略</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>btbtla.com</code></td>
-<td>❌ 强 CF</td>
-<td>级别 4</td>
-</tr>
-</tbody></table>
-<h3 id="🥈-梯队二：磁力-Telegram-搜索引擎"><a href="#🥈-梯队二：磁力-Telegram-搜索引擎" class="headerlink" title="🥈 梯队二：磁力 Telegram 搜索引擎"></a>🥈 梯队二：磁力 Telegram 搜索引擎</h3><table>
-<thead>
-<tr>
-<th>站点</th>
-<th>难度</th>
-<th>推荐级别</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>thepiratebay.org</code></td>
-<td>⭐⭐</td>
-<td>级别 2-3</td>
-</tr>
-<tr>
-<td><code>ciliku.net</code></td>
-<td>⭐⭐</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>eztv.ag</code></td>
-<td>❌ 极强 Anti-Bot</td>
-<td>级别 4</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h2><p><strong>爬虫的精髓不是”用最牛的技术”，而是”用最低的成本搞定目标”</strong>。</p>
-<ul>
-<li>80% 的老站用静态正则就够</li>
-<li>真碰到 JS 渲染再上 Headless</li>
-<li>CF 盾最后才动用 DrissionPage</li>
-</ul>
-<p>按这个分级思路，<strong>用最少的资源，跑最多的网站</strong>。</p>
-<p>如果你也在做爬虫，评论区聊聊你踩过的反爬坑～</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>开发工具</category>
-      </categories>
-      <tags>
-        <tag>爬虫</tag>
-        <tag>磁力</tag>
-        <tag>Python</tag>
-        <tag>反爬</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>300 行 CSS 改造 Hexo：赛博朋克意识空间</title>
     <url>/2026/07/13/hexo-cyberpunk-css-overhaul/</url>
     <content><![CDATA[<p><img data-src="/images/hexo-cyberpunk-cover.webp" alt="Hexo 赛博朋克改造封面"></p>
@@ -1717,112 +1373,6 @@
       </tags>
   </entry>
   <entry>
-    <title>白嫖甲骨文云4核24G，我把它装成了 Windows 11 ARM64 | 避坑实测全记录</title>
-    <url>/2026/06/20/oracle-arm64-win11-guide/</url>
-    <content><![CDATA[<p><img data-src="/images/oracle-arm64-win11-guide-cover.webp" alt="封面图"></p>
-<blockquote>
-<p><strong>一句话结论</strong>：甲骨文免费 ARM64 机器装成 Windows 11 完全可行，配合 RDP 远程桌面日常使用流畅，但有几个坑不踩一遍真的想不到。本文把我踩过的全记下来了。</p>
-</blockquote>
-<hr>
-<h2 id="先说说为什么要装-Windows-11"><a href="#先说说为什么要装-Windows-11" class="headerlink" title="先说说为什么要装 Windows 11"></a>先说说为什么要装 Windows 11</h2><p>甲骨文云（Oracle Cloud）的 Always Free 套餐有一个隐藏神器：<strong>4核CPU + 24GB内存的 ARM64 机器</strong>，完全免费，长期有效。</p>
-<p>但默认给你的是 Ubuntu，很多人拿来跑 Linux 服务没啥问题。我有个需求是要跑一些只有 Windows 才有的软件，加上 24G 内存在 Linux 下也有点浪费——于是我就萌生了把它 DD 成 Windows 11 的想法。</p>
-<p>折腾下来的结论是：<strong>能跑，而且真香</strong>。但过程里有几个地方差点让我失联，在这里完整记录一下。</p>
-<hr>
-<h2 id="第一关：防止甲骨文把你的机器回收掉"><a href="#第一关：防止甲骨文把你的机器回收掉" class="headerlink" title="第一关：防止甲骨文把你的机器回收掉"></a>第一关：防止甲骨文把你的机器回收掉</h2><p>这是很多人忽视的第一个坑。</p>
-<p>甲骨文有个<strong>闲置资源回收机制</strong>：如果你的实例连续 7 天 CPU 均值低于 10%、内存低于 10%、网络流量也很低，它会自动暂停甚至回收你的实例。</p>
-<p>听起来很可怕，但装了 Windows 11 之后，<strong>基本上天然免疫这个问题</strong>。原因很简单：Windows 系统本身的后台开销就已经吃掉相当一部分 CPU 和内存了，再跑个浏览器或者挂几个自动化脚本，资源利用率轻松超标。</p>
-<p><strong>另外要注意的是</strong>：不要频繁删机器、重建机器。甲骨文对这种行为很敏感，容易触发风控直接封号，心疼死你。</p>
-<hr>
-<h2 id="第二关：双重防火墙陷阱（这是失联的元凶）"><a href="#第二关：双重防火墙陷阱（这是失联的元凶）" class="headerlink" title="第二关：双重防火墙陷阱（这是失联的元凶）"></a>第二关：双重防火墙陷阱（这是失联的元凶）</h2><p>很多人 DD 完发现连不上，以为是操作失败，其实是被防火墙挡住了。</p>
-<p>甲骨文的防火墙是<strong>两层叠加</strong>的：</p>
-<p><strong>第一层：OCI 平台安全组（云控制台里配置）</strong></p>
-<p>在甲骨文云控制台里，进入”虚拟云网络 → 安全列表”，把你需要的端口加进入站&#x2F;出站规则。比如：</p>
-<ul>
-<li><code>3389</code>：Windows 远程桌面（RDP）</li>
-<li><code>5900</code>：VNC（救砖用）</li>
-<li>其他你需要的服务端口</li>
-</ul>
-<p>这一步大部分教程都会提，但很多人做完这一层就以为万事大吉了——</p>
-<p><strong>第二层：系统内部防火墙（这才是失联真正的元凶）</strong></p>
-<p>甲骨文默认镜像会开启系统内置防火墙（Ubuntu 的 <code>iptables</code>&#x2F;<code>firewalld</code>）。即使平台安全组全开了，系统内部没放行也一样连不上。</p>
-<p>DD 到 Windows 11 之后，可以用 PowerShell 直接处理：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 关闭 Windows Defender 防火墙（局域网环境或已有云端安全组保护的情况下）</span></span><br><span class="line"><span class="built_in">Set-NetFirewallProfile</span> <span class="literal">-Profile</span> Domain,Private,Public <span class="literal">-Enabled</span> False</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第三关：DD-重装的操作流程"><a href="#第三关：DD-重装的操作流程" class="headerlink" title="第三关：DD 重装的操作流程"></a>第三关：DD 重装的操作流程</h2><p>核心是用大佬们写好的<strong>网络重装脚本</strong>，在 Linux 环境下一键 DD 成 Windows。</p>
-<p>在你的 Ubuntu 实例里执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 拉取脚本</span></span><br><span class="line">curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行 DD，指定 ARM64 的 Win11 镜像</span></span><br><span class="line">bash reinstall.sh windows --image-url &lt;你的镜像地址&gt; --web</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>镜像地址可以去 GitHub 对应项目或相关论坛找最新的 ARM64 纯净版。</p>
-</blockquote>
-<p>执行后机器会进入 DD 模式，这个过程中 SSH 会断开——这是正常的，不是失败。等个 10-20 分钟，再通过 RDP 重新连接。</p>
-<p><strong>如果 DD 过程中断&#x2F;失联</strong>，不用慌：去甲骨文控制台创建 <strong>VNC 控制台连接</strong>，用 RealVNC 连接 <code>5900</code> 端口，可以看到底层启动界面直接救砖。</p>
-<hr>
-<h2 id="第四关：磁盘扩容（别浪费那-200G-免费空间）"><a href="#第四关：磁盘扩容（别浪费那-200G-免费空间）" class="headerlink" title="第四关：磁盘扩容（别浪费那 200G 免费空间）"></a>第四关：磁盘扩容（别浪费那 200G 免费空间）</h2><p>免费用户最多可以使用 <strong>200 GB</strong> 的块存储。OCI 控制台里操作很简单：块存储 → 引导卷 → 编辑卷大小，改成你想要的数值（别超 200G），然后创建一个备份（有 5 个免费备份名额，用起来）。</p>
-<p>但控制台改完，Windows 里不会自动识别。需要在 Win11 里用 PowerShell 手动扩展：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 重新扫描磁盘</span></span><br><span class="line"><span class="built_in">Update-HostStorageCache</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 把 C 盘扩到最大</span></span><br><span class="line"><span class="variable">$size</span> = (<span class="built_in">Get-PartitionSupportedSize</span> <span class="literal">-DriveLetter</span> C).SizeMax</span><br><span class="line"><span class="built_in">Resize-Partition</span> <span class="literal">-DriveLetter</span> C <span class="literal">-Size</span> <span class="variable">$size</span></span><br></pre></td></tr></table></figure>
-
-<p>执行完直接生效，不需要重启。</p>
-<hr>
-<h2 id="用起来怎么样？"><a href="#用起来怎么样？" class="headerlink" title="用起来怎么样？"></a>用起来怎么样？</h2><p>跑了一段时间，体感如下：</p>
-<ul>
-<li><strong>RDP 流畅度</strong>：比预期好，日常操作没有明显卡顿</li>
-<li><strong>内存够用</strong>：24G 对 Windows 来说很宽裕，多开几个应用毫无压力  </li>
-<li><strong>稳定性</strong>：运行稳定，没有遇到意外重启</li>
-<li><strong>唯一缺点</strong>：ARM64 架构，有极少数 x86 老软件不兼容，不过日常使用场景基本覆盖了</li>
-</ul>
-<p>总的来说，免费 4 核 24G Windows 机器，用来跑一些轻量任务或者当个远程桌面主机，性价比是真的高——因为它是完全免费的。</p>
-<hr>
-<h2 id="快速踩坑对照表"><a href="#快速踩坑对照表" class="headerlink" title="快速踩坑对照表"></a>快速踩坑对照表</h2><table>
-<thead>
-<tr>
-<th>问题</th>
-<th>根因</th>
-<th>解决方案</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>机器被自动暂停</td>
-<td>7天内资源利用率过低</td>
-<td>保持后台有轻量任务运行</td>
-</tr>
-<tr>
-<td>DD 后无法 RDP 连接</td>
-<td>云端安全组未放行 3389</td>
-<td>OCI 控制台加入站规则</td>
-</tr>
-<tr>
-<td>安全组放行了还是连不上</td>
-<td>系统内部防火墙未关</td>
-<td>PowerShell 关闭 Defender 防火墙</td>
-</tr>
-<tr>
-<td>DD 过程断联</td>
-<td>正常现象，重装中</td>
-<td>VNC 控制台观察进度</td>
-</tr>
-<tr>
-<td>磁盘没扩容</td>
-<td>Win11 不自动识别</td>
-<td>PowerShell 执行 Resize-Partition</td>
-</tr>
-</tbody></table>
-<hr>
-<p>有问题欢迎评论区交流，同样在折腾甲骨文的朋友可以聊聊你的玩法～</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>云服务</category>
-      </categories>
-      <tags>
-        <tag>VPS</tag>
-        <tag>甲骨文云</tag>
-        <tag>Windows</tag>
-        <tag>折腾</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>OneDrive 全量备份踩坑实录：2.5GB 打包压缩到 312MB 的全过程</title>
     <url>/2026/06/20/onedrive-backup-optimization/</url>
     <content><![CDATA[<p><img data-src="/images/onedrive-backup-optimization-cover.webp" alt="封面图"></p>
@@ -2010,10 +1560,116 @@
         <category>运维</category>
       </categories>
       <tags>
-        <tag>Python</tag>
         <tag>OneDrive</tag>
         <tag>备份</tag>
         <tag>优化</tag>
+        <tag>Python</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>白嫖甲骨文云4核24G，我把它装成了 Windows 11 ARM64 | 避坑实测全记录</title>
+    <url>/2026/06/20/oracle-arm64-win11-guide/</url>
+    <content><![CDATA[<p><img data-src="/images/oracle-arm64-win11-guide-cover.webp" alt="封面图"></p>
+<blockquote>
+<p><strong>一句话结论</strong>：甲骨文免费 ARM64 机器装成 Windows 11 完全可行，配合 RDP 远程桌面日常使用流畅，但有几个坑不踩一遍真的想不到。本文把我踩过的全记下来了。</p>
+</blockquote>
+<hr>
+<h2 id="先说说为什么要装-Windows-11"><a href="#先说说为什么要装-Windows-11" class="headerlink" title="先说说为什么要装 Windows 11"></a>先说说为什么要装 Windows 11</h2><p>甲骨文云（Oracle Cloud）的 Always Free 套餐有一个隐藏神器：<strong>4核CPU + 24GB内存的 ARM64 机器</strong>，完全免费，长期有效。</p>
+<p>但默认给你的是 Ubuntu，很多人拿来跑 Linux 服务没啥问题。我有个需求是要跑一些只有 Windows 才有的软件，加上 24G 内存在 Linux 下也有点浪费——于是我就萌生了把它 DD 成 Windows 11 的想法。</p>
+<p>折腾下来的结论是：<strong>能跑，而且真香</strong>。但过程里有几个地方差点让我失联，在这里完整记录一下。</p>
+<hr>
+<h2 id="第一关：防止甲骨文把你的机器回收掉"><a href="#第一关：防止甲骨文把你的机器回收掉" class="headerlink" title="第一关：防止甲骨文把你的机器回收掉"></a>第一关：防止甲骨文把你的机器回收掉</h2><p>这是很多人忽视的第一个坑。</p>
+<p>甲骨文有个<strong>闲置资源回收机制</strong>：如果你的实例连续 7 天 CPU 均值低于 10%、内存低于 10%、网络流量也很低，它会自动暂停甚至回收你的实例。</p>
+<p>听起来很可怕，但装了 Windows 11 之后，<strong>基本上天然免疫这个问题</strong>。原因很简单：Windows 系统本身的后台开销就已经吃掉相当一部分 CPU 和内存了，再跑个浏览器或者挂几个自动化脚本，资源利用率轻松超标。</p>
+<p><strong>另外要注意的是</strong>：不要频繁删机器、重建机器。甲骨文对这种行为很敏感，容易触发风控直接封号，心疼死你。</p>
+<hr>
+<h2 id="第二关：双重防火墙陷阱（这是失联的元凶）"><a href="#第二关：双重防火墙陷阱（这是失联的元凶）" class="headerlink" title="第二关：双重防火墙陷阱（这是失联的元凶）"></a>第二关：双重防火墙陷阱（这是失联的元凶）</h2><p>很多人 DD 完发现连不上，以为是操作失败，其实是被防火墙挡住了。</p>
+<p>甲骨文的防火墙是<strong>两层叠加</strong>的：</p>
+<p><strong>第一层：OCI 平台安全组（云控制台里配置）</strong></p>
+<p>在甲骨文云控制台里，进入”虚拟云网络 → 安全列表”，把你需要的端口加进入站&#x2F;出站规则。比如：</p>
+<ul>
+<li><code>3389</code>：Windows 远程桌面（RDP）</li>
+<li><code>5900</code>：VNC（救砖用）</li>
+<li>其他你需要的服务端口</li>
+</ul>
+<p>这一步大部分教程都会提，但很多人做完这一层就以为万事大吉了——</p>
+<p><strong>第二层：系统内部防火墙（这才是失联真正的元凶）</strong></p>
+<p>甲骨文默认镜像会开启系统内置防火墙（Ubuntu 的 <code>iptables</code>&#x2F;<code>firewalld</code>）。即使平台安全组全开了，系统内部没放行也一样连不上。</p>
+<p>DD 到 Windows 11 之后，可以用 PowerShell 直接处理：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 关闭 Windows Defender 防火墙（局域网环境或已有云端安全组保护的情况下）</span></span><br><span class="line"><span class="built_in">Set-NetFirewallProfile</span> <span class="literal">-Profile</span> Domain,Private,Public <span class="literal">-Enabled</span> False</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第三关：DD-重装的操作流程"><a href="#第三关：DD-重装的操作流程" class="headerlink" title="第三关：DD 重装的操作流程"></a>第三关：DD 重装的操作流程</h2><p>核心是用大佬们写好的<strong>网络重装脚本</strong>，在 Linux 环境下一键 DD 成 Windows。</p>
+<p>在你的 Ubuntu 实例里执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 拉取脚本</span></span><br><span class="line">curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行 DD，指定 ARM64 的 Win11 镜像</span></span><br><span class="line">bash reinstall.sh windows --image-url &lt;你的镜像地址&gt; --web</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>镜像地址可以去 GitHub 对应项目或相关论坛找最新的 ARM64 纯净版。</p>
+</blockquote>
+<p>执行后机器会进入 DD 模式，这个过程中 SSH 会断开——这是正常的，不是失败。等个 10-20 分钟，再通过 RDP 重新连接。</p>
+<p><strong>如果 DD 过程中断&#x2F;失联</strong>，不用慌：去甲骨文控制台创建 <strong>VNC 控制台连接</strong>，用 RealVNC 连接 <code>5900</code> 端口，可以看到底层启动界面直接救砖。</p>
+<hr>
+<h2 id="第四关：磁盘扩容（别浪费那-200G-免费空间）"><a href="#第四关：磁盘扩容（别浪费那-200G-免费空间）" class="headerlink" title="第四关：磁盘扩容（别浪费那 200G 免费空间）"></a>第四关：磁盘扩容（别浪费那 200G 免费空间）</h2><p>免费用户最多可以使用 <strong>200 GB</strong> 的块存储。OCI 控制台里操作很简单：块存储 → 引导卷 → 编辑卷大小，改成你想要的数值（别超 200G），然后创建一个备份（有 5 个免费备份名额，用起来）。</p>
+<p>但控制台改完，Windows 里不会自动识别。需要在 Win11 里用 PowerShell 手动扩展：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 重新扫描磁盘</span></span><br><span class="line"><span class="built_in">Update-HostStorageCache</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 把 C 盘扩到最大</span></span><br><span class="line"><span class="variable">$size</span> = (<span class="built_in">Get-PartitionSupportedSize</span> <span class="literal">-DriveLetter</span> C).SizeMax</span><br><span class="line"><span class="built_in">Resize-Partition</span> <span class="literal">-DriveLetter</span> C <span class="literal">-Size</span> <span class="variable">$size</span></span><br></pre></td></tr></table></figure>
+
+<p>执行完直接生效，不需要重启。</p>
+<hr>
+<h2 id="用起来怎么样？"><a href="#用起来怎么样？" class="headerlink" title="用起来怎么样？"></a>用起来怎么样？</h2><p>跑了一段时间，体感如下：</p>
+<ul>
+<li><strong>RDP 流畅度</strong>：比预期好，日常操作没有明显卡顿</li>
+<li><strong>内存够用</strong>：24G 对 Windows 来说很宽裕，多开几个应用毫无压力  </li>
+<li><strong>稳定性</strong>：运行稳定，没有遇到意外重启</li>
+<li><strong>唯一缺点</strong>：ARM64 架构，有极少数 x86 老软件不兼容，不过日常使用场景基本覆盖了</li>
+</ul>
+<p>总的来说，免费 4 核 24G Windows 机器，用来跑一些轻量任务或者当个远程桌面主机，性价比是真的高——因为它是完全免费的。</p>
+<hr>
+<h2 id="快速踩坑对照表"><a href="#快速踩坑对照表" class="headerlink" title="快速踩坑对照表"></a>快速踩坑对照表</h2><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>根因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>机器被自动暂停</td>
+<td>7天内资源利用率过低</td>
+<td>保持后台有轻量任务运行</td>
+</tr>
+<tr>
+<td>DD 后无法 RDP 连接</td>
+<td>云端安全组未放行 3389</td>
+<td>OCI 控制台加入站规则</td>
+</tr>
+<tr>
+<td>安全组放行了还是连不上</td>
+<td>系统内部防火墙未关</td>
+<td>PowerShell 关闭 Defender 防火墙</td>
+</tr>
+<tr>
+<td>DD 过程断联</td>
+<td>正常现象，重装中</td>
+<td>VNC 控制台观察进度</td>
+</tr>
+<tr>
+<td>磁盘没扩容</td>
+<td>Win11 不自动识别</td>
+<td>PowerShell 执行 Resize-Partition</td>
+</tr>
+</tbody></table>
+<hr>
+<p>有问题欢迎评论区交流，同样在折腾甲骨文的朋友可以聊聊你的玩法～</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>云服务</category>
+      </categories>
+      <tags>
+        <tag>VPS</tag>
+        <tag>甲骨文云</tag>
+        <tag>Windows</tag>
+        <tag>折腾</tag>
       </tags>
   </entry>
   <entry>
@@ -2463,6 +2119,350 @@
         <tag>MCP</tag>
         <tag>知乎</tag>
         <tag>AI应用</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白</title>
+    <url>/2026/06/20/magnet-crawler-fallback/</url>
+    <content><![CDATA[<p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
+<blockquote>
+<p>想自己写个磁力搜索的爬虫？看完市面上大大小小的资源站，我总结出一套”分级降级”的实战规约：从纯静态正则到 Headless 浏览器破盾，按需升级，<strong>用最低成本搞定 80% 的网站</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="写在前面：为什么写这篇"><a href="#写在前面：为什么写这篇" class="headerlink" title="写在前面：为什么写这篇"></a>写在前面：为什么写这篇</h2><p>磁力搜索这件事，国内的站基本都活不长，今天能用的站明天就挂；国外的站又普遍有强反爬。<strong>纯靠 requests 写爬虫，十有八九会失败</strong>。</p>
+<p>我摸索了一段时间，把”什么站用什么级别、什么级别用什么技术栈、怎么保护宿主机资源”整理出一套实战规约。这篇不是完整的爬虫教程，而是<strong>一份选型决策树</strong>——让你面对一个新站时，能快速判断该用什么级别去打。</p>
+<hr>
+<h2 id="核心原则：分级降级，按需升级"><a href="#核心原则：分级降级，按需升级" class="headerlink" title="核心原则：分级降级，按需升级"></a>核心原则：分级降级，按需升级</h2><p>爬虫的级别从低到高，开销也越来越大。我设计了 4 个级别：</p>
+<table>
+<thead>
+<tr>
+<th>级别</th>
+<th>适用场景</th>
+<th>资源开销</th>
+<th>技术栈</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>🟢 1 - 静态正则</td>
+<td>上古 HTML 站，无反爬</td>
+<td>极低</td>
+<td>requests + BeautifulSoup + re</td>
+</tr>
+<tr>
+<td>🟡 2 - 复杂静态</td>
+<td>链接在 JS&#x2F;隐藏 input 里</td>
+<td>中等</td>
+<td>requests + Base64 解码</td>
+</tr>
+<tr>
+<td>🟠 3 - Headless 浏览器</td>
+<td>必须点真实 DOM 才出链接</td>
+<td>高</td>
+<td>Playwright</td>
+</tr>
+<tr>
+<td>🔴 4 - 终极破盾</td>
+<td>Cloudflare 5秒盾</td>
+<td>极高</td>
+<td>DrissionPage</td>
+</tr>
+</tbody></table>
+<p><strong>核心原则</strong>：<strong>一旦当前级别能搞定，立刻返回，绝不无故触发下一级</strong>。这是为了最大化保护宿主机——Headless 浏览器一启动就吃 500MB+ 内存，跑 10 个 VPS 就可能把你服务器干爆。</p>
+<hr>
+<h2 id="第一级：纯静态正则（80-的简单站靠这个）"><a href="#第一级：纯静态正则（80-的简单站靠这个）" class="headerlink" title="第一级：纯静态正则（80% 的简单站靠这个）"></a>第一级：纯静态正则（80% 的简单站靠这个）</h2><h3 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
+<li>上古时代的论坛、下载站</li>
+<li>HTML 直接把磁力链接写在页面上</li>
+<li>0 反爬措施，没有 Cloudflare、没有 JS 渲染</li>
+</ul>
+<p>典型代表：<code>dygod.net</code>（电影天堂）、各种老 PT 论坛</p>
+<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line">HEADERS = &#123;</span><br><span class="line">    <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MAGNET_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;magnet:\?xt=urn:btih:[a-zA-Z0-9]+&#x27;</span>, re.I)</span><br><span class="line">FTP_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;ftp://[^\s&quot;\&#x27;&lt;&gt;]+&#x27;</span>, re.I)</span><br></pre></td></tr></table></figure>
+
+<h3 id="实战代码"><a href="#实战代码" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level1</span>(<span class="params">search_url, headers=<span class="literal">None</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别1：纯静态正则&quot;&quot;&quot;</span></span><br><span class="line">    h = headers <span class="keyword">or</span> HEADERS</span><br><span class="line">    resp = requests.get(search_url, headers=h, timeout=<span class="number">15</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 老旧网站常用 GB2312 编码，必须显式声明</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;gb2312&#x27;</span> <span class="keyword">in</span> (resp.apparent_encoding <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span>).lower():</span><br><span class="line">        resp.encoding = <span class="string">&#x27;gb2312&#x27;</span></span><br><span class="line"></span><br><span class="line">    html = resp.text</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 一次性提取所有磁力和 FTP</span></span><br><span class="line">    magnets = <span class="built_in">set</span>(MAGNET_RE.findall(html))</span><br><span class="line">    ftps = <span class="built_in">set</span>(FTP_RE.findall(html))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(magnets) + <span class="built_in">list</span>(ftps)</span><br></pre></td></tr></table></figure>
+
+<h3 id="实战经验"><a href="#实战经验" class="headerlink" title="实战经验"></a>实战经验</h3><ol>
+<li><strong>绕开主页</strong>：不要在主页白费力气。先用站内搜索或 Google <code>site:xxx 关键字</code> 定位到具体的<strong>详情页</strong>，详情页的链接密度更高</li>
+<li><strong>编码处理</strong>：老站常用 GB2312，不显式声明会乱码</li>
+<li><strong>去重</strong>：同一页面可能有重复链接，用 <code>set</code> 去重</li>
+<li><strong>资源消耗</strong>：全程不到 50MB 内存，宿主机毫无压力</li>
+</ol>
+<h3 id="提取元数据（重要！）"><a href="#提取元数据（重要！）" class="headerlink" title="提取元数据（重要！）"></a>提取元数据（重要！）</h3><p><strong>不要只返回磁力链接！</strong> 用户需要知道这个链接是什么资源。提取这些信息：</p>
+<ul>
+<li>文件大小（Size）</li>
+<li>清晰度（1080p &#x2F; 4K &#x2F; 720p）</li>
+<li>文件格式（MKV &#x2F; MP4 &#x2F; TS）</li>
+<li>音轨字幕信息</li>
+<li>版本说明（Remux &#x2F; Web-DL &#x2F; BDRip）</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">extract_metadata</span>(<span class="params">context_text</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从磁力链接的上下文文本提取元数据&quot;&quot;&quot;</span></span><br><span class="line">    metadata = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 清晰度</span></span><br><span class="line">    <span class="keyword">if</span> res := re.search(<span class="string">r&#x27;\b(2160p|1080p|720p|4K)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;resolution&#x27;</span>] = res.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 格式</span></span><br><span class="line">    <span class="keyword">if</span> fmt := re.search(<span class="string">r&#x27;\b(BluRay|WEB-DL|HDTV|DVDRip|Remux|BDRip)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;source&#x27;</span>] = fmt.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 文件大小（GB/MB）</span></span><br><span class="line">    <span class="keyword">if</span> size := re.search(<span class="string">r&#x27;(\d+\.?\d*)\s*(GB|MB)&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;size&#x27;</span>] = <span class="string">f&quot;<span class="subst">&#123;size.group(<span class="number">1</span>)&#125;</span> <span class="subst">&#123;size.group(<span class="number">2</span>)&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> metadata</span><br></pre></td></tr></table></figure>
+
+<p>拿到磁力后，在 HTML 里找它的父节点或相邻文本节点，把这些信息一起返回给用户。</p>
+<hr>
+<h2 id="第二级：复杂静态解析"><a href="#第二级：复杂静态解析" class="headerlink" title="第二级：复杂静态解析"></a>第二级：复杂静态解析</h2><h3 id="适用场景-1"><a href="#适用场景-1" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
+<li>页面返回 200 OK，但磁力链接被 <strong>Base64 编码</strong>藏在 JS 变量里</li>
+<li>链接放在隐藏的 <code>&lt;input&gt;</code> 或 <code>data-*</code> 属性中</li>
+<li>需要简单的 Token 拼接</li>
+</ul>
+<h3 id="实战代码-1"><a href="#实战代码-1" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level2</span>(<span class="params">html</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别2：从 JS 变量和隐藏 input 提取&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 从 &lt;input&gt; value 提取</span></span><br><span class="line">    soup = BeautifulSoup(html, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> inp <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;input&#x27;</span>, <span class="built_in">type</span>=<span class="string">&#x27;hidden&#x27;</span>):</span><br><span class="line">        value = inp.get(<span class="string">&#x27;value&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> value:</span><br><span class="line">            magnets.append(value)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从 data-* 属性提取</span></span><br><span class="line">    <span class="keyword">for</span> elem <span class="keyword">in</span> soup.find_all(attrs=&#123;<span class="string">&#x27;data-magnet&#x27;</span>: <span class="literal">True</span>&#125;):</span><br><span class="line">        magnets.append(elem[<span class="string">&#x27;data-magnet&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 从 JS 变量 Base64 解码提取</span></span><br><span class="line">    b64_pattern = re.<span class="built_in">compile</span>(<span class="string">r&#x27;[&quot;\&#x27;]([A-Za-z0-9+/=]&#123;40,&#125;)[&quot;\&#x27;]&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> b64_pattern.findall(html):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            decoded = base64.b64decode(<span class="keyword">match</span>).decode(<span class="string">&#x27;utf-8&#x27;</span>, errors=<span class="string">&#x27;ignore&#x27;</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> decoded:</span><br><span class="line">                <span class="comment"># 再用级别1的正则提取</span></span><br><span class="line">                magnets.extend(MAGNET_RE.findall(decoded))</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(<span class="built_in">set</span>(magnets))</span><br></pre></td></tr></table></figure>
+
+<p>这个级别解决 60% 的”看起来很难其实静态”的网站。</p>
+<hr>
+<h2 id="第三级：Headless-浏览器（高开销，按需用）"><a href="#第三级：Headless-浏览器（高开销，按需用）" class="headerlink" title="第三级：Headless 浏览器（高开销，按需用）"></a>第三级：Headless 浏览器（高开销，按需用）</h2><h3 id="适用场景-2"><a href="#适用场景-2" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
+<li>必须<strong>点击真实 DOM 节点</strong>（如下载按钮）才会触发 XHR 请求返回链接</li>
+<li>网站用了 React&#x2F;Vue 渲染，纯 HTML 看不到内容</li>
+</ul>
+<h3 id="技术栈-1"><a href="#技术栈-1" class="headerlink" title="技术栈"></a>技术栈</h3><p>Playwright（推荐）或 Puppeteer。</p>
+<h3 id="实战代码-2"><a href="#实战代码-2" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> playwright.sync_api <span class="keyword">import</span> sync_playwright</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level3</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别3：Headless 浏览器模拟点击&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">with</span> sync_playwright() <span class="keyword">as</span> p:</span><br><span class="line">        browser = p.chromium.launch(headless=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            page = browser.new_page()</span><br><span class="line">            page.goto(url, timeout=<span class="number">30000</span>)</span><br><span class="line">            page.wait_for_load_state(<span class="string">&#x27;networkidle&#x27;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 模拟点击下载按钮</span></span><br><span class="line">            page.click(<span class="string">&#x27;a.download-btn&#x27;</span>, timeout=<span class="number">5000</span>)</span><br><span class="line">            page.wait_for_timeout(<span class="number">2000</span>)  <span class="comment"># 等 XHR 回来</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 提取渲染后的 HTML</span></span><br><span class="line">            html = page.content()</span><br><span class="line">            magnets = MAGNET_RE.findall(html)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            browser.close()  <span class="comment"># 🔥 关键：必须 close，否则内存泄露</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
+
+<h3 id="护栏铁律"><a href="#护栏铁律" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p><strong>严禁并发！</strong> 一个浏览器实例吃 500MB+ 内存，开 5 个并发 VPS 直接 OOM。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错误写法</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    tasks = [scrape(url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">    <span class="keyword">await</span> asyncio.gather(*tasks)  <span class="comment"># 并发 5 个 Playwright 直接 OOM</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 正确写法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    <span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">        result = scrape_level3(url)</span><br><span class="line">        <span class="comment"># 串行执行，每个跑完立刻销毁</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第四级：DrissionPage-终极破盾（核武器）"><a href="#第四级：DrissionPage-终极破盾（核武器）" class="headerlink" title="第四级：DrissionPage 终极破盾（核武器）"></a>第四级：DrissionPage 终极破盾（核武器）</h2><h3 id="适用场景-3"><a href="#适用场景-3" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
+<li>Cloudflare “Just a moment” 5 秒盾</li>
+<li>521 强力 Anti-Bot 拦截</li>
+<li>eztv.ag、therarbg.com 等重度 CF 站</li>
+</ul>
+<h3 id="技术栈-2"><a href="#技术栈-2" class="headerlink" title="技术栈"></a>技术栈</h3><p>DrissionPage（基于 Chromium，能自动处理 CF 挑战）。</p>
+<h3 id="实战代码-3"><a href="#实战代码-3" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> DrissionPage <span class="keyword">import</span> ChromiumPage, ChromiumOptions</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level4</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别4：DrissionPage 破 CF 盾&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    options = ChromiumOptions()</span><br><span class="line">    options.headless(<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    page = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        page = ChromiumPage(options)</span><br><span class="line">        page.get(url, retry=<span class="number">3</span>, timeout=<span class="number">30</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># CF 盾通常需要 5-8 秒等待</span></span><br><span class="line">        page.wait.load_start()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 等待页面正常加载（CF 挑战完成后页面会有变化）</span></span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">30</span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;just-a-moment&#x27;</span> <span class="keyword">not</span> <span class="keyword">in</span> page.html.lower():</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            page.wait(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">        magnets = MAGNET_RE.findall(page.html)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">if</span> page:</span><br><span class="line">            page.quit()  <span class="comment"># 🔥 关键：销毁 Chromium 内核进程</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
+
+<h3 id="护栏铁律-1"><a href="#护栏铁律-1" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p>DrissionPage 启动的 Chromium 比 Playwright 更重，<strong>必须在 finally 中强制 quit</strong>，否则后台残留进程吃满内存。</p>
+<hr>
+<h2 id="实战决策树"><a href="#实战决策树" class="headerlink" title="实战决策树"></a>实战决策树</h2><p>面对一个新站，按这个顺序试：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">新站 → 用级别1试</span><br><span class="line">  ↓ 成功？搞定</span><br><span class="line">  ↓ 失败</span><br><span class="line">  → 用级别2试</span><br><span class="line">    ↓ 成功？搞定</span><br><span class="line">    ↓ 失败</span><br><span class="line">    → 用级别3试</span><br><span class="line">      ↓ 成功？搞定</span><br><span class="line">      ↓ 失败</span><br><span class="line">      → 用级别4（最后手段）</span><br><span class="line">        ↓ 失败？放弃，换别的站</span><br></pre></td></tr></table></figure>
+
+<p><strong>关键</strong>：每一级都用 <code>try/except</code>，失败了自动降级下一级；不要一上来就 Headless 浏览器，杀鸡用牛刀。</p>
+<hr>
+<h2 id="资源保护红线"><a href="#资源保护红线" class="headerlink" title="资源保护红线"></a>资源保护红线</h2><p>不管用哪一级，<strong>一定要遵守</strong>：</p>
+<ol>
+<li><strong>严禁并发</strong>：Headless 浏览器一启动就吃 500MB+，并发 3 个就可能 OOM</li>
+<li><strong>强制资源释放</strong>：<code>try...finally</code> 块中执行 <code>browser.close()</code> 或 <code>page.quit()</code></li>
+<li><strong>超时必须设</strong>：每个 HTTP 请求必须 <code>timeout=15</code>，否则卡死会拖垮整个流程</li>
+<li><strong>频率限制</strong>：两次请求之间加 <code>time.sleep(1-3)</code>，避免被目标站拉黑</li>
+<li><strong>优先静态</strong>：能静态正则搞定的绝不用浏览器</li>
+</ol>
+<hr>
+<h2 id="站梯队清单（实测）"><a href="#站梯队清单（实测）" class="headerlink" title="站梯队清单（实测）"></a>站梯队清单（实测）</h2><h3 id="🏆-梯队一：影视动漫资源站"><a href="#🏆-梯队一：影视动漫资源站" class="headerlink" title="🏆 梯队一：影视动漫资源站"></a>🏆 梯队一：影视动漫资源站</h3><table>
+<thead>
+<tr>
+<th>站点</th>
+<th>难度</th>
+<th>推荐级别</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>dygod.net</code></td>
+<td>⭐ 极其简单</td>
+<td>级别 1</td>
+</tr>
+<tr>
+<td><code>seedhub.cc</code></td>
+<td>⭐⭐ 需要策略</td>
+<td>级别 2</td>
+</tr>
+<tr>
+<td><code>bttwoo.com</code></td>
+<td>⭐⭐ 需要策略</td>
+<td>级别 2</td>
+</tr>
+<tr>
+<td><code>btbtla.com</code></td>
+<td>❌ 强 CF</td>
+<td>级别 4</td>
+</tr>
+</tbody></table>
+<h3 id="🥈-梯队二：磁力-Telegram-搜索引擎"><a href="#🥈-梯队二：磁力-Telegram-搜索引擎" class="headerlink" title="🥈 梯队二：磁力 Telegram 搜索引擎"></a>🥈 梯队二：磁力 Telegram 搜索引擎</h3><table>
+<thead>
+<tr>
+<th>站点</th>
+<th>难度</th>
+<th>推荐级别</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>thepiratebay.org</code></td>
+<td>⭐⭐</td>
+<td>级别 2-3</td>
+</tr>
+<tr>
+<td><code>ciliku.net</code></td>
+<td>⭐⭐</td>
+<td>级别 2</td>
+</tr>
+<tr>
+<td><code>eztv.ag</code></td>
+<td>❌ 极强 Anti-Bot</td>
+<td>级别 4</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h2><p><strong>爬虫的精髓不是”用最牛的技术”，而是”用最低的成本搞定目标”</strong>。</p>
+<ul>
+<li>80% 的老站用静态正则就够</li>
+<li>真碰到 JS 渲染再上 Headless</li>
+<li>CF 盾最后才动用 DrissionPage</li>
+</ul>
+<p>按这个分级思路，<strong>用最少的资源，跑最多的网站</strong>。</p>
+<p>如果你也在做爬虫，评论区聊聊你踩过的反爬坑～</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开发工具</category>
+      </categories>
+      <tags>
+        <tag>Python</tag>
+        <tag>爬虫</tag>
+        <tag>磁力</tag>
+        <tag>反爬</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程</title>
+    <url>/2026/07/22/hexo-next-theme-migration-guide/</url>
+    <content><![CDATA[<p><img data-src="/images/hexo-next-theme-cover.webp" alt="封面图"></p>
+<p>我的 Hexo 博客上线好几个月了，一直用默认的 landscape 主题。说实话，丑得我都不想打开第二眼——没有侧边栏、没有分页、文章列表一拉到底，旧文章永远沉在底部不见天日。</p>
+<p>上周我终于忍不了了，花 10 分钟换了 <strong>NexT 主题</strong>，顺便把品牌定制也做了。现在打开博客，我自己都想多刷几遍。</p>
+<p>下面是把整个过程拆成 8 步的完整教程，每一步都有命令，小白也能照抄。</p>
+<hr>
+<h2 id="第〇步：先搞清楚你现在的状况"><a href="#第〇步：先搞清楚你现在的状况" class="headerlink" title="第〇步：先搞清楚你现在的状况"></a>第〇步：先搞清楚你现在的状况</h2><p>首先，进入你的博客项目目录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> 你的博客目录</span><br></pre></td></tr></table></figure>
+
+<p>看一下当前用的是不是默认主题：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">grep <span class="string">&#x27;theme:&#x27;</span> _config.yml</span><br></pre></td></tr></table></figure>
+
+<p>如果输出 <code>theme: landscape</code>，说明你跟我一样在用默认主题，这篇文章就是为你写的。</p>
+<hr>
+<h2 id="第一步：为什么选-NexT？"><a href="#第一步：为什么选-NexT？" class="headerlink" title="第一步：为什么选 NexT？"></a>第一步：为什么选 NexT？</h2><p>Hexo 生态里有几千个主题，我列三个最主流的选择：</p>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>GitHub 标星</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>NexT</strong></td>
+<td>3 万+</td>
+<td>最老牌、文档最全、踩坑基本有前人填过</td>
+</tr>
+<tr>
+<td>Butterfly</td>
+<td>7 千+</td>
+<td>国产热门，颜值高，配置门槛稍高</td>
+</tr>
+<tr>
+<td>Fluid</td>
+<td>9 千+</td>
+<td>Material Design 风格，简洁</td>
+</tr>
+</tbody></table>
+<p>我选 NexT 的理由很简单：<strong>3 万 star 的社区冗余。</strong> 一个主题用的人越多，你遇到的每个问题基本都能在搜索引擎里找到答案。这对小白来说就是最大的安全感。</p>
+<hr>
+<h2 id="第二步：安装-NexT"><a href="#第二步：安装-NexT" class="headerlink" title="第二步：安装 NexT"></a>第二步：安装 NexT</h2><p>如果你是 pnpm 用户（和我一样），一行搞定：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-theme-next --save</span><br></pre></td></tr></table></figure>
+
+<p>如果是 npm 用户：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next --save</span><br></pre></td></tr></table></figure>
+
+<p>装好后，修改站点配置文件 <code>_config.yml</code>，把主题名换成 <code>next</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
+
+<p>就这么简单，现在运行 <code>hexo server</code> 看看效果——你的博客已经换皮了。</p>
+<blockquote>
+<p>默认效果其实就能打 60 分，但我们要的是 90 分——不急，后面一步步调。</p>
+</blockquote>
+<hr>
+<h2 id="第三步：创建主题配置文件"><a href="#第三步：创建主题配置文件" class="headerlink" title="第三步：创建主题配置文件"></a>第三步：创建主题配置文件</h2><p><strong>NexT 8.x 最核心的一个概念：不要在 <code>node_modules</code> 里直接改主题文件。</strong></p>
+<p>为什么？因为 <code>node_modules</code> 里的一切改动用 <code>npm install</code> 或 <code>pnpm install</code> 后会被覆盖，你的定制全丢。</p>
+<p>正确做法：在你的项目根目录新建一个文件叫 <code>_config.next.yml</code>，NexT 会自动读取这个文件来覆盖默认配置。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">touch</span> _config.next.yml</span><br></pre></td></tr></table></figure>
+
+<p>下面我把 <code>_config.next.yml</code> 里要写的内容逐项拆开讲。</p>
+<hr>
+<h2 id="第四步：基础配置（照抄就行）"><a href="#第四步：基础配置（照抄就行）" class="headerlink" title="第四步：基础配置（照抄就行）"></a>第四步：基础配置（照抄就行）</h2><p>打开 <code>_config.next.yml</code>，填入以下内容：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 布局方案：Gemini 是双栏宽侧边模式，信息密度高</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Gemini</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暗色模式：自动跟随系统</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 菜单栏：你想让读者看到哪些入口</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">about:</span> <span class="string">/about/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-user</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 侧边栏：靠左放，文章页面自动展开</span></span><br><span class="line"><span class="attr">sidebar:</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">left</span></span><br><span class="line">  <span class="attr">display:</span> <span class="string">post</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 头像：圆形显示</span></span><br><span class="line"><span class="attr">avatar:</span></span><br><span class="line">  <span class="attr">url:</span> <span class="string">/images/avatar.png</span></span><br><span class="line">  <span class="attr">rounded:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 阅读进度条：一眼看到阅读进度</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 代码块：圆角 + 一键复制按钮</span></span><br><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="attr">border_radius:</span> <span class="number">8</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># PJAX：浏览器无刷新跳转，体验丝滑</span></span><br><span class="line"><span class="attr">pjax:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 图片功能三件套</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span>      <span class="comment"># 点击放大</span></span><br><span class="line"><span class="attr">mediumzoom:</span> <span class="literal">true</span>    <span class="comment"># 缩放</span></span><br><span class="line"><span class="attr">lazyload:</span> <span class="literal">true</span>      <span class="comment"># 懒加载（图片多了不卡）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 书签功能</span></span><br><span class="line"><span class="attr">bookmark:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>每一项我都加了注释说明它是干什么的。你现在只需复制粘贴，以后想调再回来看注释。</p>
+<blockquote>
+<p>这一步走完，你的博客已经能打到 75 分了——有侧边栏、有进度条、代码块有了复制按钮。剩下的 15 分，我们留给”品牌定制”。</p>
+</blockquote>
+<hr>
+<h2 id="第五步：品牌定制——把博客变成”你的”"><a href="#第五步：品牌定制——把博客变成”你的”" class="headerlink" title="第五步：品牌定制——把博客变成”你的”"></a>第五步：品牌定制——把博客变成”你的”</h2><h3 id="5-1-准备一张头像"><a href="#5-1-准备一张头像" class="headerlink" title="5.1 准备一张头像"></a>5.1 准备一张头像</h3><p>找一张正方形的图片（推荐 512×512 以上），放进 <code>source/images/</code> 目录。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p <span class="built_in">source</span>/images</span><br><span class="line"><span class="built_in">cp</span> /你的图片路径/你的头像.png <span class="built_in">source</span>/images/avatar.png</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-改站点信息"><a href="#5-2-改站点信息" class="headerlink" title="5.2 改站点信息"></a>5.2 改站点信息</h3><p>打开 <code>_config.yml</code>（注意，这个是站点主配置，不是主题配置），修改以下字段：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">你的博客名</span></span><br><span class="line"><span class="attr">subtitle:</span> <span class="string">一句话介绍你的博客</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">你的博客是干什么的（写清楚，搜索引擎要靠这个收录）</span></span><br><span class="line"><span class="attr">keywords:</span> <span class="string">关键词1,关键词2,关键词3</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">你的名字</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-3-添加”关于”页面"><a href="#5-3-添加”关于”页面" class="headerlink" title="5.3 添加”关于”页面"></a>5.3 添加”关于”页面</h3><p>因为菜单里配了 <code>about: /about/</code>，你必须建一个对应的页面，否则点进去是 404：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo new page about</span><br></pre></td></tr></table></figure>
+
+<p>这会在 <code>source/about/index.md</code> 生成一个文件。打开它，用第一人称写一段话告诉读者你是谁、这个博客写什么。</p>
+<h3 id="5-4-定制页脚"><a href="#5-4-定制页脚" class="headerlink" title="5.4 定制页脚"></a>5.4 定制页脚</h3><p>在 <code>_config.next.yml</code> 中加上页脚设置：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="attr">since:</span> <span class="number">2026</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-snowflake</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line">  <span class="attr">copyright:</span> <span class="string">你的名字</span> <span class="string">—</span> <span class="string">一句话介绍</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第六步：装两个实用插件"><a href="#第六步：装两个实用插件" class="headerlink" title="第六步：装两个实用插件"></a>第六步：装两个实用插件</h2><h3 id="6-1-本地搜索"><a href="#6-1-本地搜索" class="headerlink" title="6.1 本地搜索"></a>6.1 本地搜索</h3><p>让你的读者能在博客里搜关键词：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-searchdb --save</span><br></pre></td></tr></table></figure>
+
+<p>然后在 <code>_config.yml</code> 中添加：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">search:</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">search.xml</span></span><br><span class="line">  <span class="attr">field:</span> <span class="string">post</span></span><br><span class="line">  <span class="attr">content:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-RSS-订阅"><a href="#6-2-RSS-订阅" class="headerlink" title="6.2 RSS 订阅"></a>6.2 RSS 订阅</h3><p>让你的博客能被 RSS 阅读器抓取：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-feed --save</span><br></pre></td></tr></table></figure>
+
+<p>然后在 <code>_config.yml</code> 中添加：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">feed:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">atom</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">atom.xml</span></span><br><span class="line">  <span class="attr">limit:</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第七步：本地预览-部署上线"><a href="#第七步：本地预览-部署上线" class="headerlink" title="第七步：本地预览 + 部署上线"></a>第七步：本地预览 + 部署上线</h2><h3 id="7-1-本地预览"><a href="#7-1-本地预览" class="headerlink" title="7.1 本地预览"></a>7.1 本地预览</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo clean &amp;&amp; hexo generate &amp;&amp; hexo server</span><br></pre></td></tr></table></figure>
+
+<p>打开浏览器访问 <code>http://localhost:4000</code>，确认一切正常。</p>
+<h3 id="7-2-部署"><a href="#7-2-部署" class="headerlink" title="7.2 部署"></a>7.2 部署</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git add -A</span><br><span class="line">git commit -m <span class="string">&quot;主题迁移：从 landscape 到 NexT&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<p>GitHub Actions 构建完成后，打开你的博客域名验证效果。</p>
+<hr>
+<h2 id="第八步（必看）：三个坑，踩进去再爬出来太疼了"><a href="#第八步（必看）：三个坑，踩进去再爬出来太疼了" class="headerlink" title="第八步（必看）：三个坑，踩进去再爬出来太疼了"></a>第八步（必看）：三个坑，踩进去再爬出来太疼了</h2><h3 id="坑一：pnpm-严格模式下-NexT-功能失灵"><a href="#坑一：pnpm-严格模式下-NexT-功能失灵" class="headerlink" title="坑一：pnpm 严格模式下 NexT 功能失灵"></a>坑一：pnpm 严格模式下 NexT 功能失灵</h3><p><strong>现象</strong>：<code>hexo generate</code> 报一堆 <code>Cannot find module &#39;hexo-util&#39;</code> 错误，首页文章显示全文（摘要机制失效）。</p>
+<p><strong>原因</strong>：pnpm 默认不提升依赖（strict hoisting），NexT 的脚本找不到它依赖的模块。</p>
+<p><strong>修复（必须做，不能跳过）</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;shamefully-hoist=true&#x27;</span> &gt; .npmrc</span><br><span class="line">CI=<span class="literal">true</span> pnpm install</span><br></pre></td></tr></table></figure>
+
+<p>然后验证修复效果：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo generate 2&gt;&amp;1 | grep -c <span class="string">&quot;Cannot find module&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>输出必须为 <code>0</code>，否则说明还有问题。</p>
+<h3 id="坑二：Hexo-8-的摘要标签已经废了"><a href="#坑二：Hexo-8-的摘要标签已经废了" class="headerlink" title="坑二：Hexo 8 的摘要标签已经废了"></a>坑二：Hexo 8 的摘要标签已经废了</h3><p>Hexo 8.1.2 彻底移除了 <code>&lt;!-- more --&gt;</code> 和 <code>excerpt_length</code> 的摘要截断功能。</p>
+<p><strong>唯一替代方案</strong>：每篇文章的 front-matter 里手动加 <code>description</code> 字段：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">&quot;文章标题&quot;</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&quot;80-150 字的中文摘要，告诉读者这篇文章讲什么&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>没有 <code>description</code> 的文章会显示全文——首页瞬间被长文淹没。</p>
+<h3 id="坑三：改完部署了，打开网页还是旧的？"><a href="#坑三：改完部署了，打开网页还是旧的？" class="headerlink" title="坑三：改完部署了，打开网页还是旧的？"></a>坑三：改完部署了，打开网页还是旧的？</h3><p><strong>别慌，这是 CDN 缓存。</strong></p>
+<p>你 curl 验证看到的可能是旧页面。正确的验证姿势：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错：可能拿到 CDN 缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 对：强制跳过缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>走完上面 8 步，你的博客已经脱胎换骨：</p>
+<ul>
+<li>✅ 有侧边栏、分页、暗色模式</li>
+<li>✅ 代码块一键复制、图片点击放大</li>
+<li>✅ 本地全文搜索</li>
+<li>✅ RSS 订阅</li>
+<li>✅ 品牌定制——标题、头像、页脚都是你自己的味道</li>
+<li>✅ 3 个坑提前帮你填平了</li>
+</ul>
+<p>整个过程不用写一行 CSS，不用改一行模板代码。NexT 把 90% 的事情都替你做好了，你只需要写一个 50 行的 YAML 文件。</p>
+<blockquote>
+<p>你的博客不应该只是”能用”——它值得”好看”。</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>教程类</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>博客</tag>
+        <tag>教程</tag>
+        <tag>小白向</tag>
       </tags>
   </entry>
 </search>
