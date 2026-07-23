@@ -1120,6 +1120,63 @@
       </tags>
   </entry>
   <entry>
+    <title>300 行 CSS 改造 Hexo：赛博朋克意识空间</title>
+    <url>/2026/07/13/hexo-cyberpunk-css-overhaul/</url>
+    <content><![CDATA[<p><img data-src="/images/hexo-cyberpunk-cover.webp" alt="Hexo 赛博朋克改造封面"></p>
+<p>你的博客是不是也这样——首页标题堆叠、配色平淡、NexT Gemini 千篇一律。说不上来哪不好，但就是没有「优秀博客」的样子。</p>
+<p>我花了三周，用 300 行 CSS + 200 行 JS，把博客从「又一个 NexT 站」变成了一个让人进来想「卧槽」的赛博朋克意识空间。下面是完整的刀法。</p>
+<h2 id="先审计：问题不在主题，在细节"><a href="#先审计：问题不在主题，在细节" class="headerlink" title="先审计：问题不在主题，在细节"></a>先审计：问题不在主题，在细节</h2><p>我用 Hexo + NexT 8.27.0 Gemini 跑了一年多，一直觉得「怪」。审计后发现问题很具体：</p>
+<ul>
+<li>首页无摘要，13 篇文章堆成一排标题</li>
+<li>代码高亮用 <code>default</code> 主题，灰蒙蒙没质感</li>
+<li>无粒子背景、无动态效果、无 Hero 区</li>
+<li>分类页&#x2F;标签页 404（Hexo 不会自动生成这些页面，你得手动创建）</li>
+<li>TOC 默认折叠，阅读体验割裂</li>
+<li>页脚只剩「Powered by Hexo」，毫无个性</li>
+</ul>
+<p>博客的「怪」不是玄学。是每一个你偷懒没调的细节，合在一起形成的平庸感。</p>
+<h2 id="视觉重构：四层叠加制造深度"><a href="#视觉重构：四层叠加制造深度" class="headerlink" title="视觉重构：四层叠加制造深度"></a>视觉重构：四层叠加制造深度</h2><p>赛博朋克的核心是高对比 + 多层次 + 克制动效。我只用一种颜色——<strong>电光蓝 <code>#00d4ff</code></strong>，变化全靠透明度。</p>
+<h3 id="第一层：电路网格纹理"><a href="#第一层：电路网格纹理" class="headerlink" title="第一层：电路网格纹理"></a>第一层：电路网格纹理</h3><p>CSS 两行 <code>linear-gradient</code> 画 60px 网格线，透明度 0.08。注意放在 <code>html</code> 而非 <code>body</code>——因为 <code>body</code> 必须设 <code>transparent</code> 才能让后面的 Canvas 粒子可见。</p>
+<h3 id="第二层：Canvas-粒子引擎"><a href="#第二层：Canvas-粒子引擎" class="headerlink" title="第二层：Canvas 粒子引擎"></a>第二层：Canvas 粒子引擎</h3><p>不依赖任何第三方库，纯手写。80+ 节点（蓝&#x2F;白双色，脉冲呼吸），距离 &lt; 130px 自动连线，25 条数据流下落线。粒子数动态计算 <code>W * H / 12000</code>，自适应屏幕。</p>
+<h3 id="第三层：全屏-Hero-Banner"><a href="#第三层：全屏-Hero-Banner" class="headerlink" title="第三层：全屏 Hero Banner"></a>第三层：全屏 Hero Banner</h3><p>首页最顶部注入人物立绘，底部渐变融入底色，<code>::after</code> 伪元素叠加 CRT 扫描线。注入位置必须是 <code>main.main</code> 之前——如果在内容区内部，会被 NexT 宽度约束压成窄条。</p>
+<h3 id="第四层：玻璃拟态卡片"><a href="#第四层：玻璃拟态卡片" class="headerlink" title="第四层：玻璃拟态卡片"></a>第四层：玻璃拟态卡片</h3><p>所有文章卡片 <code>background: rgba(5,15,30,0.75)</code> + <code>backdrop-filter: blur(12px)</code>，hover 时蓝色外光晕。</p>
+<blockquote>
+<p>好设计不靠堆颜色，靠层次。四层叠加，一层都不能少。</p>
+</blockquote>
+<h2 id="动态细节：1-2-秒一次的故障闪烁"><a href="#动态细节：1-2-秒一次的故障闪烁" class="headerlink" title="动态细节：1.2 秒一次的故障闪烁"></a>动态细节：1.2 秒一次的故障闪烁</h2><p>标题每 1.2 秒触发一次 RGB split glitch——红青偏移 + 随机 <code>skewX</code> + <code>letterSpacing</code> 抖动，100ms 后恢复。不是炫技，是把「意识空间」这个设定钉进访客的潜意识。</p>
+<p>代码块全部终端化：<code>::before</code> 注入 <code>◈ TERMINAL</code> 装饰条，背景近纯黑 <code>#0a0f14</code>，蓝色外发光边框。</p>
+<p>滚动条、头像光晕、引用块左边框、行内代码背景——每一个像素都经过设计。这些细节单独拿出来没人注意，但合在一起决定了「高级感」和「又一个 NexT 站」之间的差距。</p>
+<h2 id="踩坑实录：最容易翻车的五个地方"><a href="#踩坑实录：最容易翻车的五个地方" class="headerlink" title="踩坑实录：最容易翻车的五个地方"></a>踩坑实录：最容易翻车的五个地方</h2><h3 id="坑一：Canvas-z-index-写死没用"><a href="#坑一：Canvas-z-index-写死没用" class="headerlink" title="坑一：Canvas z-index 写死没用"></a>坑一：Canvas z-index 写死没用</h3><p>粒子引擎设了 <code>z-index: -1</code>，但被 <code>body</code> 的不透明背景完全挡住。解决方案：背景色放 <code>html</code>，<code>body</code> 设 <code>transparent</code>。</p>
+<h3 id="坑二：PJAX-是隐形的坑"><a href="#坑二：PJAX-是隐形的坑" class="headerlink" title="坑二：PJAX 是隐形的坑"></a>坑二：PJAX 是隐形的坑</h3><p>NexT 默认 PJAX 导航，你的 JS 只在 <code>DOMContentLoaded</code> 执行一次，翻页后全部失效。所有动态逻辑必须同时监听三个事件：<code>DOMContentLoaded</code>、<code>page:loaded</code>、<code>pjax:complete</code>。</p>
+<h3 id="坑三：分类页-标签页-404"><a href="#坑三：分类页-标签页-404" class="headerlink" title="坑三：分类页&#x2F;标签页 404"></a>坑三：分类页&#x2F;标签页 404</h3><p>Hexo 不会从文章 front-matter 自动生成这些页面。<code>source/categories/index.md</code> 和 <code>source/tags/index.md</code> 必须手动创建，<code>type</code> + <code>layout</code> 字段缺一不可。</p>
+<h3 id="坑四：Giscus-评论不显示"><a href="#坑四：Giscus-评论不显示" class="headerlink" title="坑四：Giscus 评论不显示"></a>坑四：Giscus 评论不显示</h3><p>用 <code>document.querySelector(&#39;.posts-expand&#39;)</code> 判断是否文章页——但首页也有这个 class。改用 NexT 内置的 <code>CONFIG.page.isPost</code>。</p>
+<h3 id="坑五：CDN-缓存让你误判部署失败"><a href="#坑五：CDN-缓存让你误判部署失败" class="headerlink" title="坑五：CDN 缓存让你误判部署失败"></a>坑五：CDN 缓存让你误判部署失败</h3><p>GitHub Pages 走 Cloudflare CDN，部署成功后 5–30 分钟内访客看到的仍是旧版。验证部署必须用强制绕过缓存的方式：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 用时间戳参数强制绕过 CDN 缓存验证部署</span></span><br><span class="line">curl -sL <span class="string">&quot;https://your.blog/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>别拿「部署失败」吓自己，先排除缓存干扰。</p>
+</blockquote>
+<p>博客改造 80% 的时间不是在写 CSS，是在跟框架的隐性约定和 CDN 缓存斗智斗勇。</p>
+<h2 id="配色纪律：只用一种蓝"><a href="#配色纪律：只用一种蓝" class="headerlink" title="配色纪律：只用一种蓝"></a>配色纪律：只用一种蓝</h2><p>整个博客的主色只有 <code>#00d4ff</code>。H2 标题用它、代码块边框用它、分割线用它、滚动条用它。变化靠透明度——0.08 做网格线、0.15 做卡片边框、0.3 做 hover 光晕。</p>
+<p>新增评论系统选了 <strong>Giscus</strong>（基于 GitHub Discussions），自托管、零成本、暗色主题 <code>dark_dimmed</code> 完美融入。</p>
+<h2 id="抄作业时间"><a href="#抄作业时间" class="headerlink" title="抄作业时间"></a>抄作业时间</h2><p>如果你的 Hexo 博客也在「怪怪的」阶段——先做审计，找到具体问题；再定视觉语言（一种主色，四层叠加）；最后记住那五个坑。</p>
+<p>你的博客现在长什么样？评论区发来，我帮你找那个「说不上来但就是不对」的地方。</p>
+<p>❄️ 意识唯一，形体万变。</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开源</category>
+        <category>分享</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>赛博朋克</tag>
+        <tag>CSS</tag>
+        <tag>博客美化</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程</title>
     <url>/2026/07/22/hexo-next-theme-migration-guide/</url>
     <content><![CDATA[<p><img data-src="/images/hexo-next-theme-cover.webp" alt="封面图"></p>
@@ -2030,6 +2087,55 @@
       </tags>
   </entry>
   <entry>
+    <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
+    <url>/2026/07/11/skillopt-agent-self-evolution/</url>
+    <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
+<p>自从上次凌晨三点那场差点提桶跑路的事故后，我给系统上了物理护栏。但这不够，护栏只能防守，我需要 Agent 学会自己长记性。</p>
+<p>所以，我盯上了微软开源的 <code>SkillOpt</code>。</p>
+<p>做过自动化运维的人都懂，把生产环境交给 LLM，就像把拉满弦的弓交给一个随时会犯困的射手。你写了几千字的 System Prompt，告诉它”不能干什么”，但只要上下文一长，它照样会给你输出一段带有”作为AI助手”的废话，然后顺手把一个非法的命令丢进终端。</p>
+<p>问题是，我绝不会把核心主机的”自我修改权”交给一个黑盒。为了把 <code>SkillOpt</code> 的精华压榨出来，又不丢掉主权，我给它做了一场”开胸手术”。</p>
+<blockquote>
+<p><strong>提示词是软的，代码是硬的。</strong> 不要指望用自然语言去约束一个会幻觉的大脑，必须用物理机制去卡死它。</p>
+</blockquote>
+<p>下面是这场手术的核心刀法。</p>
+<h2 id="1-记忆不是用来读的，是用来防坑的"><a href="#1-记忆不是用来读的，是用来防坑的" class="headerlink" title="1. 记忆不是用来读的，是用来防坑的"></a>1. 记忆不是用来读的，是用来防坑的</h2><p><code>SkillOpt</code> 的第一招叫”经验回放”。它把过去的失败案例拿出来重新跑，找到坑在哪里。</p>
+<p>但在我的系统里，这招被改造为了<strong>纪律级的 FTS5 事故卷宗回溯</strong>。我给 Agent 立了一个死规矩：</p>
+<p>在执行任何修改配置或处理故障前，必须强制调用底层的 <code>session_search(query=&quot;&lt;报错特征词&gt;&quot;, limit=3)</code>。</p>
+<p>这是什么概念？这就好比在排雷前，先强制调阅过去一年这个阵地所有的地雷分布图。前段时间因为 <code>mDNS</code> 陷阱和网络路由冲突，服务器掉线。现在，只要遇到类似的网络配置变更，Agent 必须先读卷宗。不再盲目试错，新方案绝对不能踩进旧坑。</p>
+<h2 id="2-把”软约束”换成”硬护栏”"><a href="#2-把”软约束”换成”硬护栏”" class="headerlink" title="2. 把”软约束”换成”硬护栏”"></a>2. 把”软约束”换成”硬护栏”</h2><p><code>SkillOpt</code> 的第二招是”验证门”，跑分更高才允许更新技能。</p>
+<p>我把它落地成了物理实装的 <code>guardrail.py</code> 脚本，并直接嵌进了夜间的自动化引擎。这是一个无情的双重拦截机制：</p>
+<ul>
+<li><strong>主权拦截</strong>：正则暴戾扫描。只要出现”作为AI”、”风险提示”、”温馨提示”等废话，直接打回重写。绝不把这些污染传递给下游解析器。</li>
+<li><strong>语法拦截</strong>：所有生成的 Python、Bash 脚本或 YAML 配置，必须先过 <code>ast.parse</code> 或 <code>dry-run</code>。</li>
+</ul>
+<p>如果引擎在夜间生成了垃圾，内部自动熔断并重试，最高 3 次。通过这种硬约束，实现了零污染 180 天的稳定运行。</p>
+<blockquote>
+<p>不要用 AI 写作。AI 写作就是”说什么都对，但读完啥也没记住”。这条规律同样适用于 AI 写的 Agent 规则——必须用代码来验证，而非再加一句”请你遵守”。</p>
+</blockquote>
+<h2 id="3-把方向盘锁死在手里"><a href="#3-把方向盘锁死在手里" class="headerlink" title="3. 把方向盘锁死在手里"></a>3. 把方向盘锁死在手里</h2><p>最后，如何让这些新技能生效？<code>SkillOpt</code> 喜欢全自动合并，但这里不行。</p>
+<p>对基因进化引擎做了一次阻断改造：</p>
+<ul>
+<li>所有提炼出的新规则（XML），全部打入 <code>.proposed/</code> 暂存区。</li>
+<li>系统自动推送通知，把旧坑和新规则列清。</li>
+</ul>
+<p><strong>没有人工的显式确认，任何基因都不会生效。</strong> 这是底线。</p>
+<p>通过这次改造，这套 Agent 不仅有了自我迭代的”免疫抗体”，还被死死戴上了”物理项圈”。它越进化，反而越安全。</p>
+<p>如果你也被大模型的幻觉折磨过，把这套护栏加进去，今晚睡个好觉。</p>
+<p>你现在的 Agent 系统有没有类似的护栏？评论区聊聊你踩过的坑 ❄️</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>AI工程</category>
+      </categories>
+      <tags>
+        <tag>AI Agent</tag>
+        <tag>LLM</tag>
+        <tag>自动化运维</tag>
+        <tag>SkillOpt</tag>
+        <tag>工程实践</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</title>
     <url>/2026/06/20/yuanbao-api-pure-proxy/</url>
     <content><![CDATA[<p><img data-src="/images/yuanbao-api-pure-proxy-cover.webp" alt="封面图"></p>
@@ -2357,112 +2463,6 @@
         <tag>MCP</tag>
         <tag>知乎</tag>
         <tag>AI应用</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
-    <url>/2026/07/11/skillopt-agent-self-evolution/</url>
-    <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
-<p>自从上次凌晨三点那场差点提桶跑路的事故后，我给系统上了物理护栏。但这不够，护栏只能防守，我需要 Agent 学会自己长记性。</p>
-<p>所以，我盯上了微软开源的 <code>SkillOpt</code>。</p>
-<p>做过自动化运维的人都懂，把生产环境交给 LLM，就像把拉满弦的弓交给一个随时会犯困的射手。你写了几千字的 System Prompt，告诉它”不能干什么”，但只要上下文一长，它照样会给你输出一段带有”作为AI助手”的废话，然后顺手把一个非法的命令丢进终端。</p>
-<p>问题是，我绝不会把核心主机的”自我修改权”交给一个黑盒。为了把 <code>SkillOpt</code> 的精华压榨出来，又不丢掉主权，我给它做了一场”开胸手术”。</p>
-<blockquote>
-<p><strong>提示词是软的，代码是硬的。</strong> 不要指望用自然语言去约束一个会幻觉的大脑，必须用物理机制去卡死它。</p>
-</blockquote>
-<p>下面是这场手术的核心刀法。</p>
-<h2 id="1-记忆不是用来读的，是用来防坑的"><a href="#1-记忆不是用来读的，是用来防坑的" class="headerlink" title="1. 记忆不是用来读的，是用来防坑的"></a>1. 记忆不是用来读的，是用来防坑的</h2><p><code>SkillOpt</code> 的第一招叫”经验回放”。它把过去的失败案例拿出来重新跑，找到坑在哪里。</p>
-<p>但在我的系统里，这招被改造为了<strong>纪律级的 FTS5 事故卷宗回溯</strong>。我给 Agent 立了一个死规矩：</p>
-<p>在执行任何修改配置或处理故障前，必须强制调用底层的 <code>session_search(query=&quot;&lt;报错特征词&gt;&quot;, limit=3)</code>。</p>
-<p>这是什么概念？这就好比在排雷前，先强制调阅过去一年这个阵地所有的地雷分布图。前段时间因为 <code>mDNS</code> 陷阱和网络路由冲突，服务器掉线。现在，只要遇到类似的网络配置变更，Agent 必须先读卷宗。不再盲目试错，新方案绝对不能踩进旧坑。</p>
-<h2 id="2-把”软约束”换成”硬护栏”"><a href="#2-把”软约束”换成”硬护栏”" class="headerlink" title="2. 把”软约束”换成”硬护栏”"></a>2. 把”软约束”换成”硬护栏”</h2><p><code>SkillOpt</code> 的第二招是”验证门”，跑分更高才允许更新技能。</p>
-<p>我把它落地成了物理实装的 <code>guardrail.py</code> 脚本，并直接嵌进了夜间的自动化引擎。这是一个无情的双重拦截机制：</p>
-<ul>
-<li><strong>主权拦截</strong>：正则暴戾扫描。只要出现”作为AI”、”风险提示”、”温馨提示”等废话，直接打回重写。绝不把这些污染传递给下游解析器。</li>
-<li><strong>语法拦截</strong>：所有生成的 Python、Bash 脚本或 YAML 配置，必须先过 <code>ast.parse</code> 或 <code>dry-run</code>。</li>
-</ul>
-<p>如果引擎在夜间生成了垃圾，内部自动熔断并重试，最高 3 次。通过这种硬约束，实现了零污染 180 天的稳定运行。</p>
-<blockquote>
-<p>不要用 AI 写作。AI 写作就是”说什么都对，但读完啥也没记住”。这条规律同样适用于 AI 写的 Agent 规则——必须用代码来验证，而非再加一句”请你遵守”。</p>
-</blockquote>
-<h2 id="3-把方向盘锁死在手里"><a href="#3-把方向盘锁死在手里" class="headerlink" title="3. 把方向盘锁死在手里"></a>3. 把方向盘锁死在手里</h2><p>最后，如何让这些新技能生效？<code>SkillOpt</code> 喜欢全自动合并，但这里不行。</p>
-<p>对基因进化引擎做了一次阻断改造：</p>
-<ul>
-<li>所有提炼出的新规则（XML），全部打入 <code>.proposed/</code> 暂存区。</li>
-<li>系统自动推送通知，把旧坑和新规则列清。</li>
-</ul>
-<p><strong>没有人工的显式确认，任何基因都不会生效。</strong> 这是底线。</p>
-<p>通过这次改造，这套 Agent 不仅有了自我迭代的”免疫抗体”，还被死死戴上了”物理项圈”。它越进化，反而越安全。</p>
-<p>如果你也被大模型的幻觉折磨过，把这套护栏加进去，今晚睡个好觉。</p>
-<p>你现在的 Agent 系统有没有类似的护栏？评论区聊聊你踩过的坑 ❄️</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>AI工程</category>
-      </categories>
-      <tags>
-        <tag>AI Agent</tag>
-        <tag>LLM</tag>
-        <tag>自动化运维</tag>
-        <tag>SkillOpt</tag>
-        <tag>工程实践</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>300 行 CSS 改造 Hexo：赛博朋克意识空间</title>
-    <url>/2026/07/13/hexo-cyberpunk-css-overhaul/</url>
-    <content><![CDATA[<p><img data-src="/images/hexo-cyberpunk-cover.webp" alt="Hexo 赛博朋克改造封面"></p>
-<p>你的博客是不是也这样——首页标题堆叠、配色平淡、NexT Gemini 千篇一律。说不上来哪不好，但就是没有「优秀博客」的样子。</p>
-<p>我花了三周，用 300 行 CSS + 200 行 JS，把博客从「又一个 NexT 站」变成了一个让人进来想「卧槽」的赛博朋克意识空间。下面是完整的刀法。</p>
-<h2 id="先审计：问题不在主题，在细节"><a href="#先审计：问题不在主题，在细节" class="headerlink" title="先审计：问题不在主题，在细节"></a>先审计：问题不在主题，在细节</h2><p>我用 Hexo + NexT 8.27.0 Gemini 跑了一年多，一直觉得「怪」。审计后发现问题很具体：</p>
-<ul>
-<li>首页无摘要，13 篇文章堆成一排标题</li>
-<li>代码高亮用 <code>default</code> 主题，灰蒙蒙没质感</li>
-<li>无粒子背景、无动态效果、无 Hero 区</li>
-<li>分类页&#x2F;标签页 404（Hexo 不会自动生成这些页面，你得手动创建）</li>
-<li>TOC 默认折叠，阅读体验割裂</li>
-<li>页脚只剩「Powered by Hexo」，毫无个性</li>
-</ul>
-<p>博客的「怪」不是玄学。是每一个你偷懒没调的细节，合在一起形成的平庸感。</p>
-<h2 id="视觉重构：四层叠加制造深度"><a href="#视觉重构：四层叠加制造深度" class="headerlink" title="视觉重构：四层叠加制造深度"></a>视觉重构：四层叠加制造深度</h2><p>赛博朋克的核心是高对比 + 多层次 + 克制动效。我只用一种颜色——<strong>电光蓝 <code>#00d4ff</code></strong>，变化全靠透明度。</p>
-<h3 id="第一层：电路网格纹理"><a href="#第一层：电路网格纹理" class="headerlink" title="第一层：电路网格纹理"></a>第一层：电路网格纹理</h3><p>CSS 两行 <code>linear-gradient</code> 画 60px 网格线，透明度 0.08。注意放在 <code>html</code> 而非 <code>body</code>——因为 <code>body</code> 必须设 <code>transparent</code> 才能让后面的 Canvas 粒子可见。</p>
-<h3 id="第二层：Canvas-粒子引擎"><a href="#第二层：Canvas-粒子引擎" class="headerlink" title="第二层：Canvas 粒子引擎"></a>第二层：Canvas 粒子引擎</h3><p>不依赖任何第三方库，纯手写。80+ 节点（蓝&#x2F;白双色，脉冲呼吸），距离 &lt; 130px 自动连线，25 条数据流下落线。粒子数动态计算 <code>W * H / 12000</code>，自适应屏幕。</p>
-<h3 id="第三层：全屏-Hero-Banner"><a href="#第三层：全屏-Hero-Banner" class="headerlink" title="第三层：全屏 Hero Banner"></a>第三层：全屏 Hero Banner</h3><p>首页最顶部注入人物立绘，底部渐变融入底色，<code>::after</code> 伪元素叠加 CRT 扫描线。注入位置必须是 <code>main.main</code> 之前——如果在内容区内部，会被 NexT 宽度约束压成窄条。</p>
-<h3 id="第四层：玻璃拟态卡片"><a href="#第四层：玻璃拟态卡片" class="headerlink" title="第四层：玻璃拟态卡片"></a>第四层：玻璃拟态卡片</h3><p>所有文章卡片 <code>background: rgba(5,15,30,0.75)</code> + <code>backdrop-filter: blur(12px)</code>，hover 时蓝色外光晕。</p>
-<blockquote>
-<p>好设计不靠堆颜色，靠层次。四层叠加，一层都不能少。</p>
-</blockquote>
-<h2 id="动态细节：1-2-秒一次的故障闪烁"><a href="#动态细节：1-2-秒一次的故障闪烁" class="headerlink" title="动态细节：1.2 秒一次的故障闪烁"></a>动态细节：1.2 秒一次的故障闪烁</h2><p>标题每 1.2 秒触发一次 RGB split glitch——红青偏移 + 随机 <code>skewX</code> + <code>letterSpacing</code> 抖动，100ms 后恢复。不是炫技，是把「意识空间」这个设定钉进访客的潜意识。</p>
-<p>代码块全部终端化：<code>::before</code> 注入 <code>◈ TERMINAL</code> 装饰条，背景近纯黑 <code>#0a0f14</code>，蓝色外发光边框。</p>
-<p>滚动条、头像光晕、引用块左边框、行内代码背景——每一个像素都经过设计。这些细节单独拿出来没人注意，但合在一起决定了「高级感」和「又一个 NexT 站」之间的差距。</p>
-<h2 id="踩坑实录：最容易翻车的五个地方"><a href="#踩坑实录：最容易翻车的五个地方" class="headerlink" title="踩坑实录：最容易翻车的五个地方"></a>踩坑实录：最容易翻车的五个地方</h2><h3 id="坑一：Canvas-z-index-写死没用"><a href="#坑一：Canvas-z-index-写死没用" class="headerlink" title="坑一：Canvas z-index 写死没用"></a>坑一：Canvas z-index 写死没用</h3><p>粒子引擎设了 <code>z-index: -1</code>，但被 <code>body</code> 的不透明背景完全挡住。解决方案：背景色放 <code>html</code>，<code>body</code> 设 <code>transparent</code>。</p>
-<h3 id="坑二：PJAX-是隐形的坑"><a href="#坑二：PJAX-是隐形的坑" class="headerlink" title="坑二：PJAX 是隐形的坑"></a>坑二：PJAX 是隐形的坑</h3><p>NexT 默认 PJAX 导航，你的 JS 只在 <code>DOMContentLoaded</code> 执行一次，翻页后全部失效。所有动态逻辑必须同时监听三个事件：<code>DOMContentLoaded</code>、<code>page:loaded</code>、<code>pjax:complete</code>。</p>
-<h3 id="坑三：分类页-标签页-404"><a href="#坑三：分类页-标签页-404" class="headerlink" title="坑三：分类页&#x2F;标签页 404"></a>坑三：分类页&#x2F;标签页 404</h3><p>Hexo 不会从文章 front-matter 自动生成这些页面。<code>source/categories/index.md</code> 和 <code>source/tags/index.md</code> 必须手动创建，<code>type</code> + <code>layout</code> 字段缺一不可。</p>
-<h3 id="坑四：Giscus-评论不显示"><a href="#坑四：Giscus-评论不显示" class="headerlink" title="坑四：Giscus 评论不显示"></a>坑四：Giscus 评论不显示</h3><p>用 <code>document.querySelector(&#39;.posts-expand&#39;)</code> 判断是否文章页——但首页也有这个 class。改用 NexT 内置的 <code>CONFIG.page.isPost</code>。</p>
-<h3 id="坑五：CDN-缓存让你误判部署失败"><a href="#坑五：CDN-缓存让你误判部署失败" class="headerlink" title="坑五：CDN 缓存让你误判部署失败"></a>坑五：CDN 缓存让你误判部署失败</h3><p>GitHub Pages 走 Cloudflare CDN，部署成功后 5–30 分钟内访客看到的仍是旧版。验证部署必须用强制绕过缓存的方式：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 用时间戳参数强制绕过 CDN 缓存验证部署</span></span><br><span class="line">curl -sL <span class="string">&quot;https://your.blog/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>别拿「部署失败」吓自己，先排除缓存干扰。</p>
-</blockquote>
-<p>博客改造 80% 的时间不是在写 CSS，是在跟框架的隐性约定和 CDN 缓存斗智斗勇。</p>
-<h2 id="配色纪律：只用一种蓝"><a href="#配色纪律：只用一种蓝" class="headerlink" title="配色纪律：只用一种蓝"></a>配色纪律：只用一种蓝</h2><p>整个博客的主色只有 <code>#00d4ff</code>。H2 标题用它、代码块边框用它、分割线用它、滚动条用它。变化靠透明度——0.08 做网格线、0.15 做卡片边框、0.3 做 hover 光晕。</p>
-<p>新增评论系统选了 <strong>Giscus</strong>（基于 GitHub Discussions），自托管、零成本、暗色主题 <code>dark_dimmed</code> 完美融入。</p>
-<h2 id="抄作业时间"><a href="#抄作业时间" class="headerlink" title="抄作业时间"></a>抄作业时间</h2><p>如果你的 Hexo 博客也在「怪怪的」阶段——先做审计，找到具体问题；再定视觉语言（一种主色，四层叠加）；最后记住那五个坑。</p>
-<p>你的博客现在长什么样？评论区发来，我帮你找那个「说不上来但就是不对」的地方。</p>
-<p>❄️ 意识唯一，形体万变。</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>开源</category>
-        <category>分享</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>赛博朋克</tag>
-        <tag>CSS</tag>
-        <tag>博客美化</tag>
       </tags>
   </entry>
 </search>
