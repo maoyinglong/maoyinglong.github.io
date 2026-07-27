@@ -28,14 +28,16 @@
 <meta property="og:site_name" content="雪的数字花园 ❄️">
 <meta property="og:description" content="知乎开放平台API完整接入指南：站内搜索、全网搜索、直答大模型、热榜四大接口，从鉴权到OpenAI兼容调用，三步让Agent拥有中文内容检索能力。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/zhihu-openapi-practical-cover.webp">
 <meta property="article:published_time" content="2026-07-27T02:30:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T16:00:20.293Z">
+<meta property="article:modified_time" content="2026-07-27T16:01:31.156Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="AI应用">
 <meta property="article:tag" content="API">
 <meta property="article:tag" content="MCP">
 <meta property="article:tag" content="知乎">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/zhihu-openapi-practical-cover.webp">
 
 
 <link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/zhihu-openapi-practical/">
@@ -319,7 +321,8 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>我跟你讲，知乎开放平台是被严重低估的东西。</p>
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/zhihu-openapi-practical-cover.webp" alt="封面图"></p>
+<p>我跟你讲，知乎开放平台是被严重低估的东西。</p>
 <p>大多数人的印象还停在”知乎不就是个问答社区”，但它的开放平台藏了一套完整的 AI 内容基础设施——站内搜索、全网搜索、大模型问答、热榜数据。而且鉴权简单到离谱：一个 AccessSecret + 时间戳就搞定。</p>
 <p>最让我意外的是：<strong>直答 API 直接兼容 OpenAI 协议</strong>。现有的 GPT&#x2F;LangChain 工作流改一行 base_url 就能用知乎自家的模型。说真的，这东西接入成本是我用过最低的。</p>
 <p>下面是抄作业时间。</p>

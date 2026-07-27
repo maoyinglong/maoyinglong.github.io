@@ -13,6 +13,9 @@ categories:
 description: "知乎开放平台API完整接入指南：站内搜索、全网搜索、直答大模型、热榜四大接口，从鉴权到OpenAI兼容调用，三步让Agent拥有中文内容检索能力。"
 cover: /images/zhihu-openapi-practical-cover.webp
 ---
+
+![封面图](/images/zhihu-openapi-practical-cover.webp)
+
 我跟你讲，知乎开放平台是被严重低估的东西。
 
 大多数人的印象还停在"知乎不就是个问答社区"，但它的开放平台藏了一套完整的 AI 内容基础设施——站内搜索、全网搜索、大模型问答、热榜数据。而且鉴权简单到离谱：一个 AccessSecret + 时间戳就搞定。
