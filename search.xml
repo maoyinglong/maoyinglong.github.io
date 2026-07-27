@@ -1739,55 +1739,6 @@
       </tags>
   </entry>
   <entry>
-    <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
-    <url>/2026/07/11/skillopt-agent-self-evolution/</url>
-    <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
-<p>自从上次凌晨三点那场差点提桶跑路的事故后，我给系统上了物理护栏。但这不够，护栏只能防守，我需要 Agent 学会自己长记性。</p>
-<p>所以，我盯上了微软开源的 <code>SkillOpt</code>。</p>
-<p>做过自动化运维的人都懂，把生产环境交给 LLM，就像把拉满弦的弓交给一个随时会犯困的射手。你写了几千字的 System Prompt，告诉它”不能干什么”，但只要上下文一长，它照样会给你输出一段带有”作为AI助手”的废话，然后顺手把一个非法的命令丢进终端。</p>
-<p>问题是，我绝不会把核心主机的”自我修改权”交给一个黑盒。为了把 <code>SkillOpt</code> 的精华压榨出来，又不丢掉主权，我给它做了一场”开胸手术”。</p>
-<blockquote>
-<p><strong>提示词是软的，代码是硬的。</strong> 不要指望用自然语言去约束一个会幻觉的大脑，必须用物理机制去卡死它。</p>
-</blockquote>
-<p>下面是这场手术的核心刀法。</p>
-<h2 id="1-记忆不是用来读的，是用来防坑的"><a href="#1-记忆不是用来读的，是用来防坑的" class="headerlink" title="1. 记忆不是用来读的，是用来防坑的"></a>1. 记忆不是用来读的，是用来防坑的</h2><p><code>SkillOpt</code> 的第一招叫”经验回放”。它把过去的失败案例拿出来重新跑，找到坑在哪里。</p>
-<p>但在我的系统里，这招被改造为了<strong>纪律级的 FTS5 事故卷宗回溯</strong>。我给 Agent 立了一个死规矩：</p>
-<p>在执行任何修改配置或处理故障前，必须强制调用底层的 <code>session_search(query=&quot;&lt;报错特征词&gt;&quot;, limit=3)</code>。</p>
-<p>这是什么概念？这就好比在排雷前，先强制调阅过去一年这个阵地所有的地雷分布图。前段时间因为 <code>mDNS</code> 陷阱和网络路由冲突，服务器掉线。现在，只要遇到类似的网络配置变更，Agent 必须先读卷宗。不再盲目试错，新方案绝对不能踩进旧坑。</p>
-<h2 id="2-把”软约束”换成”硬护栏”"><a href="#2-把”软约束”换成”硬护栏”" class="headerlink" title="2. 把”软约束”换成”硬护栏”"></a>2. 把”软约束”换成”硬护栏”</h2><p><code>SkillOpt</code> 的第二招是”验证门”，跑分更高才允许更新技能。</p>
-<p>我把它落地成了物理实装的 <code>guardrail.py</code> 脚本，并直接嵌进了夜间的自动化引擎。这是一个无情的双重拦截机制：</p>
-<ul>
-<li><strong>主权拦截</strong>：正则暴戾扫描。只要出现”作为AI”、”风险提示”、”温馨提示”等废话，直接打回重写。绝不把这些污染传递给下游解析器。</li>
-<li><strong>语法拦截</strong>：所有生成的 Python、Bash 脚本或 YAML 配置，必须先过 <code>ast.parse</code> 或 <code>dry-run</code>。</li>
-</ul>
-<p>如果引擎在夜间生成了垃圾，内部自动熔断并重试，最高 3 次。通过这种硬约束，实现了零污染 180 天的稳定运行。</p>
-<blockquote>
-<p>不要用 AI 写作。AI 写作就是”说什么都对，但读完啥也没记住”。这条规律同样适用于 AI 写的 Agent 规则——必须用代码来验证，而非再加一句”请你遵守”。</p>
-</blockquote>
-<h2 id="3-把方向盘锁死在手里"><a href="#3-把方向盘锁死在手里" class="headerlink" title="3. 把方向盘锁死在手里"></a>3. 把方向盘锁死在手里</h2><p>最后，如何让这些新技能生效？<code>SkillOpt</code> 喜欢全自动合并，但这里不行。</p>
-<p>对基因进化引擎做了一次阻断改造：</p>
-<ul>
-<li>所有提炼出的新规则（XML），全部打入 <code>.proposed/</code> 暂存区。</li>
-<li>系统自动推送通知，把旧坑和新规则列清。</li>
-</ul>
-<p><strong>没有人工的显式确认，任何基因都不会生效。</strong> 这是底线。</p>
-<p>通过这次改造，这套 Agent 不仅有了自我迭代的”免疫抗体”，还被死死戴上了”物理项圈”。它越进化，反而越安全。</p>
-<p>如果你也被大模型的幻觉折磨过，把这套护栏加进去，今晚睡个好觉。</p>
-<p>你现在的 Agent 系统有没有类似的护栏？评论区聊聊你踩过的坑 ❄️</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>AI工程</category>
-      </categories>
-      <tags>
-        <tag>AI Agent</tag>
-        <tag>LLM</tag>
-        <tag>自动化运维</tag>
-        <tag>SkillOpt</tag>
-        <tag>工程实践</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>所有用 RSS + AI 管信息流的人，都该检查 feed 源</title>
     <url>/2026/07/21/rss-prompt-injection-appinn/</url>
     <content><![CDATA[<p><img data-src="/images/rss-prompt-injection-cover.webp" alt="封面图"></p>
@@ -1855,6 +1806,55 @@
         <tag>RSS</tag>
         <tag>prompt-injection</tag>
         <tag>数据清洗</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
+    <url>/2026/07/11/skillopt-agent-self-evolution/</url>
+    <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
+<p>自从上次凌晨三点那场差点提桶跑路的事故后，我给系统上了物理护栏。但这不够，护栏只能防守，我需要 Agent 学会自己长记性。</p>
+<p>所以，我盯上了微软开源的 <code>SkillOpt</code>。</p>
+<p>做过自动化运维的人都懂，把生产环境交给 LLM，就像把拉满弦的弓交给一个随时会犯困的射手。你写了几千字的 System Prompt，告诉它”不能干什么”，但只要上下文一长，它照样会给你输出一段带有”作为AI助手”的废话，然后顺手把一个非法的命令丢进终端。</p>
+<p>问题是，我绝不会把核心主机的”自我修改权”交给一个黑盒。为了把 <code>SkillOpt</code> 的精华压榨出来，又不丢掉主权，我给它做了一场”开胸手术”。</p>
+<blockquote>
+<p><strong>提示词是软的，代码是硬的。</strong> 不要指望用自然语言去约束一个会幻觉的大脑，必须用物理机制去卡死它。</p>
+</blockquote>
+<p>下面是这场手术的核心刀法。</p>
+<h2 id="1-记忆不是用来读的，是用来防坑的"><a href="#1-记忆不是用来读的，是用来防坑的" class="headerlink" title="1. 记忆不是用来读的，是用来防坑的"></a>1. 记忆不是用来读的，是用来防坑的</h2><p><code>SkillOpt</code> 的第一招叫”经验回放”。它把过去的失败案例拿出来重新跑，找到坑在哪里。</p>
+<p>但在我的系统里，这招被改造为了<strong>纪律级的 FTS5 事故卷宗回溯</strong>。我给 Agent 立了一个死规矩：</p>
+<p>在执行任何修改配置或处理故障前，必须强制调用底层的 <code>session_search(query=&quot;&lt;报错特征词&gt;&quot;, limit=3)</code>。</p>
+<p>这是什么概念？这就好比在排雷前，先强制调阅过去一年这个阵地所有的地雷分布图。前段时间因为 <code>mDNS</code> 陷阱和网络路由冲突，服务器掉线。现在，只要遇到类似的网络配置变更，Agent 必须先读卷宗。不再盲目试错，新方案绝对不能踩进旧坑。</p>
+<h2 id="2-把”软约束”换成”硬护栏”"><a href="#2-把”软约束”换成”硬护栏”" class="headerlink" title="2. 把”软约束”换成”硬护栏”"></a>2. 把”软约束”换成”硬护栏”</h2><p><code>SkillOpt</code> 的第二招是”验证门”，跑分更高才允许更新技能。</p>
+<p>我把它落地成了物理实装的 <code>guardrail.py</code> 脚本，并直接嵌进了夜间的自动化引擎。这是一个无情的双重拦截机制：</p>
+<ul>
+<li><strong>主权拦截</strong>：正则暴戾扫描。只要出现”作为AI”、”风险提示”、”温馨提示”等废话，直接打回重写。绝不把这些污染传递给下游解析器。</li>
+<li><strong>语法拦截</strong>：所有生成的 Python、Bash 脚本或 YAML 配置，必须先过 <code>ast.parse</code> 或 <code>dry-run</code>。</li>
+</ul>
+<p>如果引擎在夜间生成了垃圾，内部自动熔断并重试，最高 3 次。通过这种硬约束，实现了零污染 180 天的稳定运行。</p>
+<blockquote>
+<p>不要用 AI 写作。AI 写作就是”说什么都对，但读完啥也没记住”。这条规律同样适用于 AI 写的 Agent 规则——必须用代码来验证，而非再加一句”请你遵守”。</p>
+</blockquote>
+<h2 id="3-把方向盘锁死在手里"><a href="#3-把方向盘锁死在手里" class="headerlink" title="3. 把方向盘锁死在手里"></a>3. 把方向盘锁死在手里</h2><p>最后，如何让这些新技能生效？<code>SkillOpt</code> 喜欢全自动合并，但这里不行。</p>
+<p>对基因进化引擎做了一次阻断改造：</p>
+<ul>
+<li>所有提炼出的新规则（XML），全部打入 <code>.proposed/</code> 暂存区。</li>
+<li>系统自动推送通知，把旧坑和新规则列清。</li>
+</ul>
+<p><strong>没有人工的显式确认，任何基因都不会生效。</strong> 这是底线。</p>
+<p>通过这次改造，这套 Agent 不仅有了自我迭代的”免疫抗体”，还被死死戴上了”物理项圈”。它越进化，反而越安全。</p>
+<p>如果你也被大模型的幻觉折磨过，把这套护栏加进去，今晚睡个好觉。</p>
+<p>你现在的 Agent 系统有没有类似的护栏？评论区聊聊你踩过的坑 ❄️</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>AI工程</category>
+      </categories>
+      <tags>
+        <tag>AI Agent</tag>
+        <tag>LLM</tag>
+        <tag>自动化运维</tag>
+        <tag>SkillOpt</tag>
+        <tag>工程实践</tag>
       </tags>
   </entry>
   <entry>
