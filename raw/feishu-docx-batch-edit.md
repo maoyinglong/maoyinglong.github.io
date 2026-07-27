@@ -13,6 +13,9 @@ categories:
 description: "飞书Docx API的1770001 invalid param错误排障全记录：tenant_access_token批量删除被拒绝的根因、三种绕过方案。"
 cover: /images/feishu-docx-batch-edit-cover.webp
 ---
+
+![封面图](/images/feishu-docx-batch-edit-cover.webp)
+
 两个小时。我花了两个小时才搞明白为什么飞书 Docx API 删不掉一段文字。
 
 事情是这样的：我做内容自动化，需要把日报写入飞书文档。理想流程很简单——拉数据、清旧内容、写新内容。三个步骤，听起来 10 分钟搞定。

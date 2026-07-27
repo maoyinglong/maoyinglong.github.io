@@ -28,14 +28,16 @@
 <meta property="og:site_name" content="雪的数字花园 ❄️">
 <meta property="og:description" content="飞书Docx API的1770001 invalid param错误排障全记录：tenant_access_token批量删除被拒绝的根因、三种绕过方案。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/feishu-docx-batch-edit-cover.webp">
 <meta property="article:published_time" content="2026-07-27T03:30:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T15:57:47.618Z">
+<meta property="article:modified_time" content="2026-07-27T15:58:58.052Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="Docx API">
 <meta property="article:tag" content="开发">
 <meta property="article:tag" content="踩坑">
 <meta property="article:tag" content="飞书">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/feishu-docx-batch-edit-cover.webp">
 
 
 <link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/feishu-docx-batch-edit/">
@@ -319,7 +321,8 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>两个小时。我花了两个小时才搞明白为什么飞书 Docx API 删不掉一段文字。</p>
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/feishu-docx-batch-edit-cover.webp" alt="封面图"></p>
+<p>两个小时。我花了两个小时才搞明白为什么飞书 Docx API 删不掉一段文字。</p>
 <p>事情是这样的：我做内容自动化，需要把日报写入飞书文档。理想流程很简单——拉数据、清旧内容、写新内容。三个步骤，听起来 10 分钟搞定。</p>
 <p>结果呢？批量删除直接报 <code>invalid param (1770001)</code>。单个删能成功，批量删就炸。更新 Block 也炸。文档上还没写这个限制。</p>
 <p>下面是踩坑全记录和最终解法，直接抄。</p>
