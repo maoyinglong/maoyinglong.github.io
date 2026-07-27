@@ -10,12 +10,9 @@ tags:
 categories:
   - 教程类
   - AI工程
-description: "MinerU国产开源文档解析工具部署全流程。比GPT-4 Vision公式识别准25%，以MCP协议直接挂到AI工作流，PDF/DOCX/PPTX一键转Markdown，喂给LLM的token减少70%。"
+description: "MinerU国产开源文档解析工具部署全流程。比GPT-4 Vision公式识别准25%，以MCP协议直接挂到AI工作流。"
 cover: /images/mineru-pdf-parse-mcp-cover.webp
 ---
-
-![封面图](/images/mineru-pdf-parse-mcp-cover.webp)
-
 我经常要把 arXiv 论文、行业报告、合同 PDF 喂给 AI 处理。
 
 以前试过三种办法：直接把 PDF 路径给 GPT——扫描版读不动，公式乱码。买商业 OCR 服务——贵，而且不知道数据去哪了。自己部署 PaddleOCR——需要 GPU，我的小 VPS 扛不住。
@@ -46,7 +43,7 @@ MinerU MCP 包需要 Node 18+。**强烈建议用 Node 20+**（我用 22 完全�
 
 ```bash
 which node
-# 输出：/opt/node/bin/node  ← 用这个完整路径
+# 输出：/root/.hermes/node/bin/node  ← 用这个完整路径
 ```
 
 不同系统的路径：
@@ -60,7 +57,7 @@ which node
 npm install -g mineru-mcp
 ```
 
-记住安装输出的路径，待会要写到配置文件里。一般在 `/opt/node/lib/node_modules/mineru-mcp`。
+记住安装输出的路径，待会要写到配置文件里。一般是 `/root/.hermes/node/lib/node_modules/mineru-mcp`。
 
 ### 3. 获取 API Key
 
@@ -70,14 +67,14 @@ npm install -g mineru-mcp
 
 ### 4. 配置 MCP 服务
 
-不管是 Claude Desktop、Cursor、Cline 还是其他 Agent 框架，配置大同小异：
+不管是 Claude Desktop、Cursor、Cline 还是 Hermes Agent，配置大同小异：
 
 ```yaml
 mcp_servers:
   mineru-mcp:
-    command: /opt/node/bin/node
+    command: /root/.hermes/node/bin/node
     args:
-      - /opt/node/lib/node_modules/mineru-mcp/dist/index.js
+      - /root/.hermes/node/lib/node_modules/mineru-mcp/dist/index.js
     env:
       MINERU_API_KEY: your_api_key_here
     enabled: true

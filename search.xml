@@ -664,19 +664,18 @@
   <entry>
     <title>飞书机器人哑了？90%的人不知道查这个地方</title>
     <url>/2026/07/27/feishu-bot-connectivity-fix/</url>
-    <content><![CDATA[<p><img data-src="/images/feishu-bot-connectivity-fix-cover.webp" alt="封面图"></p>
-<p>某天下午，我给飞书 Bot 发了条消息——石沉大海。</p>
+    <content><![CDATA[<p>某天下午，我给飞书 Bot 发了条消息——石沉大海。</p>
 <p>打开飞书开放平台，点”验证连接状态”——红色，失败。日志里躺着一条：<code>RuntimeError: Executor shutdown has been called</code>。</p>
 <p>然后我花了 5 分钟定位、10 秒修好。这篇把完整的诊断链路写下来，下次你对号入座，不用从零排查。</p>
-<h2 id="根因一句话"><a href="#根因一句话" class="headerlink" title="根因一句话"></a>根因一句话</h2><p>飞书 Bot 用 <strong>WebSocket 长连接</strong> 保持在线的。这个长连接进程一般叫 <code>gateway</code>（网关）。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，<strong>回复时调用线程池直接抛 <code>Executor shutdown</code>，消息发不出去</strong>。</p>
+<h2 id="根因一句话"><a href="#根因一句话" class="headerlink" title="根因一句话"></a>根因一句话</h2><p>飞书 Bot 用 <strong>WebSocket 长连接</strong> 保持在线的。这个长连接进程叫 <code>gateway</code>。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，<strong>回复时调用线程池直接抛 <code>Executor shutdown</code>，消息发不出去</strong>。</p>
 <p>表现就是：飞书后台显示连接异常，实际 Bot 能收到消息但发不出，你以为 Bot 死了。</p>
-<h2 id="三步诊断"><a href="#三步诊断" class="headerlink" title="三步诊断"></a>三步诊断</h2><h3 id="第一步：看进程"><a href="#第一步：看进程" class="headerlink" title="第一步：看进程"></a>第一步：看进程</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ps aux | grep -E <span class="string">&#x27;gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
+<h2 id="三步诊断"><a href="#三步诊断" class="headerlink" title="三步诊断"></a>三步诊断</h2><h3 id="第一步：看进程"><a href="#第一步：看进程" class="headerlink" title="第一步：看进程"></a>第一步：看进程</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ps aux | grep -E <span class="string">&#x27;hermes|gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>看到 gateway 进程 → 还活着，问题不在这</li>
+<li>看到 <code>hermes gateway run</code> → gateway 还活着，问题不在这</li>
 <li>没看到 → <strong>gateway 已挂</strong>，往下走</li>
 </ul>
-<h3 id="第二步：看日志"><a href="#第二步：看日志" class="headerlink" title="第二步：看日志"></a>第二步：看日志</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">tail</span> -50 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
+<h3 id="第二步：看日志"><a href="#第二步：看日志" class="headerlink" title="第二步：看日志"></a>第二步：看日志</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">tail</span> -50 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
 <p>关键日志模式：</p>
 <table>
@@ -703,28 +702,30 @@
 <td>gateway 已停</td>
 </tr>
 </tbody></table>
-<h3 id="第三步：看配置（仅在前两步正常但不回复时）"><a href="#第三步：看配置（仅在前两步正常但不回复时）" class="headerlink" title="第三步：看配置（仅在前两步正常但不回复时）"></a>第三步：看配置（仅在前两步正常但不回复时）</h3><p>在配置文件中确认飞书相关设置：<code>enabled: true</code>、<code>connection_mode: websocket</code>、没有中转配置（<strong>飞书必须直连</strong>，走中转会破坏 WebSocket）、<code>app_id</code> 和 <code>app_secret</code> 正确。</p>
-<h2 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h2><h3 id="90-的情况：重启-gateway"><a href="#90-的情况：重启-gateway" class="headerlink" title="90% 的情况：重启 gateway"></a>90% 的情况：重启 gateway</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">tail</span> -20 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
+<h3 id="第三步：看配置（仅在前两步正常但不回复时）"><a href="#第三步：看配置（仅在前两步正常但不回复时）" class="headerlink" title="第三步：看配置（仅在前两步正常但不回复时）"></a>第三步：看配置（仅在前两步正常但不回复时）</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cat</span> ~/.hermes/config.yaml | grep -A 10 feishu</span><br></pre></td></tr></table></figure>
+
+<p>确认：<code>enabled: true</code>、<code>connection_mode: websocket</code>、没有 <code>proxy:</code> 配置（<strong>飞书必须直连</strong>，走中转会破坏 WebSocket）、<code>app_id</code> 和 <code>app_secret</code> 正确。</p>
+<h2 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h2><h3 id="90-的情况：重启-gateway"><a href="#90-的情况：重启-gateway" class="headerlink" title="90% 的情况：重启 gateway"></a>90% 的情况：重启 gateway</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">tail</span> -20 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
 <p>看到这两行就是活了：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">✓ feishu connected</span><br><span class="line">Gateway running with 2 platform(s)</span><br></pre></td></tr></table></figure>
 
 <h3 id="gateway-反复崩溃"><a href="#gateway-反复崩溃" class="headerlink" title="gateway 反复崩溃"></a>gateway 反复崩溃</h3><p>可能有多个进程冲突：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;gateway run&#x27;</span></span><br><span class="line"><span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;hermes gateway&#x27;</span></span><br><span class="line"><span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
 
-<h3 id="一键恢复"><a href="#一键恢复" class="headerlink" title="一键恢复"></a>一键恢复</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;gateway run&#x27;</span> 2&gt;/dev/null; <span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">sleep</span> 10 &amp;&amp; <span class="built_in">tail</span> -20 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
+<h3 id="一键恢复"><a href="#一键恢复" class="headerlink" title="一键恢复"></a>一键恢复</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;hermes gateway&#x27;</span> 2&gt;/dev/null; <span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">sleep</span> 10 &amp;&amp; <span class="built_in">tail</span> -20 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
 <h2 id="几个常见误区"><a href="#几个常见误区" class="headerlink" title="几个常见误区"></a>几个常见误区</h2><h3 id="“验证连接状态”按钮失败-≠-真的失败"><a href="#“验证连接状态”按钮失败-≠-真的失败" class="headerlink" title="“验证连接状态”按钮失败 ≠ 真的失败"></a>“验证连接状态”按钮失败 ≠ 真的失败</h3><p>飞书开放平台的”验证连接状态”按钮点失败不用慌。一些 SDK 库对平台侧的 PONG 探测不回复，属于设计如此。<strong>判断标准</strong>：看 gateway 日志有没有 <code>✓ feishu connected</code>，加实际发条消息看能不能回。</p>
 <h3 id="飞书必须直连"><a href="#飞书必须直连" class="headerlink" title="飞书必须直连"></a>飞书必须直连</h3><p><code>.feishu.cn</code> 和 <code>.larksuite.com</code> <strong>不要走中转</strong>。中转引入的额外握手延迟会破坏 WebSocket 长连接。如果你有全局中转（如 Clash），环境变量加 <code>no_proxy=*.feishu.cn,*.larksuite.com</code>。</p>
-<h3 id="别重启-CLI-客户端"><a href="#别重启-CLI-客户端" class="headerlink" title="别重启 CLI 客户端"></a>别重启 CLI 客户端</h3><p>CLI 客户端是命令行界面（你用来跟 AI 聊天的终端），不是后台服务。重启它<strong>对飞书连接毫无帮助</strong>。真正管飞书连接的是 gateway。</p>
+<h3 id="别重启-hermes-chat"><a href="#别重启-hermes-chat" class="headerlink" title="别重启 hermes chat"></a>别重启 hermes chat</h3><p><code>hermes chat</code> 是 CLI 客户端，不是后台服务。重启它<strong>对飞书连接毫无帮助</strong>。真正管飞书连接的是 <code>hermes gateway</code>。</p>
 <blockquote>
 <p>飞书服务端极少出问题。99% 是本地 gateway 进程或 executor 状态异常。</p>
 </blockquote>
-<h2 id="防患于未然"><a href="#防患于未然" class="headerlink" title="防患于未然"></a>防患于未然</h2><h3 id="systemd-守护"><a href="#systemd-守护" class="headerlink" title="systemd 守护"></a>systemd 守护</h3><figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Bot Gateway</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/local/bin/&lt;你的程序&gt; gateway run</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+<h2 id="防患于未然"><a href="#防患于未然" class="headerlink" title="防患于未然"></a>防患于未然</h2><h3 id="systemd-守护"><a href="#systemd-守护" class="headerlink" title="systemd 守护"></a>systemd 守护</h3><figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Hermes Gateway</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/local/bin/hermes gateway run</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload &amp;&amp; systemctl <span class="built_in">enable</span> --now bot-gateway</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload &amp;&amp; systemctl <span class="built_in">enable</span> --now hermes-gateway</span><br></pre></td></tr></table></figure>
 
-<h3 id="Cron-兜底"><a href="#Cron-兜底" class="headerlink" title="Cron 兜底"></a>Cron 兜底</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">*/5 * * * * pgrep -f <span class="string">&#x27;gateway run&#x27;</span> &gt; /dev/null || \</span><br><span class="line">  (<span class="built_in">nohup</span> &lt;你的程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;)</span><br></pre></td></tr></table></figure>
+<h3 id="Cron-兜底"><a href="#Cron-兜底" class="headerlink" title="Cron 兜底"></a>Cron 兜底</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">*/5 * * * * pgrep -f <span class="string">&#x27;hermes gateway&#x27;</span> &gt; /dev/null || \</span><br><span class="line">  (<span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;)</span><br></pre></td></tr></table></figure>
 
 <h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：用飞书 Bot 的开发者，尤其是自部署 Agent 网关的。</p>
 <p><strong>不适合</strong>：用飞书官方托管 Bot 的——那个 gateway 不用你管。</p>
@@ -845,8 +846,7 @@
   <entry>
     <title>飞书API能创建但不能批量删除，这是设计不是bug</title>
     <url>/2026/07/27/feishu-docx-batch-edit/</url>
-    <content><![CDATA[<p><img data-src="/images/feishu-docx-batch-edit-cover.webp" alt="封面图"></p>
-<p>两个小时。我花了两个小时才搞明白为什么飞书 Docx API 删不掉一段文字。</p>
+    <content><![CDATA[<p>两个小时。我花了两个小时才搞明白为什么飞书 Docx API 删不掉一段文字。</p>
 <p>事情是这样的：我做内容自动化，需要把日报写入飞书文档。理想流程很简单——拉数据、清旧内容、写新内容。三个步骤，听起来 10 分钟搞定。</p>
 <p>结果呢？批量删除直接报 <code>invalid param (1770001)</code>。单个删能成功，批量删就炸。更新 Block 也炸。文档上还没写这个限制。</p>
 <p>下面是踩坑全记录和最终解法，直接抄。</p>
@@ -1267,8 +1267,7 @@
   <entry>
     <title>我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走</title>
     <url>/2026/07/27/magnet-crawler-fallback/</url>
-    <content><![CDATA[<p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
-<p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
+    <content><![CDATA[<p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
 <p>但这不是一个失败故事。在放弃之前，我跑通了从纯静态正则会到 Headless 浏览器破 Cloudflare 盾的全套技术栈，整理出了一套 4 级降级方案。你可以直接拿走用，省掉我踩过的所有坑。</p>
 <p>这篇不是完整的爬虫教程，而是一份<strong>选型决策树</strong>——面对一个资源站，你能立刻判断该用什么级别去打。</p>
 <h2 id="4-级降级方案：按需升级，绝不越级"><a href="#4-级降级方案：按需升级，绝不越级" class="headerlink" title="4 级降级方案：按需升级，绝不越级"></a>4 级降级方案：按需升级，绝不越级</h2><p>每升一级，资源开销成倍增长。我一共设计了 4 个级别：</p>
@@ -1368,8 +1367,7 @@
   <entry>
     <title>GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF</title>
     <url>/2026/07/27/mineru-pdf-parse-mcp/</url>
-    <content><![CDATA[<p><img data-src="/images/mineru-pdf-parse-mcp-cover.webp" alt="封面图"></p>
-<p>我经常要把 arXiv 论文、行业报告、合同 PDF 喂给 AI 处理。</p>
+    <content><![CDATA[<p>我经常要把 arXiv 论文、行业报告、合同 PDF 喂给 AI 处理。</p>
 <p>以前试过三种办法：直接把 PDF 路径给 GPT——扫描版读不动，公式乱码。买商业 OCR 服务——贵，而且不知道数据去哪了。自己部署 PaddleOCR——需要 GPU，我的小 VPS 扛不住。</p>
 <p>直到遇到了 MinerU（OpenDataLab 出品），国产开源，解析精度比 GPT-4 Vision 高出一截。最离谱的是——<strong>它能以 MCP 协议直接挂到 Claude&#x2F;GPT&#x2F;LangChain 工作流里</strong>，AI 调用它就跟调用一个函数一样自然。</p>
 <p>下面是抄作业时间。</p>
@@ -1383,7 +1381,7 @@
 <h2 id="部署：四步走"><a href="#部署：四步走" class="headerlink" title="部署：四步走"></a>部署：四步走</h2><h3 id="1-Node-js-环境"><a href="#1-Node-js-环境" class="headerlink" title="1. Node.js 环境"></a>1. Node.js 环境</h3><p>MinerU MCP 包需要 Node 18+。<strong>强烈建议用 Node 20+</strong>（我用 22 完全没问题）。</p>
 <p>最关键的坑：<strong>别用裸 <code>node</code> 命令</strong>。在 MCP 客户端配置里写 <code>command: node</code>，大概率报 <code>spawn node ENOENT</code>。因为 MCP 客户端的 PATH 环境变量里可能找不到 node。</p>
 <p>正确做法——用 Node 二进制的<strong>绝对路径</strong>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">which</span> node</span><br><span class="line"><span class="comment"># 输出：/opt/node/bin/node  ← 用这个完整路径</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">which</span> node</span><br><span class="line"><span class="comment"># 输出：/root/.hermes/node/bin/node  ← 用这个完整路径</span></span><br></pre></td></tr></table></figure>
 
 <p>不同系统的路径：</p>
 <ul>
@@ -1393,13 +1391,13 @@
 </ul>
 <h3 id="2-安装-MCP-包"><a href="#2-安装-MCP-包" class="headerlink" title="2. 安装 MCP 包"></a>2. 安装 MCP 包</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -g mineru-mcp</span><br></pre></td></tr></table></figure>
 
-<p>记住安装输出的路径，待会要写到配置文件里。一般在 <code>/opt/node/lib/node_modules/mineru-mcp</code>。</p>
+<p>记住安装输出的路径，待会要写到配置文件里。一般是 <code>/root/.hermes/node/lib/node_modules/mineru-mcp</code>。</p>
 <h3 id="3-获取-API-Key"><a href="#3-获取-API-Key" class="headerlink" title="3. 获取 API Key"></a>3. 获取 API Key</h3><p>到 <a href="https://mineru.net/">https://mineru.net</a> 注册开发者，控制台拿 API Token。</p>
 <blockquote>
 <p>【亲测】API Key 别手滑写进命令行调试——会被 shell 历史和监控日志捕获。也绝不要写到公共仓库。正确做法：写进 MCP 配置文件的 <code>env</code> 字段，文件权限设 600。</p>
 </blockquote>
-<h3 id="4-配置-MCP-服务"><a href="#4-配置-MCP-服务" class="headerlink" title="4. 配置 MCP 服务"></a>4. 配置 MCP 服务</h3><p>不管是 Claude Desktop、Cursor、Cline 还是其他 Agent 框架，配置大同小异：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">mcp_servers:</span></span><br><span class="line">  <span class="attr">mineru-mcp:</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">/opt/node/bin/node</span></span><br><span class="line">    <span class="attr">args:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/opt/node/lib/node_modules/mineru-mcp/dist/index.js</span></span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="attr">MINERU_API_KEY:</span> <span class="string">your_api_key_here</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<h3 id="4-配置-MCP-服务"><a href="#4-配置-MCP-服务" class="headerlink" title="4. 配置 MCP 服务"></a>4. 配置 MCP 服务</h3><p>不管是 Claude Desktop、Cursor、Cline 还是 Hermes Agent，配置大同小异：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">mcp_servers:</span></span><br><span class="line">  <span class="attr">mineru-mcp:</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">/root/.hermes/node/bin/node</span></span><br><span class="line">    <span class="attr">args:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/root/.hermes/node/lib/node_modules/mineru-mcp/dist/index.js</span></span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="attr">MINERU_API_KEY:</span> <span class="string">your_api_key_here</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
 
 <p>加载后 AI 工具列表会多出 6 个工具：</p>
 <table>
@@ -1979,8 +1977,7 @@
   <entry>
     <title>三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源</title>
     <url>/2026/07/27/zhihu-openapi-practical/</url>
-    <content><![CDATA[<p><img data-src="/images/zhihu-openapi-practical-cover.webp" alt="封面图"></p>
-<p>我跟你讲，知乎开放平台是被严重低估的东西。</p>
+    <content><![CDATA[<p>我跟你讲，知乎开放平台是被严重低估的东西。</p>
 <p>大多数人的印象还停在”知乎不就是个问答社区”，但它的开放平台藏了一套完整的 AI 内容基础设施——站内搜索、全网搜索、大模型问答、热榜数据。而且鉴权简单到离谱：一个 AccessSecret + 时间戳就搞定。</p>
 <p>最让我意外的是：<strong>直答 API 直接兼容 OpenAI 协议</strong>。现有的 GPT&#x2F;LangChain 工作流改一行 base_url 就能用知乎自家的模型。说真的，这东西接入成本是我用过最低的。</p>
 <p>下面是抄作业时间。</p>

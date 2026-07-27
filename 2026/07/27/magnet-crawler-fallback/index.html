@@ -28,16 +28,14 @@
 <meta property="og:site_name" content="雪的数字花园 ❄️">
 <meta property="og:description" content="磁力搜索爬虫的4级降级方案：从纯静态正则到Headless浏览器再到DrissionPage破Cloudflare盾，含完整Python代码和实战决策树。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog.rnm.gv.uy/images/magnet-crawler-fallback-cover.webp">
 <meta property="article:published_time" content="2026-07-27T04:30:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T15:26:14.262Z">
+<meta property="article:modified_time" content="2026-07-27T15:33:11.802Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="Python">
 <meta property="article:tag" content="反爬">
 <meta property="article:tag" content="爬虫">
 <meta property="article:tag" content="磁力">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/magnet-crawler-fallback-cover.webp">
 
 
 <link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/magnet-crawler-fallback/">
@@ -321,8 +319,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
-<p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
+    <div class="post-body" itemprop="articleBody"><p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
 <p>但这不是一个失败故事。在放弃之前，我跑通了从纯静态正则会到 Headless 浏览器破 Cloudflare 盾的全套技术栈，整理出了一套 4 级降级方案。你可以直接拿走用，省掉我踩过的所有坑。</p>
 <p>这篇不是完整的爬虫教程，而是一份<strong>选型决策树</strong>——面对一个资源站，你能立刻判断该用什么级别去打。</p>
 <h2 id="4-级降级方案：按需升级，绝不越级"><a href="#4-级降级方案：按需升级，绝不越级" class="headerlink" title="4 级降级方案：按需升级，绝不越级"></a>4 级降级方案：按需升级，绝不越级</h2><p>每升一级，资源开销成倍增长。我一共设计了 4 个级别：</p>

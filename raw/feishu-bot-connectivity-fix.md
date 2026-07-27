@@ -10,12 +10,9 @@ tags:
 categories:
   - 教程类
   - 开发工具
-description: "飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本、systemd守护和cron兜底方案。"
+description: "飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本。"
 cover: /images/feishu-bot-connectivity-fix-cover.webp
 ---
-
-![封面图](/images/feishu-bot-connectivity-fix-cover.webp)
-
 某天下午，我给飞书 Bot 发了条消息——石沉大海。
 
 打开飞书开放平台，点"验证连接状态"——红色，失败。日志里躺着一条：`RuntimeError: Executor shutdown has been called`。
@@ -24,7 +21,7 @@ cover: /images/feishu-bot-connectivity-fix-cover.webp
 
 ## 根因一句话
 
-飞书 Bot 用 **WebSocket 长连接** 保持在线的。这个长连接进程一般叫 `gateway`（网关）。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，**回复时调用线程池直接抛 `Executor shutdown`，消息发不出去**。
+飞书 Bot 用 **WebSocket 长连接** 保持在线的。这个长连接进程叫 `gateway`。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，**回复时调用线程池直接抛 `Executor shutdown`，消息发不出去**。
 
 表现就是：飞书后台显示连接异常，实际 Bot 能收到消息但发不出，你以为 Bot 死了。
 
@@ -33,16 +30,16 @@ cover: /images/feishu-bot-connectivity-fix-cover.webp
 ### 第一步：看进程
 
 ```bash
-ps aux | grep -E 'gateway' | grep -v grep
+ps aux | grep -E 'hermes|gateway' | grep -v grep
 ```
 
-- 看到 gateway 进程 → 还活着，问题不在这
+- 看到 `hermes gateway run` → gateway 还活着，问题不在这
 - 没看到 → **gateway 已挂**，往下走
 
 ### 第二步：看日志
 
 ```bash
-tail -50 ~/logs/gateway.log
+tail -50 ~/.hermes/logs/gateway.log
 ```
 
 关键日志模式：
@@ -56,15 +53,19 @@ tail -50 ~/logs/gateway.log
 
 ### 第三步：看配置（仅在前两步正常但不回复时）
 
-在配置文件中确认飞书相关设置：`enabled: true`、`connection_mode: websocket`、没有中转配置（**飞书必须直连**，走中转会破坏 WebSocket）、`app_id` 和 `app_secret` 正确。
+```bash
+cat ~/.hermes/config.yaml | grep -A 10 feishu
+```
+
+确认：`enabled: true`、`connection_mode: websocket`、没有 `proxy:` 配置（**飞书必须直连**，走中转会破坏 WebSocket）、`app_id` 和 `app_secret` 正确。
 
 ## 解法
 
 ### 90% 的情况：重启 gateway
 
 ```bash
-nohup <你的agent程序> gateway run > ~/logs/gateway.log 2>&1 &
-tail -20 ~/logs/gateway.log
+nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &
+tail -20 ~/.hermes/logs/gateway.log
 ```
 
 看到这两行就是活了：
@@ -79,17 +80,17 @@ Gateway running with 2 platform(s)
 可能有多个进程冲突：
 
 ```bash
-pkill -f 'gateway run'
+pkill -f 'hermes gateway'
 sleep 2
-nohup <你的agent程序> gateway run > ~/logs/gateway.log 2>&1 &
+nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &
 ```
 
 ### 一键恢复
 
 ```bash
-pkill -f 'gateway run' 2>/dev/null; sleep 2
-nohup <你的agent程序> gateway run > ~/logs/gateway.log 2>&1 &
-sleep 10 && tail -20 ~/logs/gateway.log
+pkill -f 'hermes gateway' 2>/dev/null; sleep 2
+nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &
+sleep 10 && tail -20 ~/.hermes/logs/gateway.log
 ```
 
 ## 几个常见误区
@@ -102,9 +103,9 @@ sleep 10 && tail -20 ~/logs/gateway.log
 
 `.feishu.cn` 和 `.larksuite.com` **不要走中转**。中转引入的额外握手延迟会破坏 WebSocket 长连接。如果你有全局中转（如 Clash），环境变量加 `no_proxy=*.feishu.cn,*.larksuite.com`。
 
-### 别重启 CLI 客户端
+### 别重启 hermes chat
 
-CLI 客户端是命令行界面（你用来跟 AI 聊天的终端），不是后台服务。重启它**对飞书连接毫无帮助**。真正管飞书连接的是 gateway。
+`hermes chat` 是 CLI 客户端，不是后台服务。重启它**对飞书连接毫无帮助**。真正管飞书连接的是 `hermes gateway`。
 
 > 飞书服务端极少出问题。99% 是本地 gateway 进程或 executor 状态异常。
 
@@ -114,13 +115,13 @@ CLI 客户端是命令行界面（你用来跟 AI 聊天的终端），不是后
 
 ```ini
 [Unit]
-Description=Bot Gateway
+Description=Hermes Gateway
 After=network.target
 
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/<你的程序> gateway run
+ExecStart=/usr/local/bin/hermes gateway run
 Restart=always
 RestartSec=10
 
@@ -129,14 +130,14 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-systemctl daemon-reload && systemctl enable --now bot-gateway
+systemctl daemon-reload && systemctl enable --now hermes-gateway
 ```
 
 ### Cron 兜底
 
 ```bash
-*/5 * * * * pgrep -f 'gateway run' > /dev/null || \
-  (nohup <你的程序> gateway run > ~/logs/gateway.log 2>&1 &)
+*/5 * * * * pgrep -f 'hermes gateway' > /dev/null || \
+  (nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &)
 ```
 
 ## 适合谁与不适合谁
