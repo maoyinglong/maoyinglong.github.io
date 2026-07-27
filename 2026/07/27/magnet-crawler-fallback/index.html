@@ -21,32 +21,32 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"blog.rnm.gv.uy","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-light","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"flat","show_result":true},"fold":{"enable":false,"height":500},"language":false,"border_radius":8,"language_tag":{"enable":true}},"bookmark":{"enable":true,"color":"#4fc3f7","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":150,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":3,"unescape":false,"preload":false,"placeholder":"搜一搜雪的花园..."}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="知乎开放平台 API 文档写得很散，实战起来还有很多隐藏坑。这篇系统整理了内容聚合和智能体问答场景下的完整接入姿势。">
+    <meta name="description" content="磁力搜索爬虫的4级降级方案：从纯静态正则到Headless浏览器再到DrissionPage破Cloudflare盾，含完整Python代码和实战决策树。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="知乎开放平台 API 实战：用它搭一个内容聚合 &#x2F; 智能体问答系统">
-<meta property="og:url" content="https://blog.rnm.gv.uy/2026/06/20/zhihu-openapi-practical/index.html">
+<meta property="og:title" content="我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走">
+<meta property="og:url" content="https://blog.rnm.gv.uy/2026/07/27/magnet-crawler-fallback/index.html">
 <meta property="og:site_name" content="雪的数字花园 ❄️">
-<meta property="og:description" content="知乎开放平台 API 文档写得很散，实战起来还有很多隐藏坑。这篇系统整理了内容聚合和智能体问答场景下的完整接入姿势。">
+<meta property="og:description" content="磁力搜索爬虫的4级降级方案：从纯静态正则到Headless浏览器再到DrissionPage破Cloudflare盾，含完整Python代码和实战决策树。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog.rnm.gv.uy/images/zhihu-openapi-practical-cover.webp">
-<meta property="article:published_time" content="2026-06-20T08:00:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T14:11:30.960Z">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/magnet-crawler-fallback-cover.webp">
+<meta property="article:published_time" content="2026-07-27T04:30:00.000Z">
+<meta property="article:modified_time" content="2026-07-27T15:26:14.262Z">
 <meta property="article:author" content="雪 ❄️">
-<meta property="article:tag" content="AI应用">
-<meta property="article:tag" content="API">
-<meta property="article:tag" content="MCP">
-<meta property="article:tag" content="知乎">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="反爬">
+<meta property="article:tag" content="爬虫">
+<meta property="article:tag" content="磁力">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/zhihu-openapi-practical-cover.webp">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/magnet-crawler-fallback-cover.webp">
 
 
-<link rel="canonical" href="https://blog.rnm.gv.uy/2026/06/20/zhihu-openapi-practical/">
+<link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/magnet-crawler-fallback/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/06/20/zhihu-openapi-practical/","path":"2026/06/20/zhihu-openapi-practical/","title":"知乎开放平台 API 实战：用它搭一个内容聚合 / 智能体问答系统"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/07/27/magnet-crawler-fallback/","path":"2026/07/27/magnet-crawler-fallback/","title":"我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>知乎开放平台 API 实战：用它搭一个内容聚合 / 智能体问答系统 | 雪的数字花园 ❄️</title>
+<title>我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走 | 雪的数字花园 ❄️</title>
   
 
 
@@ -172,7 +172,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%88%E8%AF%B4%E5%AE%9A%E4%BD%8D%EF%BC%9A%E7%9F%A5%E4%B9%8E-API-%E9%80%82%E5%90%88%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">先说定位：知乎 API 适合什么场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E6%8B%BF%E5%88%B0-Access-Secret%EF%BC%88%E9%89%B4%E6%9D%83%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">第一步：拿到 Access Secret（鉴权）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E5%92%8C%E6%8B%BF-key"><span class="nav-number">2.1.</span> <span class="nav-text">注册和拿 key</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E7%94%A8%E6%A0%BC%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">调用格式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%9B%9B%E5%A4%A7%E7%B1%BB%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">3.</span> <span class="nav-text">第二步：四大类接口的使用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%AB%99%E5%86%85%E6%90%9C%E7%B4%A2%EF%BC%88zhihu-search%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">1. 站内搜索（zhihu_search）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%85%A8%E7%BD%91%E6%90%9C%E7%B4%A2%EF%BC%88global-search%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">2. 全网搜索（global_search）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E7%9F%A5%E4%B9%8E%E7%9B%B4%E7%AD%94%EF%BC%88zhida%EF%BC%89-%E9%97%AE%E7%AD%94%E5%A4%A7%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.3.</span> <span class="nav-text">3. 知乎直答（zhida）- 问答大模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E7%9F%A5%E4%B9%8E%E7%83%AD%E6%A6%9C%EF%BC%88hot-list%EF%BC%89"><span class="nav-number">3.4.</span> <span class="nav-text">4. 知乎热榜（hot_list）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E9%80%89-API%E3%80%81Skill-%E8%BF%98%E6%98%AF-MCP%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">第三步：选 API、Skill 还是 MCP？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A8%E8%8D%90%E7%94%A8%E6%B3%95"><span class="nav-number">4.1.</span> <span class="nav-text">推荐用法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%B8%B8%E8%A7%81%E9%94%99%E8%AF%AF%E7%A0%81"><span class="nav-number">5.</span> <span class="nav-text">第四步：常见错误码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%EF%BC%9A%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E2%80%9D%E7%9F%A5%E4%B9%8E%E7%83%AD%E6%A6%9C-%E8%A7%A3%E8%AF%BB%E2%80%9D%E5%B7%A5%E4%BD%9C%E6%B5%81"><span class="nav-number">6.</span> <span class="nav-text">实战：一个简单的”知乎热榜 + 解读”工作流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="nav-number">7.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E7%BA%A7%E9%99%8D%E7%BA%A7%E6%96%B9%E6%A1%88%EF%BC%9A%E6%8C%89%E9%9C%80%E5%8D%87%E7%BA%A7%EF%BC%8C%E7%BB%9D%E4%B8%8D%E8%B6%8A%E7%BA%A7"><span class="nav-number">1.</span> <span class="nav-text">4 级降级方案：按需升级，绝不越级</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A7%E5%88%AB-1%EF%BC%9A%E7%BA%AF%E9%9D%99%E6%80%81%E6%AD%A3%E5%88%99%EF%BC%8880-%E7%9A%84%E7%AB%99%E9%9D%A0%E5%AE%83%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">级别 1：纯静态正则（80% 的站靠它）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8"><span class="nav-number">2.1.</span> <span class="nav-text">什么时候用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81"><span class="nav-number">2.2.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C"><span class="nav-number">2.3.</span> <span class="nav-text">实战经验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A7%E5%88%AB-2%EF%BC%9A%E5%A4%8D%E6%9D%82%E9%9D%99%E6%80%81%E8%A7%A3%E6%9E%90"><span class="nav-number">3.</span> <span class="nav-text">级别 2：复杂静态解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8-1"><span class="nav-number">3.1.</span> <span class="nav-text">什么时候用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81-1"><span class="nav-number">3.2.</span> <span class="nav-text">代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A7%E5%88%AB-3%EF%BC%9AHeadless-%E6%B5%8F%E8%A7%88%E5%99%A8%EF%BC%88%E9%AB%98%E5%BC%80%E9%94%80%EF%BC%8C%E6%8C%89%E9%9C%80%E7%94%A8%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">级别 3：Headless 浏览器（高开销，按需用）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A7%E5%88%AB-4%EF%BC%9ADrissionPage-%E7%BB%88%E6%9E%81%E7%A0%B4%E7%9B%BE%EF%BC%88%E6%A0%B8%E6%AD%A6%E5%99%A8%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">级别 4：DrissionPage 终极破盾（核武器）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E5%86%B3%E7%AD%96%E6%A0%91"><span class="nav-number">6.</span> <span class="nav-text">实战决策树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E4%BF%9D%E6%8A%A4%E7%BA%A2%E7%BA%BF"><span class="nav-number">7.</span> <span class="nav-text">资源保护红线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E5%90%88%E8%B0%81%E4%B8%8E%E4%B8%8D%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">8.</span> <span class="nav-text">适合谁与不适合谁</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -244,7 +244,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/06/20/zhihu-openapi-practical/">
+    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/07/27/magnet-crawler-fallback/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/xue-avatar.png">
@@ -257,12 +257,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="知乎开放平台 API 实战：用它搭一个内容聚合 &#x2F; 智能体问答系统 | 雪的数字花园 ❄️">
-      <meta itemprop="description" content="知乎开放平台 API 文档写得很散，实战起来还有很多隐藏坑。这篇系统整理了内容聚合和智能体问答场景下的完整接入姿势。">
+      <meta itemprop="name" content="我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走 | 雪的数字花园 ❄️">
+      <meta itemprop="description" content="磁力搜索爬虫的4级降级方案：从纯静态正则到Headless浏览器再到DrissionPage破Cloudflare盾，含完整Python代码和实战决策树。">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          知乎开放平台 API 实战：用它搭一个内容聚合 / 智能体问答系统
+          我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走
         </h1>
 
         <div class="post-meta-container">
@@ -273,7 +273,7 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2026-06-20 16:00:00" itemprop="dateCreated datePublished" datetime="2026-06-20T16:00:00+08:00">2026-06-20</time>
+      <time title="创建时间：2026-07-27 12:30:00" itemprop="dateCreated datePublished" datetime="2026-07-27T12:30:00+08:00">2026-07-27</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -285,7 +285,7 @@
         </span>
           ，
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/AI%E5%B7%A5%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">AI工程</span></a>
+          <a href="/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">开发工具</span></a>
         </span>
     </span>
 
@@ -303,218 +303,110 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>5.1k</span>
+      <span>4.1k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>5 分钟</span>
+      <span>4 分钟</span>
     </span>
 </div>
 
-            <div class="post-description">知乎开放平台 API 文档写得很散，实战起来还有很多隐藏坑。这篇系统整理了内容聚合和智能体问答场景下的完整接入姿势。</div>
+            <div class="post-description">磁力搜索爬虫的4级降级方案：从纯静态正则到Headless浏览器再到DrissionPage破Cloudflare盾，含完整Python代码和实战决策树。</div>
         </div>
       </header>
 
     
     
     
-    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/zhihu-openapi-practical-cover.webp" alt="封面图"></p>
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
+<p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
+<p>但这不是一个失败故事。在放弃之前，我跑通了从纯静态正则会到 Headless 浏览器破 Cloudflare 盾的全套技术栈，整理出了一套 4 级降级方案。你可以直接拿走用，省掉我踩过的所有坑。</p>
+<p>这篇不是完整的爬虫教程，而是一份<strong>选型决策树</strong>——面对一个资源站，你能立刻判断该用什么级别去打。</p>
+<h2 id="4-级降级方案：按需升级，绝不越级"><a href="#4-级降级方案：按需升级，绝不越级" class="headerlink" title="4 级降级方案：按需升级，绝不越级"></a>4 级降级方案：按需升级，绝不越级</h2><p>每升一级，资源开销成倍增长。我一共设计了 4 个级别：</p>
+<table>
+<thead>
+<tr>
+<th>级别</th>
+<th>适用场景</th>
+<th>开销</th>
+<th>技术栈</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>🟢 1 静态正则</td>
+<td>老 HTML 站，无反爬</td>
+<td>极低</td>
+<td>requests + BeautifulSoup + re</td>
+</tr>
+<tr>
+<td>🟡 2 复杂静态</td>
+<td>链接藏 JS&#x2F;隐藏 input 里</td>
+<td>中等</td>
+<td>requests + Base64 解码</td>
+</tr>
+<tr>
+<td>🟠 3 Headless 浏览器</td>
+<td>必须点 DOM 才出链接</td>
+<td>高</td>
+<td>Playwright</td>
+</tr>
+<tr>
+<td>🔴 4 终极破盾</td>
+<td>Cloudflare 5 秒盾</td>
+<td>极高</td>
+<td>DrissionPage</td>
+</tr>
+</tbody></table>
+<p><strong>核心原则：一旦当前级别能搞定，立刻返回，绝不无故触发下一级。</strong></p>
+<p>为什么？Headless 浏览器一启动就吃 500MB+ 内存。并发 3 个直接 OOM。你得对宿主机负责。</p>
+<h2 id="级别-1：纯静态正则（80-的站靠它）"><a href="#级别-1：纯静态正则（80-的站靠它）" class="headerlink" title="级别 1：纯静态正则（80% 的站靠它）"></a>级别 1：纯静态正则（80% 的站靠它）</h2><h3 id="什么时候用"><a href="#什么时候用" class="headerlink" title="什么时候用"></a>什么时候用</h3><p>上古论坛、下载站，HTML 直接写磁力链接，没有任何反爬。</p>
+<p>典型代表：<code>dygod.net</code>（电影天堂）、各种老 PT 论坛。</p>
+<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests, re</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line">MAGNET_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;magnet:\?xt=urn:btih:[a-zA-Z0-9]+&#x27;</span>, re.I)</span><br><span class="line">FTP_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;ftp://[^\s&quot;\&#x27;&lt;&gt;]+&#x27;</span>, re.I)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level1</span>(<span class="params">url</span>):</span><br><span class="line">    resp = requests.get(url, headers=&#123;<span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0...&quot;</span>&#125;, timeout=<span class="number">15</span>)</span><br><span class="line">    <span class="comment"># 老站常用 GB2312</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;gb2312&#x27;</span> <span class="keyword">in</span> (resp.apparent_encoding <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span>).lower():</span><br><span class="line">        resp.encoding = <span class="string">&#x27;gb2312&#x27;</span></span><br><span class="line">    html = resp.text</span><br><span class="line">    magnets = <span class="built_in">set</span>(MAGNET_RE.findall(html))</span><br><span class="line">    ftps = <span class="built_in">set</span>(FTP_RE.findall(html))</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(magnets) + <span class="built_in">list</span>(ftps)</span><br></pre></td></tr></table></figure>
+
+<h3 id="实战经验"><a href="#实战经验" class="headerlink" title="实战经验"></a>实战经验</h3><ol>
+<li><strong>绕开主页</strong>：用站内搜索或 Google <code>site:xxx 关键字</code> 定位到详情页，链接密度更高</li>
+<li><strong>编码处理</strong>：老站常用 GB2312，不显式声明会乱码</li>
+<li><strong>提取元数据</strong>：别只返回磁力链接——用户需要知道文件大小、清晰度、格式、音轨</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">extract_metadata</span>(<span class="params">context_text</span>):</span><br><span class="line">    meta = &#123;&#125;</span><br><span class="line">    <span class="keyword">if</span> res := re.search(<span class="string">r&#x27;\b(2160p|1080p|720p|4K)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        meta[<span class="string">&#x27;resolution&#x27;</span>] = res.group(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">if</span> fmt := re.search(<span class="string">r&#x27;\b(BluRay|WEB-DL|HDTV|Remux|BDRip)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        meta[<span class="string">&#x27;source&#x27;</span>] = fmt.group(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">if</span> size := re.search(<span class="string">r&#x27;(\d+\.?\d*)\s*(GB|MB)&#x27;</span>, context_text, re.I):</span><br><span class="line">        meta[<span class="string">&#x27;size&#x27;</span>] = <span class="string">f&quot;<span class="subst">&#123;size.group(<span class="number">1</span>)&#125;</span> <span class="subst">&#123;size.group(<span class="number">2</span>)&#125;</span>&quot;</span></span><br><span class="line">    <span class="keyword">return</span> meta</span><br></pre></td></tr></table></figure>
+
 <blockquote>
-<p>知乎官方开放平台提供了站内搜索、全网搜索、知乎直答（问答）、热榜四大类 API&#x2F;Skill&#x2F;MCP。这篇从实操角度，把每一类接口”怎么用、什么时候用、有什么坑”完整梳理一遍。</p>
+<p>这个级别全程不到 50MB 内存，宿主机毫无压力。80% 的老站用它就够了。</p>
 </blockquote>
-<hr>
-<h2 id="先说定位：知乎-API-适合什么场景"><a href="#先说定位：知乎-API-适合什么场景" class="headerlink" title="先说定位：知乎 API 适合什么场景"></a>先说定位：知乎 API 适合什么场景</h2><p>简单理解：知乎开放平台把它的内容检索、问答和热榜能力，以 API&#x2F;MCP&#x2F;Skill 三种形式开放出来。<strong>不是给”刷数据”用的，而是给 AI 应用做”内容源”用的</strong>。</p>
-<p>常见用法：</p>
-<table>
-<thead>
-<tr>
-<th>场景</th>
-<th>用哪个 API</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>给 AI 助手加上”查知乎”的能力</td>
-<td>直答 API &#x2F; 全网搜索</td>
-</tr>
-<tr>
-<td>做内容聚合（自动追踪话题）</td>
-<td>站内搜索 + 热榜</td>
-</tr>
-<tr>
-<td>做舆情监控或趋势分析</td>
-<td>热榜 + 全网搜索的 <code>filter</code> 参数</td>
-</tr>
-<tr>
-<td>在 Claude &#x2F; GPT &#x2F; LangChain 工作流里嵌入</td>
-<td>MCP 协议（标准接口）</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="第一步：拿到-Access-Secret（鉴权）"><a href="#第一步：拿到-Access-Secret（鉴权）" class="headerlink" title="第一步：拿到 Access Secret（鉴权）"></a>第一步：拿到 Access Secret（鉴权）</h2><h3 id="注册和拿-key"><a href="#注册和拿-key" class="headerlink" title="注册和拿 key"></a>注册和拿 key</h3><p>到 <a target="_blank" rel="noopener" href="https://developer.zhihu.com/profile">https://developer.zhihu.com/profile</a> 注册并创建应用。审核通过后（一般很快），在个人中心能看到 <strong><code>Access Secret</code></strong>。</p>
-<h3 id="调用格式"><a href="#调用格式" class="headerlink" title="调用格式"></a>调用格式</h3><p>所有 API 统一用 Bearer 鉴权 + 时间戳防重放：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">curl -G <span class="string">&#x27;https://developer.zhihu.com/api/v1/content/zhihu_search&#x27;</span> \</span><br><span class="line">  --data-urlencode <span class="string">&#x27;Query=怎么理解rave文化&#x27;</span> \</span><br><span class="line">  -H <span class="string">&#x27;Authorization: Bearer 你的AccessSecret&#x27;</span> \</span><br><span class="line">  -H <span class="string">&quot;X-Request-Timestamp: <span class="subst">$(date +%s)</span>&quot;</span> \</span><br><span class="line">  -H <span class="string">&#x27;Content-Type: application/json&#x27;</span></span><br></pre></td></tr></table></figure>
+<h2 id="级别-2：复杂静态解析"><a href="#级别-2：复杂静态解析" class="headerlink" title="级别 2：复杂静态解析"></a>级别 2：复杂静态解析</h2><h3 id="什么时候用-1"><a href="#什么时候用-1" class="headerlink" title="什么时候用"></a>什么时候用</h3><p>页面返回 200 OK，但磁力链接被 Base64 编码藏在 JS 变量里，或者放在隐藏 <code>&lt;input&gt;</code>、<code>data-*</code> 属性中。</p>
+<h3 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level2</span>(<span class="params">html</span>):</span><br><span class="line">    magnets = []</span><br><span class="line">    soup = BeautifulSoup(html, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 从隐藏 input 提取</span></span><br><span class="line">    <span class="keyword">for</span> inp <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;input&#x27;</span>, <span class="built_in">type</span>=<span class="string">&#x27;hidden&#x27;</span>):</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> inp.get(<span class="string">&#x27;value&#x27;</span>, <span class="string">&#x27;&#x27;</span>):</span><br><span class="line">            magnets.append(inp[<span class="string">&#x27;value&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 从 data-* 属性提取</span></span><br><span class="line">    <span class="keyword">for</span> elem <span class="keyword">in</span> soup.find_all(attrs=&#123;<span class="string">&#x27;data-magnet&#x27;</span>: <span class="literal">True</span>&#125;):</span><br><span class="line">        magnets.append(elem[<span class="string">&#x27;data-magnet&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Base64 解码 JS 变量</span></span><br><span class="line">    b64_pattern = re.<span class="built_in">compile</span>(<span class="string">r&#x27;[&quot;\&#x27;]([A-Za-z0-9+/=]&#123;40,&#125;)[&quot;\&#x27;]&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> b64_pattern.findall(html):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            decoded = base64.b64decode(<span class="keyword">match</span>).decode(<span class="string">&#x27;utf-8&#x27;</span>, errors=<span class="string">&#x27;ignore&#x27;</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> decoded:</span><br><span class="line">                magnets.extend(MAGNET_RE.findall(decoded))</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(<span class="built_in">set</span>(magnets))</span><br></pre></td></tr></table></figure>
 
-<p><strong>两个必填 Header</strong>：</p>
-<ul>
-<li><code>Authorization: Bearer &lt;你的AccessSecret&gt;</code></li>
-<li><code>X-Request-Timestamp</code>: 秒级 Unix 时间戳（<code>date +%s</code>），<strong>必须传当前时间</strong>，服务端会校验时间偏差</li>
-</ul>
-<p><strong>最容易踩的坑</strong>：忘记带 <code>X-Request-Timestamp</code>，直接被拒。文档里这一行很多人没注意。</p>
-<hr>
-<h2 id="第二步：四大类接口的使用场景"><a href="#第二步：四大类接口的使用场景" class="headerlink" title="第二步：四大类接口的使用场景"></a>第二步：四大类接口的使用场景</h2><h3 id="1-站内搜索（zhihu-search）"><a href="#1-站内搜索（zhihu-search）" class="headerlink" title="1. 站内搜索（zhihu_search）"></a>1. 站内搜索（zhihu_search）</h3><p><strong>什么时候用</strong>：你想在 AI 应用里加”查知乎站内”的按钮或指令。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/zhihu_search</span><br></pre></td></tr></table></figure>
+<p>这个级别解决 60% 的”看起来很难其实静态”的网站。</p>
+<h2 id="级别-3：Headless-浏览器（高开销，按需用）"><a href="#级别-3：Headless-浏览器（高开销，按需用）" class="headerlink" title="级别 3：Headless 浏览器（高开销，按需用）"></a>级别 3：Headless 浏览器（高开销，按需用）</h2><p>必须点击真实 DOM 节点才触发 XHR 返回链接的网站——比如 React&#x2F;Vue 渲染的页面。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> playwright.sync_api <span class="keyword">import</span> sync_playwright</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level3</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">with</span> sync_playwright() <span class="keyword">as</span> p:</span><br><span class="line">        browser = p.chromium.launch(headless=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            page = browser.new_page()</span><br><span class="line">            page.goto(url, timeout=<span class="number">30000</span>)</span><br><span class="line">            page.wait_for_load_state(<span class="string">&#x27;networkidle&#x27;</span>)</span><br><span class="line">            page.click(<span class="string">&#x27;a.download-btn&#x27;</span>, timeout=<span class="number">5000</span>)</span><br><span class="line">            page.wait_for_timeout(<span class="number">2000</span>)</span><br><span class="line">            html = page.content()</span><br><span class="line">            <span class="keyword">return</span> MAGNET_RE.findall(html)</span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            browser.close()  <span class="comment"># 🔥 必须 close，否则内存泄漏</span></span><br></pre></td></tr></table></figure>
 
-<p>参数：</p>
-<ul>
-<li><code>Query</code>（必填）：关键词</li>
-<li><code>Count</code>（选填）：返回数量，默认 10，<strong>最大 10</strong>（多了服务端会截断）</li>
-</ul>
-<p>返回字段：<code>Title</code>、<code>ContentType</code>（Article&#x2F;Answer）、<code>ContentID</code>、<code>Url</code>、<code>VoteUpCount</code>、<code>CommentCount</code>、<code>AuthorName</code>、<code>AuthorAvatar</code>、<code>EditTime</code>、<code>AuthorityLevel</code>、<code>RankingScore</code>。</p>
-<p><strong>实战注意</strong>：</p>
-<ul>
-<li>关键词必须是非空字符串，空字符串直接报错</li>
-<li>想根据赞同数排序，自己拿到结果后做后处理；接口本身只按 <code>RankingScore</code> 排序（综合分）</li>
-<li><code>AuthorityLevel</code>（权威等级）是个被低估的字段——做严肃问答时可以用它做过滤</li>
-</ul>
-<h3 id="2-全网搜索（global-search）"><a href="#2-全网搜索（global-search）" class="headerlink" title="2. 全网搜索（global_search）"></a>2. 全网搜索（global_search）</h3><p><strong>什么时候用</strong>：你想搜全网（不只是知乎），但要中文优先、知乎生态过滤。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/global_search</span><br></pre></td></tr></table></figure>
+<p><strong>铁律</strong>：严禁并发。一个 browser 吃 500MB+，开 5 个直接 OOM。</p>
+<h2 id="级别-4：DrissionPage-终极破盾（核武器）"><a href="#级别-4：DrissionPage-终极破盾（核武器）" class="headerlink" title="级别 4：DrissionPage 终极破盾（核武器）"></a>级别 4：DrissionPage 终极破盾（核武器）</h2><p>Cloudflare 5 秒盾、521 Anti-Bot 拦截——这时候只有 DrissionPage 能破。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> DrissionPage <span class="keyword">import</span> ChromiumPage, ChromiumOptions</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level4</span>(<span class="params">url</span>):</span><br><span class="line">    options = ChromiumOptions()</span><br><span class="line">    options.headless(<span class="literal">True</span>)</span><br><span class="line">    page = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        page = ChromiumPage(options)</span><br><span class="line">        page.get(url, retry=<span class="number">3</span>, timeout=<span class="number">30</span>)</span><br><span class="line">        page.wait.load_start()</span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">30</span>):  <span class="comment"># 等 CF 挑战完成</span></span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;just-a-moment&#x27;</span> <span class="keyword">not</span> <span class="keyword">in</span> page.html.lower():</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            page.wait(<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> MAGNET_RE.findall(page.html)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">if</span> page:</span><br><span class="line">            page.quit()  <span class="comment"># 🔥 必须 quit，销毁 Chromium 内核</span></span><br></pre></td></tr></table></figure>
 
-<p>参数：</p>
-<ul>
-<li><code>Query</code>（必填）</li>
-<li><code>Count</code>（选填）：默认 10，<strong>最大 20</strong></li>
-<li><code>SearchDB</code>：<code>all</code>（默认）&#x2F; <code>realtime</code>（实时）&#x2F; <code>static</code>（静态索引）</li>
-<li><code>Filter</code>：高级语法筛选，<strong>必须 URL 编码</strong></li>
-</ul>
-<p><strong><code>Filter</code> 是这个接口的灵魂</strong>，比如：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host==&quot;example.com&quot; AND publish_time&gt;=1778494631</span><br></pre></td></tr></table></figure>
+<h2 id="实战决策树"><a href="#实战决策树" class="headerlink" title="实战决策树"></a>实战决策树</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">新站 → 级别 1 试</span><br><span class="line">  ↓ 成功？搞定</span><br><span class="line">  ↓ 失败 → 级别 2 试</span><br><span class="line">    ↓ 成功？搞定</span><br><span class="line">    ↓ 失败 → 级别 3 试</span><br><span class="line">      ↓ 成功？搞定</span><br><span class="line">      ↓ 失败 → 级别 4（最后手段）</span><br><span class="line">        ↓ 失败？放弃，换站</span><br></pre></td></tr></table></figure>
 
-<p>支持 <code>host</code>（站点域名过滤）+ <code>publish_time</code>（时间过滤）+ <code>AND</code>&#x2F;<code>OR</code> 逻辑。</p>
-<p><strong>重要提示</strong>：<code>host</code> 不支持搜索知乎站内（<code>zhihu.com</code> 及子域名会被排除），搜站内必须用第一个接口。</p>
-<h3 id="3-知乎直答（zhida）-问答大模型"><a href="#3-知乎直答（zhida）-问答大模型" class="headerlink" title="3. 知乎直答（zhida）- 问答大模型"></a>3. 知乎直答（zhida）- 问答大模型</h3><p><strong>什么时候用</strong>：你想让 AI 应用直接调用知乎自家的大模型（基于知乎内容训练）。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST https://developer.zhihu.com/v1/chat/completions</span><br></pre></td></tr></table></figure>
-
-<p><strong>这个接口是 OpenAI 兼容的</strong>，可以直接套 OpenAI SDK：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> openai</span><br><span class="line"></span><br><span class="line">client = openai.OpenAI(</span><br><span class="line">    api_key=<span class="string">&quot;你的AccessSecret&quot;</span>,</span><br><span class="line">    base_url=<span class="string">&quot;https://developer.zhihu.com/v1&quot;</span>,</span><br><span class="line">    default_headers=&#123;<span class="string">&quot;X-Request-Timestamp&quot;</span>: <span class="built_in">str</span>(<span class="built_in">int</span>(time.time()))&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">response = client.chat.completions.create(</span><br><span class="line">    model=<span class="string">&quot;zhida-thinking-1p5&quot;</span>,  <span class="comment"># 深度思考模式</span></span><br><span class="line">    messages=[&#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;什么是 RAG？&quot;</span>&#125;]</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<p><strong>模型档位</strong>：</p>
-<table>
-<thead>
-<tr>
-<th>模型</th>
-<th>特点</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>zhida-fast-1p5</code></td>
-<td>快速回答，日常推荐</td>
-</tr>
-<tr>
-<td><code>zhida-thinking-1p5</code></td>
-<td>深度思考，输出包含 <code>reasoning_content</code>（推理过程）</td>
-</tr>
-<tr>
-<td><code>zhida-agent</code></td>
-<td>智能检索 + 回答（类似 RAG 模式）</td>
-</tr>
-</tbody></table>
-<p><strong>流式响应</strong>：支持 SSE 格式，包含 <code>reasoning_content</code> 和 <code>content</code> 两段。前端可以分别渲染”思考过程”和”最终答案”。</p>
-<h3 id="4-知乎热榜（hot-list）"><a href="#4-知乎热榜（hot-list）" class="headerlink" title="4. 知乎热榜（hot_list）"></a>4. 知乎热榜（hot_list）</h3><p><strong>什么时候用</strong>：做内容聚合、舆情监控、趋势追踪。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/hot_list?Limit=30</span><br></pre></td></tr></table></figure>
-
-<p>参数：<code>Limit</code>（选填），默认 30，最大 30。</p>
-<p>返回结构非常清晰：</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;Total&quot;</span><span class="punctuation">:</span> <span class="number">30</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;Items&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;Title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;如何看待当前 AI Agent 的发展趋势？&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;Url&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://www.zhihu.com/question/123456789&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;ThumbnailUrl&quot;</span><span class="punctuation">:</span> <span class="string">&quot;...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;Summary&quot;</span><span class="punctuation">:</span> <span class="string">&quot;...&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>实战技巧</strong>：</p>
-<ul>
-<li>把热榜数据 + 直答 API 组合：自动生成”今日热议话题解读”</li>
-<li>用 <code>ThumbnailUrl</code> 做封面图，比你自己爬知乎省事得多</li>
-<li>注意频率限制，<strong>别高频调用</strong>，会被限流（错误码 30001）</li>
-</ul>
-<hr>
-<h2 id="第三步：选-API、Skill-还是-MCP？"><a href="#第三步：选-API、Skill-还是-MCP？" class="headerlink" title="第三步：选 API、Skill 还是 MCP？"></a>第三步：选 API、Skill 还是 MCP？</h2><p>知乎开放平台针对每个接口提供了<strong>三种形式</strong>：</p>
-<table>
-<thead>
-<tr>
-<th>形式</th>
-<th>适合谁</th>
-<th>优点</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>RESTful API</strong></td>
-<td>后端开发、自己写代码</td>
-<td>最灵活</td>
-</tr>
-<tr>
-<td><strong>Skill 包</strong>（.zip）</td>
-<td>想要开箱即用的 Agent 框架</td>
-<td>预制好 Agent 调用逻辑</td>
-</tr>
-<tr>
-<td><strong>MCP</strong></td>
-<td>Claude Desktop、Cursor 等支持 MCP 的工具</td>
-<td>标准协议，接入即用</td>
-</tr>
-</tbody></table>
-<h3 id="推荐用法"><a href="#推荐用法" class="headerlink" title="推荐用法"></a>推荐用法</h3><p><strong>如果你用 Claude Desktop &#x2F; Cursor &#x2F; Cline 等 AI IDE</strong>：</p>
-<p>直接配 MCP。比如直答 MCP 的配置：</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;mcpServers&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;zhihu-zhida&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;url&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://developer.zhihu.com/api/mcp/zhida/v1/stream&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;headers&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;Authorization&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Bearer 你的AccessSecret&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>注意</strong>：直答 MCP 用了 Streamable HTTP 传输，单一 stream 端点处理所有 RPC 请求。它默认会阻塞等待完整响应，<strong>如果你需要流式增量输出或看推理过程，建议直接调原生 completions API 而不是 MCP</strong>。</p>
-<p><strong>如果你自建 Agent &#x2F; 工作流</strong>：</p>
-<p>直接调原生 API 更可控，特别是 <code>reasoning_content</code> 这种深度推理字段。</p>
-<hr>
-<h2 id="第四步：常见错误码"><a href="#第四步：常见错误码" class="headerlink" title="第四步：常见错误码"></a>第四步：常见错误码</h2><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;code&quot;</span><span class="punctuation">:</span> <span class="number">20001</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;鉴权失败&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<table>
-<thead>
-<tr>
-<th>错误码</th>
-<th>说明</th>
-<th>排查方向</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>0</td>
-<td>成功</td>
-<td>-</td>
-</tr>
-<tr>
-<td>10001</td>
-<td>参数错误</td>
-<td>检查 query 字段是否为空、格式是否正确</td>
-</tr>
-<tr>
-<td>20001</td>
-<td>鉴权失败</td>
-<td>检查 AccessSecret 是否过期、是否带 <code>Bearer</code> 前缀</td>
-</tr>
-<tr>
-<td>30001</td>
-<td>频率限制</td>
-<td>降低调用频率、加退避</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="实战：一个简单的”知乎热榜-解读”工作流"><a href="#实战：一个简单的”知乎热榜-解读”工作流" class="headerlink" title="实战：一个简单的”知乎热榜 + 解读”工作流"></a>实战：一个简单的”知乎热榜 + 解读”工作流</h2><p>把上面几个 API 串起来：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> openai</span><br><span class="line"></span><br><span class="line">ACCESS_SECRET = <span class="string">&quot;你的AccessSecret&quot;</span></span><br><span class="line">HEADERS = &#123;</span><br><span class="line">    <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;ACCESS_SECRET&#125;</span>&quot;</span>,</span><br><span class="line">    <span class="string">&quot;X-Request-Timestamp&quot;</span>: <span class="built_in">str</span>(<span class="built_in">int</span>(time.time())),</span><br><span class="line">    <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 拉热榜</span></span><br><span class="line">hot = requests.get(</span><br><span class="line">    <span class="string">&quot;https://developer.zhihu.com/api/v1/content/hot_list&quot;</span>,</span><br><span class="line">    headers=HEADERS,</span><br><span class="line">    params=&#123;<span class="string">&quot;Limit&quot;</span>: <span class="number">10</span>&#125;</span><br><span class="line">).json()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 用直答 API 给每个热点生成一段解读</span></span><br><span class="line">client = openai.OpenAI(</span><br><span class="line">    api_key=ACCESS_SECRET,</span><br><span class="line">    base_url=<span class="string">&quot;https://developer.zhihu.com/v1&quot;</span>,</span><br><span class="line">    default_headers=HEADERS</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> item <span class="keyword">in</span> hot[<span class="string">&quot;Data&quot;</span>][<span class="string">&quot;Items&quot;</span>]:</span><br><span class="line">    response = client.chat.completions.create(</span><br><span class="line">        model=<span class="string">&quot;zhida-fast-1p5&quot;</span>,</span><br><span class="line">        messages=[&#123;</span><br><span class="line">            <span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>,</span><br><span class="line">            <span class="string">&quot;content&quot;</span>: <span class="string">f&quot;请用 100 字解读这个知乎热榜话题：<span class="subst">&#123;item[<span class="string">&#x27;Title&#x27;</span>]&#125;</span>&quot;</span></span><br><span class="line">        &#125;],</span><br><span class="line">        stream=<span class="literal">False</span></span><br><span class="line">    )</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;🔥 <span class="subst">&#123;item[<span class="string">&#x27;Title&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;   <span class="subst">&#123;response.choices[<span class="number">0</span>].message.content&#125;</span>\n&quot;</span>)</span><br><span class="line">    time.sleep(<span class="number">1</span>)  <span class="comment"># 避免频率限制</span></span><br></pre></td></tr></table></figure>
-
-<p>10 分钟就能搭一个”今日知乎热议 Top 10 解读”的脚本。</p>
-<hr>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>知乎开放平台相比其他大厂的开放平台，<strong>最良心的是 API 设计得规范、文档清晰、鉴权简单</strong>。特别是直答 API 直接兼容 OpenAI 协议，做应用接入几乎零成本。</p>
-<p>几个建议：</p>
-<ul>
-<li><strong>不要高频调用</strong>：热榜 1 小时拉一次足够了，搜索按需调用</li>
-<li><strong>优先用站内搜索 API 而不是爬知乎</strong>：合规、稳定、有官方支持</li>
-<li><strong>直答 API 的 <code>reasoning_content</code> 字段</strong>：做”思考过程可视化”特别有用，很多前端直接渲染这个字段做”AI 在思考”的效果</li>
-<li><strong>AccessSecret 不要暴露在前端</strong>：所有 API 调用走后端代理，前端只调自己的后端</li>
-</ul>
-<p>有问题欢迎评论区交流，或者告诉我你打算用知乎 API 做什么项目～</p>
+<p>每一级用 <code>try/except</code>，失败自动降级下一级。<strong>别一上来就 Headless 浏览器，杀鸡用牛刀</strong>。</p>
+<h2 id="资源保护红线"><a href="#资源保护红线" class="headerlink" title="资源保护红线"></a>资源保护红线</h2><p>不管用哪一级：</p>
+<ol>
+<li><strong>严禁并发</strong>：Headless 浏览器吃 500MB+，并发 3 个就可能 OOM</li>
+<li><strong>强制资源释放</strong>：<code>try...finally</code> 中执行 <code>browser.close()</code> 或 <code>page.quit()</code></li>
+<li><strong>超时必须设</strong>：每个 HTTP 请求 <code>timeout=15</code></li>
+<li><strong>频率限制</strong>：两次请求之间 <code>time.sleep(1-3)</code></li>
+<li><strong>优先静态</strong>：能静态正则绝不用浏览器</li>
+</ol>
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：偶尔需要搜资源的，想把爬虫当工具而非事业来做的。</p>
+<p><strong>不适合</strong>：想做大规模聚合站的——这个方案是”够用就行”级别，不是商业级。需要长期维护大量站点爬虫的——站点变动快，维护成本高。</p>
+<blockquote>
+<p>爬虫的精髓不是”用最牛的技术”，而是”用最低的成本搞定目标”。80% 的老站静态正则就够，真碰到 JS 渲染再上 Headless，CF 盾最后才动 DrissionPage。按这个分级，用最少的资源跑最多的站。</p>
+</blockquote>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你做过爬虫吗？踩过什么反爬坑？评论区聊聊。</p>
 
     </div>
 
@@ -524,24 +416,21 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/API/" rel="tag"># API</a>
-              <a href="/tags/MCP/" rel="tag"># MCP</a>
-              <a href="/tags/%E7%9F%A5%E4%B9%8E/" rel="tag"># 知乎</a>
-              <a href="/tags/AI%E5%BA%94%E7%94%A8/" rel="tag"># AI应用</a>
+              <a href="/tags/%E7%88%AC%E8%99%AB/" rel="tag"># 爬虫</a>
+              <a href="/tags/%E7%A3%81%E5%8A%9B/" rel="tag"># 磁力</a>
+              <a href="/tags/Python/" rel="tag"># Python</a>
+              <a href="/tags/%E5%8F%8D%E7%88%AC/" rel="tag"># 反爬</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2026/06/20/evomap-bounty-guide/" rel="prev" title="EvoMap 白嫖 GitHub 仓库积分：1W 积分保姆级攻略（含一次失败修复）">
-                  <i class="fa fa-angle-left"></i> EvoMap 白嫖 GitHub 仓库积分：1W 积分保姆级攻略（含一次失败修复）
+                <a href="/2026/07/27/feishu-bot-connectivity-fix/" rel="prev" title="飞书机器人哑了？90%的人不知道查这个地方">
+                  <i class="fa fa-angle-left"></i> 飞书机器人哑了？90%的人不知道查这个地方
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/06/20/mineru-pdf-parse-mcp/" rel="next" title="把 PDF 变成可读 Markdown：MinerU 文档解析 MCP 部署实战">
-                  把 PDF 变成可读 Markdown：MinerU 文档解析 MCP 部署实战 <i class="fa fa-angle-right"></i>
-                </a>
             </div>
           </div>
     </footer>
@@ -572,13 +461,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">72k</span>
+    <span title="站点总字数">65k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:05</span>
+    <span title="站点阅读时长">59 分钟</span>
   </span>
 </div>
 <div class="busuanzi-count">

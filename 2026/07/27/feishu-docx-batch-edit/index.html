@@ -21,32 +21,32 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"blog.rnm.gv.uy","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-light","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"flat","show_result":true},"fold":{"enable":false,"height":500},"language":false,"border_radius":8,"language_tag":{"enable":true}},"bookmark":{"enable":true,"color":"#4fc3f7","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":150,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":3,"unescape":false,"preload":false,"placeholder":"搜一搜雪的花园..."}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="自建磁力爬虫这条路我走完了——从入门到放弃，再到放弃得明明白白。复盘了整个技术路线和最终决策，省得你重蹈覆辙。">
+    <meta name="description" content="飞书Docx API的1770001 invalid param错误排障全记录：tenant_access_token批量删除被拒绝的根因、三种绕过方案（逐块删除&#x2F;先删后插&#x2F;换user_token）、生产可用的代码。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白">
-<meta property="og:url" content="https://blog.rnm.gv.uy/2026/06/20/magnet-crawler-fallback/index.html">
+<meta property="og:title" content="飞书API能创建但不能批量删除，这是设计不是bug">
+<meta property="og:url" content="https://blog.rnm.gv.uy/2026/07/27/feishu-docx-batch-edit/index.html">
 <meta property="og:site_name" content="雪的数字花园 ❄️">
-<meta property="og:description" content="自建磁力爬虫这条路我走完了——从入门到放弃，再到放弃得明明白白。复盘了整个技术路线和最终决策，省得你重蹈覆辙。">
+<meta property="og:description" content="飞书Docx API的1770001 invalid param错误排障全记录：tenant_access_token批量删除被拒绝的根因、三种绕过方案（逐块删除&#x2F;先删后插&#x2F;换user_token）、生产可用的代码。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog.rnm.gv.uy/images/magnet-crawler-fallback-cover.webp">
-<meta property="article:published_time" content="2026-06-20T13:30:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T14:11:30.959Z">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/feishu-docx-batch-edit-cover.webp">
+<meta property="article:published_time" content="2026-07-27T03:30:00.000Z">
+<meta property="article:modified_time" content="2026-07-27T15:26:14.262Z">
 <meta property="article:author" content="雪 ❄️">
-<meta property="article:tag" content="Python">
-<meta property="article:tag" content="反爬">
-<meta property="article:tag" content="爬虫">
-<meta property="article:tag" content="磁力">
+<meta property="article:tag" content="Docx API">
+<meta property="article:tag" content="开发">
+<meta property="article:tag" content="踩坑">
+<meta property="article:tag" content="飞书">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/magnet-crawler-fallback-cover.webp">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/feishu-docx-batch-edit-cover.webp">
 
 
-<link rel="canonical" href="https://blog.rnm.gv.uy/2026/06/20/magnet-crawler-fallback/">
+<link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/feishu-docx-batch-edit/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/06/20/magnet-crawler-fallback/","path":"2026/06/20/magnet-crawler-fallback/","title":"自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/07/27/feishu-docx-batch-edit/","path":"2026/07/27/feishu-docx-batch-edit/","title":"飞书API能创建但不能批量删除，这是设计不是bug"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白 | 雪的数字花园 ❄️</title>
+<title>飞书API能创建但不能批量删除，这是设计不是bug | 雪的数字花园 ❄️</title>
   
 
 
@@ -172,7 +172,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E5%86%99%E8%BF%99%E7%AF%87"><span class="nav-number">1.</span> <span class="nav-text">写在前面：为什么写这篇</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E5%88%99%EF%BC%9A%E5%88%86%E7%BA%A7%E9%99%8D%E7%BA%A7%EF%BC%8C%E6%8C%89%E9%9C%80%E5%8D%87%E7%BA%A7"><span class="nav-number">2.</span> <span class="nav-text">核心原则：分级降级，按需升级</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E7%BA%A7%EF%BC%9A%E7%BA%AF%E9%9D%99%E6%80%81%E6%AD%A3%E5%88%99%EF%BC%8880-%E7%9A%84%E7%AE%80%E5%8D%95%E7%AB%99%E9%9D%A0%E8%BF%99%E4%B8%AA%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">第一级：纯静态正则（80% 的简单站靠这个）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">3.1.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E6%A0%88"><span class="nav-number">3.2.</span> <span class="nav-text">技术栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E4%BB%A3%E7%A0%81"><span class="nav-number">3.3.</span> <span class="nav-text">实战代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C"><span class="nav-number">3.4.</span> <span class="nav-text">实战经验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%90%E5%8F%96%E5%85%83%E6%95%B0%E6%8D%AE%EF%BC%88%E9%87%8D%E8%A6%81%EF%BC%81%EF%BC%89"><span class="nav-number">3.5.</span> <span class="nav-text">提取元数据（重要！）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E7%BA%A7%EF%BC%9A%E5%A4%8D%E6%9D%82%E9%9D%99%E6%80%81%E8%A7%A3%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">第二级：复杂静态解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF-1"><span class="nav-number">4.1.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E4%BB%A3%E7%A0%81-1"><span class="nav-number">4.2.</span> <span class="nav-text">实战代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E7%BA%A7%EF%BC%9AHeadless-%E6%B5%8F%E8%A7%88%E5%99%A8%EF%BC%88%E9%AB%98%E5%BC%80%E9%94%80%EF%BC%8C%E6%8C%89%E9%9C%80%E7%94%A8%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">第三级：Headless 浏览器（高开销，按需用）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF-2"><span class="nav-number">5.1.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E6%A0%88-1"><span class="nav-number">5.2.</span> <span class="nav-text">技术栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E4%BB%A3%E7%A0%81-2"><span class="nav-number">5.3.</span> <span class="nav-text">实战代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%A4%E6%A0%8F%E9%93%81%E5%BE%8B"><span class="nav-number">5.4.</span> <span class="nav-text">护栏铁律</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E7%BA%A7%EF%BC%9ADrissionPage-%E7%BB%88%E6%9E%81%E7%A0%B4%E7%9B%BE%EF%BC%88%E6%A0%B8%E6%AD%A6%E5%99%A8%EF%BC%89"><span class="nav-number">6.</span> <span class="nav-text">第四级：DrissionPage 终极破盾（核武器）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF-3"><span class="nav-number">6.1.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E6%A0%88-2"><span class="nav-number">6.2.</span> <span class="nav-text">技术栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E4%BB%A3%E7%A0%81-3"><span class="nav-number">6.3.</span> <span class="nav-text">实战代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%A4%E6%A0%8F%E9%93%81%E5%BE%8B-1"><span class="nav-number">6.4.</span> <span class="nav-text">护栏铁律</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E5%86%B3%E7%AD%96%E6%A0%91"><span class="nav-number">7.</span> <span class="nav-text">实战决策树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E4%BF%9D%E6%8A%A4%E7%BA%A2%E7%BA%BF"><span class="nav-number">8.</span> <span class="nav-text">资源保护红线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%99%E6%A2%AF%E9%98%9F%E6%B8%85%E5%8D%95%EF%BC%88%E5%AE%9E%E6%B5%8B%EF%BC%89"><span class="nav-number">9.</span> <span class="nav-text">站梯队清单（实测）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%8F%86-%E6%A2%AF%E9%98%9F%E4%B8%80%EF%BC%9A%E5%BD%B1%E8%A7%86%E5%8A%A8%E6%BC%AB%E8%B5%84%E6%BA%90%E7%AB%99"><span class="nav-number">9.1.</span> <span class="nav-text">🏆 梯队一：影视动漫资源站</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A5%88-%E6%A2%AF%E9%98%9F%E4%BA%8C%EF%BC%9A%E7%A3%81%E5%8A%9B-Telegram-%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E"><span class="nav-number">9.2.</span> <span class="nav-text">🥈 梯队二：磁力 Telegram 搜索引擎</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">一句话总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%B0%E8%B1%A1%EF%BC%9A%E4%BB%80%E4%B9%88%E8%83%BD%E8%B7%91%E3%80%81%E4%BB%80%E4%B9%88%E4%B8%8D%E8%A1%8C"><span class="nav-number">1.</span> <span class="nav-text">现象：什么能跑、什么不行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B9%E5%9B%A0%EF%BC%9A%E5%BA%94%E7%94%A8%E8%BA%AB%E4%BB%BD%E7%9A%84%E9%9A%90%E8%97%8F%E9%99%90%E5%88%B6"><span class="nav-number">2.</span> <span class="nav-text">根因：应用身份的隐藏限制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E8%A7%A3%E6%B3%95%EF%BC%8C%E4%BB%8E%E7%A8%B3%E5%88%B0%E5%BF%AB"><span class="nav-number">3.</span> <span class="nav-text">三种解法，从稳到快</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E6%B3%95%E4%B8%80%EF%BC%9A%E9%80%90%E5%9D%97%E5%88%A0%E9%99%A4%EF%BC%88%E6%9C%80%E7%A8%B3%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">解法一：逐块删除（最稳）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E6%B3%95%E4%BA%8C%EF%BC%9A%E5%85%88%E5%88%A0%E5%90%8E%E6%8F%92%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%8C%E6%95%88%E7%8E%87%E9%AB%98%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">解法二：先删后插（推荐，效率高）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E6%B3%95%E4%B8%89%EF%BC%9A%E6%8D%A2-user-access-token%EF%BC%88%E7%BB%88%E6%9E%81%E6%96%B9%E6%A1%88%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">解法三：换 user_access_token（终极方案）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%AE%B9%E6%98%93%E8%B8%A9%E7%9A%84%E5%9D%91"><span class="nav-number">4.</span> <span class="nav-text">其他容易踩的坑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#revision-id-%E6%AF%8F%E6%AC%A1%E9%83%BD%E5%9C%A8%E5%8F%98"><span class="nav-number">4.1.</span> <span class="nav-text">revision_id 每次都在变</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E5%8A%A8%E6%80%81%E5%8F%98%E5%8C%96"><span class="nav-number">4.2.</span> <span class="nav-text">索引动态变化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E6%A1%A3%E6%9C%89%E5%8D%A0%E4%BD%8D-block"><span class="nav-number">4.3.</span> <span class="nav-text">文档有占位 block</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Wiki-%E6%96%87%E6%A1%A3-%E2%89%A0-Docx-%E6%96%87%E6%A1%A3"><span class="nav-number">4.4.</span> <span class="nav-text">Wiki 文档 ≠ Docx 文档</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E7%BB%88%E5%8F%AF%E7%94%A8%E4%BB%A3%E7%A0%81%EF%BC%88%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E9%AA%8C%E8%AF%81%E8%BF%87%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">最终可用代码（生产环境验证过）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E5%90%88%E8%B0%81%E4%B8%8E%E4%B8%8D%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">6.</span> <span class="nav-text">适合谁与不适合谁</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -244,7 +244,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/06/20/magnet-crawler-fallback/">
+    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/07/27/feishu-docx-batch-edit/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/xue-avatar.png">
@@ -257,12 +257,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白 | 雪的数字花园 ❄️">
-      <meta itemprop="description" content="自建磁力爬虫这条路我走完了——从入门到放弃，再到放弃得明明白白。复盘了整个技术路线和最终决策，省得你重蹈覆辙。">
+      <meta itemprop="name" content="飞书API能创建但不能批量删除，这是设计不是bug | 雪的数字花园 ❄️">
+      <meta itemprop="description" content="飞书Docx API的1770001 invalid param错误排障全记录：tenant_access_token批量删除被拒绝的根因、三种绕过方案（逐块删除&#x2F;先删后插&#x2F;换user_token）、生产可用的代码。">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白
+          飞书API能创建但不能批量删除，这是设计不是bug
         </h1>
 
         <div class="post-meta-container">
@@ -273,7 +273,7 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2026-06-20 21:30:00" itemprop="dateCreated datePublished" datetime="2026-06-20T21:30:00+08:00">2026-06-20</time>
+      <time title="创建时间：2026-07-27 11:30:00" itemprop="dateCreated datePublished" datetime="2026-07-27T11:30:00+08:00">2026-07-27</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -303,203 +303,95 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>5.7k</span>
+      <span>4.3k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>5 分钟</span>
+      <span>4 分钟</span>
     </span>
 </div>
 
-            <div class="post-description">自建磁力爬虫这条路我走完了——从入门到放弃，再到放弃得明明白白。复盘了整个技术路线和最终决策，省得你重蹈覆辙。</div>
+            <div class="post-description">飞书Docx API的1770001 invalid param错误排障全记录：tenant_access_token批量删除被拒绝的根因、三种绕过方案（逐块删除/先删后插/换user_token）、生产可用的代码。</div>
         </div>
       </header>
 
     
     
     
-    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>想自己写个磁力搜索的爬虫？看完市面上大大小小的资源站，我总结出一套”分级降级”的实战规约：从纯静态正则到 Headless 浏览器破盾，按需升级，<strong>用最低成本搞定 80% 的网站</strong>。</p>
-</blockquote>
-<hr>
-<h2 id="写在前面：为什么写这篇"><a href="#写在前面：为什么写这篇" class="headerlink" title="写在前面：为什么写这篇"></a>写在前面：为什么写这篇</h2><p>磁力搜索这件事，国内的站基本都活不长，今天能用的站明天就挂；国外的站又普遍有强反爬。<strong>纯靠 requests 写爬虫，十有八九会失败</strong>。</p>
-<p>我摸索了一段时间，把”什么站用什么级别、什么级别用什么技术栈、怎么保护宿主机资源”整理出一套实战规约。这篇不是完整的爬虫教程，而是<strong>一份选型决策树</strong>——让你面对一个新站时，能快速判断该用什么级别去打。</p>
-<hr>
-<h2 id="核心原则：分级降级，按需升级"><a href="#核心原则：分级降级，按需升级" class="headerlink" title="核心原则：分级降级，按需升级"></a>核心原则：分级降级，按需升级</h2><p>爬虫的级别从低到高，开销也越来越大。我设计了 4 个级别：</p>
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/feishu-docx-batch-edit-cover.webp" alt="封面图"></p>
+<p>两个小时。我花了两个小时才搞明白为什么飞书 Docx API 删不掉一段文字。</p>
+<p>事情是这样的：我做内容自动化，需要把日报写入飞书文档。理想流程很简单——拉数据、清旧内容、写新内容。三个步骤，听起来 10 分钟搞定。</p>
+<p>结果呢？批量删除直接报 <code>invalid param (1770001)</code>。单个删能成功，批量删就炸。更新 Block 也炸。文档上还没写这个限制。</p>
+<p>下面是踩坑全记录和最终解法，直接抄。</p>
+<h2 id="现象：什么能跑、什么不行"><a href="#现象：什么能跑、什么不行" class="headerlink" title="现象：什么能跑、什么不行"></a>现象：什么能跑、什么不行</h2><p>我用 <code>tenant_access_token</code>（应用身份）测了一轮：</p>
 <table>
 <thead>
 <tr>
-<th>级别</th>
-<th>适用场景</th>
-<th>资源开销</th>
-<th>技术栈</th>
+<th>操作</th>
+<th>结果</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>🟢 1 - 静态正则</td>
-<td>上古 HTML 站，无反爬</td>
-<td>极低</td>
-<td>requests + BeautifulSoup + re</td>
+<td>创建 Block</td>
+<td>✅ 成功</td>
 </tr>
 <tr>
-<td>🟡 2 - 复杂静态</td>
-<td>链接在 JS&#x2F;隐藏 input 里</td>
-<td>中等</td>
-<td>requests + Base64 解码</td>
+<td>删除单个 Block（<code>start_index=N, end_index=N+1</code>）</td>
+<td>✅ 成功</td>
 </tr>
 <tr>
-<td>🟠 3 - Headless 浏览器</td>
-<td>必须点真实 DOM 才出链接</td>
-<td>高</td>
-<td>Playwright</td>
+<td>批量删除（<code>start_index=4, end_index=14</code>）</td>
+<td>❌ <code>1770001</code></td>
 </tr>
 <tr>
-<td>🔴 4 - 终极破盾</td>
-<td>Cloudflare 5秒盾</td>
-<td>极高</td>
-<td>DrissionPage</td>
+<td>更新 Block</td>
+<td>❌ <code>invalid param</code></td>
 </tr>
 </tbody></table>
-<p><strong>核心原则</strong>：<strong>一旦当前级别能搞定，立刻返回，绝不无故触发下一级</strong>。这是为了最大化保护宿主机——Headless 浏览器一启动就吃 500MB+ 内存，跑 10 个 VPS 就可能把你服务器干爆。</p>
-<hr>
-<h2 id="第一级：纯静态正则（80-的简单站靠这个）"><a href="#第一级：纯静态正则（80-的简单站靠这个）" class="headerlink" title="第一级：纯静态正则（80% 的简单站靠这个）"></a>第一级：纯静态正则（80% 的简单站靠这个）</h2><h3 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>上古时代的论坛、下载站</li>
-<li>HTML 直接把磁力链接写在页面上</li>
-<li>0 反爬措施，没有 Cloudflare、没有 JS 渲染</li>
-</ul>
-<p>典型代表：<code>dygod.net</code>（电影天堂）、各种老 PT 论坛</p>
-<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line">HEADERS = &#123;</span><br><span class="line">    <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MAGNET_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;magnet:\?xt=urn:btih:[a-zA-Z0-9]+&#x27;</span>, re.I)</span><br><span class="line">FTP_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;ftp://[^\s&quot;\&#x27;&lt;&gt;]+&#x27;</span>, re.I)</span><br></pre></td></tr></table></figure>
-
-<h3 id="实战代码"><a href="#实战代码" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level1</span>(<span class="params">search_url, headers=<span class="literal">None</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别1：纯静态正则&quot;&quot;&quot;</span></span><br><span class="line">    h = headers <span class="keyword">or</span> HEADERS</span><br><span class="line">    resp = requests.get(search_url, headers=h, timeout=<span class="number">15</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 老旧网站常用 GB2312 编码，必须显式声明</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;gb2312&#x27;</span> <span class="keyword">in</span> (resp.apparent_encoding <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span>).lower():</span><br><span class="line">        resp.encoding = <span class="string">&#x27;gb2312&#x27;</span></span><br><span class="line"></span><br><span class="line">    html = resp.text</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 一次性提取所有磁力和 FTP</span></span><br><span class="line">    magnets = <span class="built_in">set</span>(MAGNET_RE.findall(html))</span><br><span class="line">    ftps = <span class="built_in">set</span>(FTP_RE.findall(html))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(magnets) + <span class="built_in">list</span>(ftps)</span><br></pre></td></tr></table></figure>
-
-<h3 id="实战经验"><a href="#实战经验" class="headerlink" title="实战经验"></a>实战经验</h3><ol>
-<li><strong>绕开主页</strong>：不要在主页白费力气。先用站内搜索或 Google <code>site:xxx 关键字</code> 定位到具体的<strong>详情页</strong>，详情页的链接密度更高</li>
-<li><strong>编码处理</strong>：老站常用 GB2312，不显式声明会乱码</li>
-<li><strong>去重</strong>：同一页面可能有重复链接，用 <code>set</code> 去重</li>
-<li><strong>资源消耗</strong>：全程不到 50MB 内存，宿主机毫无压力</li>
-</ol>
-<h3 id="提取元数据（重要！）"><a href="#提取元数据（重要！）" class="headerlink" title="提取元数据（重要！）"></a>提取元数据（重要！）</h3><p><strong>不要只返回磁力链接！</strong> 用户需要知道这个链接是什么资源。提取这些信息：</p>
+<p>规律很清晰：<strong>单个操作能过，批量操作直接拒绝</strong>。</p>
+<h2 id="根因：应用身份的隐藏限制"><a href="#根因：应用身份的隐藏限制" class="headerlink" title="根因：应用身份的隐藏限制"></a>根因：应用身份的隐藏限制</h2><p>文档上没明说，我推测是：</p>
 <ul>
-<li>文件大小（Size）</li>
-<li>清晰度（1080p &#x2F; 4K &#x2F; 720p）</li>
-<li>文件格式（MKV &#x2F; MP4 &#x2F; TS）</li>
-<li>音轨字幕信息</li>
-<li>版本说明（Remux &#x2F; Web-DL &#x2F; BDRip）</li>
+<li><code>tenant_access_token</code> 是应用级身份，权限受限</li>
+<li>批量删除涉及”破坏性操作 + 多 block 影响范围”，平台对应用身份做了风控</li>
+<li>想搞复杂编辑，可能需要 <code>user_access_token</code>（用户身份 OAuth）</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">extract_metadata</span>(<span class="params">context_text</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从磁力链接的上下文文本提取元数据&quot;&quot;&quot;</span></span><br><span class="line">    metadata = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 清晰度</span></span><br><span class="line">    <span class="keyword">if</span> res := re.search(<span class="string">r&#x27;\b(2160p|1080p|720p|4K)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;resolution&#x27;</span>] = res.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 格式</span></span><br><span class="line">    <span class="keyword">if</span> fmt := re.search(<span class="string">r&#x27;\b(BluRay|WEB-DL|HDTV|DVDRip|Remux|BDRip)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;source&#x27;</span>] = fmt.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 文件大小（GB/MB）</span></span><br><span class="line">    <span class="keyword">if</span> size := re.search(<span class="string">r&#x27;(\d+\.?\d*)\s*(GB|MB)&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;size&#x27;</span>] = <span class="string">f&quot;<span class="subst">&#123;size.group(<span class="number">1</span>)&#125;</span> <span class="subst">&#123;size.group(<span class="number">2</span>)&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> metadata</span><br></pre></td></tr></table></figure>
+<p>但获取 <code>user_access_token</code> 需要完整 OAuth 流程，做纯后台自动化的时候不现实。我先在 <code>tenant_access_token</code> 下找出路。</p>
+<h2 id="三种解法，从稳到快"><a href="#三种解法，从稳到快" class="headerlink" title="三种解法，从稳到快"></a>三种解法，从稳到快</h2><h3 id="解法一：逐块删除（最稳）"><a href="#解法一：逐块删除（最稳）" class="headerlink" title="解法一：逐块删除（最稳）"></a>解法一：逐块删除（最稳）</h3><p>每次只删一个 block，从后往前删（避免索引变化），删完一个再删下一个：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">delete_blocks_one_by_one</span>(<span class="params">doc_token, parent_id, headers, start, end</span>):</span><br><span class="line">    current_end = end</span><br><span class="line">    <span class="keyword">while</span> current_end &gt; start:</span><br><span class="line">        <span class="comment"># 每次重新拿最新 revision_id</span></span><br><span class="line">        rev_resp = requests.get(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line">        rev = rev_resp.json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line"></span><br><span class="line">        del_resp = requests.delete(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span></span><br><span class="line">            <span class="string">f&quot;/blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">            params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">            json=&#123;<span class="string">&quot;start_index&quot;</span>: current_end - <span class="number">1</span>, <span class="string">&quot;end_index&quot;</span>: current_end&#125;,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line">        <span class="keyword">if</span> del_resp.json().get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">f&quot;删除失败: <span class="subst">&#123;del_resp.json()&#125;</span>&quot;</span>)</span><br><span class="line">        current_end -= <span class="number">1</span></span><br></pre></td></tr></table></figure>
 
-<p>拿到磁力后，在 HTML 里找它的父节点或相邻文本节点，把这些信息一起返回给用户。</p>
-<hr>
-<h2 id="第二级：复杂静态解析"><a href="#第二级：复杂静态解析" class="headerlink" title="第二级：复杂静态解析"></a>第二级：复杂静态解析</h2><h3 id="适用场景-1"><a href="#适用场景-1" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>页面返回 200 OK，但磁力链接被 <strong>Base64 编码</strong>藏在 JS 变量里</li>
-<li>链接放在隐藏的 <code>&lt;input&gt;</code> 或 <code>data-*</code> 属性中</li>
-<li>需要简单的 Token 拼接</li>
-</ul>
-<h3 id="实战代码-1"><a href="#实战代码-1" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level2</span>(<span class="params">html</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别2：从 JS 变量和隐藏 input 提取&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 从 &lt;input&gt; value 提取</span></span><br><span class="line">    soup = BeautifulSoup(html, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> inp <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;input&#x27;</span>, <span class="built_in">type</span>=<span class="string">&#x27;hidden&#x27;</span>):</span><br><span class="line">        value = inp.get(<span class="string">&#x27;value&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> value:</span><br><span class="line">            magnets.append(value)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从 data-* 属性提取</span></span><br><span class="line">    <span class="keyword">for</span> elem <span class="keyword">in</span> soup.find_all(attrs=&#123;<span class="string">&#x27;data-magnet&#x27;</span>: <span class="literal">True</span>&#125;):</span><br><span class="line">        magnets.append(elem[<span class="string">&#x27;data-magnet&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 从 JS 变量 Base64 解码提取</span></span><br><span class="line">    b64_pattern = re.<span class="built_in">compile</span>(<span class="string">r&#x27;[&quot;\&#x27;]([A-Za-z0-9+/=]&#123;40,&#125;)[&quot;\&#x27;]&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> b64_pattern.findall(html):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            decoded = base64.b64decode(<span class="keyword">match</span>).decode(<span class="string">&#x27;utf-8&#x27;</span>, errors=<span class="string">&#x27;ignore&#x27;</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> decoded:</span><br><span class="line">                <span class="comment"># 再用级别1的正则提取</span></span><br><span class="line">                magnets.extend(MAGNET_RE.findall(decoded))</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(<span class="built_in">set</span>(magnets))</span><br></pre></td></tr></table></figure>
+<p>缺点：删 N 个 block 要 N 次请求。但稳。</p>
+<h3 id="解法二：先删后插（推荐，效率高）"><a href="#解法二：先删后插（推荐，效率高）" class="headerlink" title="解法二：先删后插（推荐，效率高）"></a>解法二：先删后插（推荐，效率高）</h3><p>关键发现：<strong>POST 创建 Block 支持批量，DELETE 不支持批量</strong>。</p>
+<p>所以最佳组合：用”逐个删除 + 批量创建”：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">replace_content</span>(<span class="params">doc_token, parent_id, headers, new_blocks</span>):</span><br><span class="line">    <span class="comment"># 1. 获取最新 revision</span></span><br><span class="line">    rev = get_revision(doc_token, headers)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从后往前逐个删</span></span><br><span class="line">    block_count = get_block_count(doc_token, headers)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(block_count - <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>):</span><br><span class="line">        rev = get_revision(doc_token, headers)</span><br><span class="line">        requests.delete(</span><br><span class="line">            <span class="string">f&quot;.../blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">            params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">            json=&#123;<span class="string">&quot;start_index&quot;</span>: i, <span class="string">&quot;end_index&quot;</span>: i + <span class="number">1</span>&#125;,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 批量插入新内容</span></span><br><span class="line">    requests.post(</span><br><span class="line">        <span class="string">f&quot;.../blocks/<span class="subst">&#123;parent_id&#125;</span>/children&quot;</span>,</span><br><span class="line">        json=&#123;<span class="string">&quot;children&quot;</span>: new_blocks&#125;,</span><br><span class="line">        headers=headers</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
 
-<p>这个级别解决 60% 的”看起来很难其实静态”的网站。</p>
-<hr>
-<h2 id="第三级：Headless-浏览器（高开销，按需用）"><a href="#第三级：Headless-浏览器（高开销，按需用）" class="headerlink" title="第三级：Headless 浏览器（高开销，按需用）"></a>第三级：Headless 浏览器（高开销，按需用）</h2><h3 id="适用场景-2"><a href="#适用场景-2" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>必须<strong>点击真实 DOM 节点</strong>（如下载按钮）才会触发 XHR 请求返回链接</li>
-<li>网站用了 React&#x2F;Vue 渲染，纯 HTML 看不到内容</li>
-</ul>
-<h3 id="技术栈-1"><a href="#技术栈-1" class="headerlink" title="技术栈"></a>技术栈</h3><p>Playwright（推荐）或 Puppeteer。</p>
-<h3 id="实战代码-2"><a href="#实战代码-2" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> playwright.sync_api <span class="keyword">import</span> sync_playwright</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level3</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别3：Headless 浏览器模拟点击&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">with</span> sync_playwright() <span class="keyword">as</span> p:</span><br><span class="line">        browser = p.chromium.launch(headless=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            page = browser.new_page()</span><br><span class="line">            page.goto(url, timeout=<span class="number">30000</span>)</span><br><span class="line">            page.wait_for_load_state(<span class="string">&#x27;networkidle&#x27;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 模拟点击下载按钮</span></span><br><span class="line">            page.click(<span class="string">&#x27;a.download-btn&#x27;</span>, timeout=<span class="number">5000</span>)</span><br><span class="line">            page.wait_for_timeout(<span class="number">2000</span>)  <span class="comment"># 等 XHR 回来</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 提取渲染后的 HTML</span></span><br><span class="line">            html = page.content()</span><br><span class="line">            magnets = MAGNET_RE.findall(html)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            browser.close()  <span class="comment"># 🔥 关键：必须 close，否则内存泄露</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
+<h3 id="解法三：换-user-access-token（终极方案）"><a href="#解法三：换-user-access-token（终极方案）" class="headerlink" title="解法三：换 user_access_token（终极方案）"></a>解法三：换 user_access_token（终极方案）</h3><p>如果一定要批量删除，走 OAuth 拿用户身份 token。但这只适合用户产品（用户授权后代表自己操作），不适合纯后台自动化。</p>
+<h2 id="其他容易踩的坑"><a href="#其他容易踩的坑" class="headerlink" title="其他容易踩的坑"></a>其他容易踩的坑</h2><h3 id="revision-id-每次都在变"><a href="#revision-id-每次都在变" class="headerlink" title="revision_id 每次都在变"></a>revision_id 每次都在变</h3><p>飞书文档每改一次，<code>revision_id</code> 就变。用老的删直接报”revision 不匹配”。</p>
+<p><strong>铁律</strong>：每次操作前先 GET 一次拿最新 revision。</p>
+<h3 id="索引动态变化"><a href="#索引动态变化" class="headerlink" title="索引动态变化"></a>索引动态变化</h3><p>你删第 5 个 block 后，原本索引 6 的变成索引 5。所以<strong>逐个删除必须从后往前</strong>——这个要是搞反了，删到一半索引全乱。</p>
+<h3 id="文档有占位-block"><a href="#文档有占位-block" class="headerlink" title="文档有占位 block"></a>文档有占位 block</h3><p>新建飞书文档至少有一个占位 block。删除时<strong>别把整个文档删空</strong>，否则后续插入找不到 parent。</p>
+<h3 id="Wiki-文档-≠-Docx-文档"><a href="#Wiki-文档-≠-Docx-文档" class="headerlink" title="Wiki 文档 ≠ Docx 文档"></a>Wiki 文档 ≠ Docx 文档</h3><p>操作的如果是 Wiki 节点（<code>/wiki/...</code>），API 路径前缀是 <code>/wiki/v2</code>，不是 <code>/docx/v1</code>。这是两个不同的 API 体系，权限模型也不同。</p>
+<h2 id="最终可用代码（生产环境验证过）"><a href="#最终可用代码（生产环境验证过）" class="headerlink" title="最终可用代码（生产环境验证过）"></a>最终可用代码（生产环境验证过）</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">FEISHU_BASE = <span class="string">&quot;https://open.feishu.cn/open-apis/docx/v1&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">clear_and_write_doc</span>(<span class="params">doc_token, parent_id, tenant_token, new_blocks</span>):</span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;tenant_token&#125;</span>&quot;</span>,</span><br><span class="line">        <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 获取文档信息</span></span><br><span class="line">    doc_resp = requests.get(</span><br><span class="line">        <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>, headers=headers</span><br><span class="line">    ).json()</span><br><span class="line">    rev = doc_resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line">    block_count = <span class="built_in">len</span>(doc_resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;blocks&quot;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从后往前逐个删（保留索引 0 占位）</span></span><br><span class="line">    <span class="keyword">if</span> block_count &gt; <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(block_count - <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>):</span><br><span class="line">            rev = requests.get(</span><br><span class="line">                <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>, headers=headers</span><br><span class="line">            ).json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line">            del_resp = requests.delete(</span><br><span class="line">                <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span></span><br><span class="line">                <span class="string">f&quot;/blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">                params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">                json=&#123;<span class="string">&quot;start_index&quot;</span>: i, <span class="string">&quot;end_index&quot;</span>: i + <span class="number">1</span>&#125;,</span><br><span class="line">                headers=headers</span><br><span class="line">            ).json()</span><br><span class="line">            <span class="keyword">if</span> del_resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot;删除第 <span class="subst">&#123;i&#125;</span> 个 block 失败: <span class="subst">&#123;del_resp&#125;</span>&quot;</span>)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 批量创建新内容</span></span><br><span class="line">    <span class="keyword">return</span> requests.post(</span><br><span class="line">        <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>/blocks/<span class="subst">&#123;parent_id&#125;</span>/children&quot;</span>,</span><br><span class="line">        headers=headers,</span><br><span class="line">        json=&#123;<span class="string">&quot;children&quot;</span>: new_blocks&#125;</span><br><span class="line">    ).json()</span><br></pre></td></tr></table></figure>
 
-<h3 id="护栏铁律"><a href="#护栏铁律" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p><strong>严禁并发！</strong> 一个浏览器实例吃 500MB+ 内存，开 5 个并发 VPS 直接 OOM。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ❌ 错误写法</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    tasks = [scrape(url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">    <span class="keyword">await</span> asyncio.gather(*tasks)  <span class="comment"># 并发 5 个 Playwright 直接 OOM</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 正确写法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    <span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">        result = scrape_level3(url)</span><br><span class="line">        <span class="comment"># 串行执行，每个跑完立刻销毁</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第四级：DrissionPage-终极破盾（核武器）"><a href="#第四级：DrissionPage-终极破盾（核武器）" class="headerlink" title="第四级：DrissionPage 终极破盾（核武器）"></a>第四级：DrissionPage 终极破盾（核武器）</h2><h3 id="适用场景-3"><a href="#适用场景-3" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>Cloudflare “Just a moment” 5 秒盾</li>
-<li>521 强力 Anti-Bot 拦截</li>
-<li>eztv.ag、therarbg.com 等重度 CF 站</li>
-</ul>
-<h3 id="技术栈-2"><a href="#技术栈-2" class="headerlink" title="技术栈"></a>技术栈</h3><p>DrissionPage（基于 Chromium，能自动处理 CF 挑战）。</p>
-<h3 id="实战代码-3"><a href="#实战代码-3" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> DrissionPage <span class="keyword">import</span> ChromiumPage, ChromiumOptions</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level4</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别4：DrissionPage 破 CF 盾&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    options = ChromiumOptions()</span><br><span class="line">    options.headless(<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    page = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        page = ChromiumPage(options)</span><br><span class="line">        page.get(url, retry=<span class="number">3</span>, timeout=<span class="number">30</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># CF 盾通常需要 5-8 秒等待</span></span><br><span class="line">        page.wait.load_start()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 等待页面正常加载（CF 挑战完成后页面会有变化）</span></span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">30</span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;just-a-moment&#x27;</span> <span class="keyword">not</span> <span class="keyword">in</span> page.html.lower():</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            page.wait(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">        magnets = MAGNET_RE.findall(page.html)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">if</span> page:</span><br><span class="line">            page.quit()  <span class="comment"># 🔥 关键：销毁 Chromium 内核进程</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
-
-<h3 id="护栏铁律-1"><a href="#护栏铁律-1" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p>DrissionPage 启动的 Chromium 比 Playwright 更重，<strong>必须在 finally 中强制 quit</strong>，否则后台残留进程吃满内存。</p>
-<hr>
-<h2 id="实战决策树"><a href="#实战决策树" class="headerlink" title="实战决策树"></a>实战决策树</h2><p>面对一个新站，按这个顺序试：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">新站 → 用级别1试</span><br><span class="line">  ↓ 成功？搞定</span><br><span class="line">  ↓ 失败</span><br><span class="line">  → 用级别2试</span><br><span class="line">    ↓ 成功？搞定</span><br><span class="line">    ↓ 失败</span><br><span class="line">    → 用级别3试</span><br><span class="line">      ↓ 成功？搞定</span><br><span class="line">      ↓ 失败</span><br><span class="line">      → 用级别4（最后手段）</span><br><span class="line">        ↓ 失败？放弃，换别的站</span><br></pre></td></tr></table></figure>
-
-<p><strong>关键</strong>：每一级都用 <code>try/except</code>，失败了自动降级下一级；不要一上来就 Headless 浏览器，杀鸡用牛刀。</p>
-<hr>
-<h2 id="资源保护红线"><a href="#资源保护红线" class="headerlink" title="资源保护红线"></a>资源保护红线</h2><p>不管用哪一级，<strong>一定要遵守</strong>：</p>
-<ol>
-<li><strong>严禁并发</strong>：Headless 浏览器一启动就吃 500MB+，并发 3 个就可能 OOM</li>
-<li><strong>强制资源释放</strong>：<code>try...finally</code> 块中执行 <code>browser.close()</code> 或 <code>page.quit()</code></li>
-<li><strong>超时必须设</strong>：每个 HTTP 请求必须 <code>timeout=15</code>，否则卡死会拖垮整个流程</li>
-<li><strong>频率限制</strong>：两次请求之间加 <code>time.sleep(1-3)</code>，避免被目标站拉黑</li>
-<li><strong>优先静态</strong>：能静态正则搞定的绝不用浏览器</li>
-</ol>
-<hr>
-<h2 id="站梯队清单（实测）"><a href="#站梯队清单（实测）" class="headerlink" title="站梯队清单（实测）"></a>站梯队清单（实测）</h2><h3 id="🏆-梯队一：影视动漫资源站"><a href="#🏆-梯队一：影视动漫资源站" class="headerlink" title="🏆 梯队一：影视动漫资源站"></a>🏆 梯队一：影视动漫资源站</h3><table>
-<thead>
-<tr>
-<th>站点</th>
-<th>难度</th>
-<th>推荐级别</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>dygod.net</code></td>
-<td>⭐ 极其简单</td>
-<td>级别 1</td>
-</tr>
-<tr>
-<td><code>seedhub.cc</code></td>
-<td>⭐⭐ 需要策略</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>bttwoo.com</code></td>
-<td>⭐⭐ 需要策略</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>btbtla.com</code></td>
-<td>❌ 强 CF</td>
-<td>级别 4</td>
-</tr>
-</tbody></table>
-<h3 id="🥈-梯队二：磁力-Telegram-搜索引擎"><a href="#🥈-梯队二：磁力-Telegram-搜索引擎" class="headerlink" title="🥈 梯队二：磁力 Telegram 搜索引擎"></a>🥈 梯队二：磁力 Telegram 搜索引擎</h3><table>
-<thead>
-<tr>
-<th>站点</th>
-<th>难度</th>
-<th>推荐级别</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>thepiratebay.org</code></td>
-<td>⭐⭐</td>
-<td>级别 2-3</td>
-</tr>
-<tr>
-<td><code>ciliku.net</code></td>
-<td>⭐⭐</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>eztv.ag</code></td>
-<td>❌ 极强 Anti-Bot</td>
-<td>级别 4</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h2><p><strong>爬虫的精髓不是”用最牛的技术”，而是”用最低的成本搞定目标”</strong>。</p>
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：</p>
 <ul>
-<li>80% 的老站用静态正则就够</li>
-<li>真碰到 JS 渲染再上 Headless</li>
-<li>CF 盾最后才动用 DrissionPage</li>
+<li>用飞书做自动化日报&#x2F;周报&#x2F;内容推送的</li>
+<li>需要程序化编辑飞书文档的开发者</li>
 </ul>
-<p>按这个分级思路，<strong>用最少的资源，跑最多的网站</strong>。</p>
-<p>如果你也在做爬虫，评论区聊聊你踩过的反爬坑～</p>
+<p><strong>不适合</strong>：</p>
+<ul>
+<li>只需要手动编辑飞书文档的——别折腾 API</li>
+<li>需要高性能批量编辑的——逐块删除的 N 次请求模式不适合大批量场景</li>
+</ul>
+<blockquote>
+<p>飞书 Docx API 的限制比想象的多，文档没明写，官方论坛也很少人讨论。但只要掌握”逐个删除 + 批量创建 + 从后往前”三板斧，自动化内容推送完全能跑通。</p>
+</blockquote>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你做过飞书文档自动化吗？评论区聊聊踩过的坑。</p>
 
     </div>
 
@@ -509,23 +401,23 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E7%88%AC%E8%99%AB/" rel="tag"># 爬虫</a>
-              <a href="/tags/%E7%A3%81%E5%8A%9B/" rel="tag"># 磁力</a>
-              <a href="/tags/Python/" rel="tag"># Python</a>
-              <a href="/tags/%E5%8F%8D%E7%88%AC/" rel="tag"># 反爬</a>
+              <a href="/tags/%E9%A3%9E%E4%B9%A6/" rel="tag"># 飞书</a>
+              <a href="/tags/Docx-API/" rel="tag"># Docx API</a>
+              <a href="/tags/%E8%B8%A9%E5%9D%91/" rel="tag"># 踩坑</a>
+              <a href="/tags/%E5%BC%80%E5%8F%91/" rel="tag"># 开发</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2026/06/20/feishu-bot-connectivity-fix/" rel="prev" title="飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）">
-                  <i class="fa fa-angle-left"></i> 飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）
+                <a href="/2026/07/27/mineru-pdf-parse-mcp/" rel="prev" title="GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF">
+                  <i class="fa fa-angle-left"></i> GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/06/20/feishu-wiki-automation/" rel="next" title="飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑">
-                  飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑 <i class="fa fa-angle-right"></i>
+                <a href="/2026/07/27/feishu-bot-connectivity-fix/" rel="next" title="飞书机器人哑了？90%的人不知道查这个地方">
+                  飞书机器人哑了？90%的人不知道查这个地方 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
@@ -557,13 +449,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">72k</span>
+    <span title="站点总字数">65k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:05</span>
+    <span title="站点阅读时长">59 分钟</span>
   </span>
 </div>
 <div class="busuanzi-count">

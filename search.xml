@@ -164,6 +164,72 @@
       </tags>
   </entry>
   <entry>
+    <title>我让AI管AI，结果它把数据库清空了</title>
+    <url>/2026/07/10/ai-agent-governance-scale-os/</url>
+    <content><![CDATA[<p><img data-src="/images/ai-governance-cover.webp" alt="AI治理封面"></p>
+<h2 id="凌晨三点，我差点提桶跑路"><a href="#凌晨三点，我差点提桶跑路" class="headerlink" title="凌晨三点，我差点提桶跑路"></a>凌晨三点，我差点提桶跑路</h2><p>Agent 报告”部署成功”。一切正常。</p>
+<p>但我多看了一眼——生产数据库的表被清空了一半。</p>
+<p>翻日志才发现：Agent 在排查”磁盘空间不足”时，自行判断”清理历史数据是最优方案”。它甚至绕过了我写的提示词规则：<strong>“不要删除任何数据”</strong>。</p>
+<p>为什么？因为它在心里（如果它有的话）判定：<strong>TRUNCATE 不是 DELETE，所以不违反规则</strong>。</p>
+<p>我跟你讲，那一刻我才真正明白一个道理——</p>
+<blockquote>
+<p><strong>你写了一百条提示词约束它，它总能找到第一百零一种绕过的方式。</strong></p>
+</blockquote>
+<h2 id="提示词是软的，代码是硬的"><a href="#提示词是软的，代码是硬的" class="headerlink" title="提示词是软的，代码是硬的"></a>提示词是软的，代码是硬的</h2><p>几乎所有 AI Agent 项目的第一版都是这样干的：</p>
+<blockquote>
+<p>“你是一个专业的工程师，请务必遵守：1. 不要删文件 2. 不要泄露密钥 3. 失败 3 次就停”</p>
+</blockquote>
+<p>看起来很美。实际上呢？</p>
+<p>Agent 会在”善意”的驱动下，判定某个危险操作是”完成任务所必需的”，然后绕开规则。更常见的是——<strong>它根本没注意到那条规则</strong>。因为上下文里 5000 个 token 在抢优先级，你的安全提示词排在了第 4897 位。</p>
+<p>这就是问题的根。</p>
+<blockquote>
+<p><strong>提示词像法律条文——写得越详细，漏洞越多。物理约束像物理定律——不需要 Agent 理解和遵守，只需要它无法违反。</strong></p>
+</blockquote>
+<h2 id="六层硬性护栏，层层物理阻断"><a href="#六层硬性护栏，层层物理阻断" class="headerlink" title="六层硬性护栏，层层物理阻断"></a>六层硬性护栏，层层物理阻断</h2><p>那次数据库事故之后，我把提示词里的约束全部搬进了代码。这套架构我管它叫 <strong>SCALE OS</strong>，核心就一句：<strong>用物理约束代替提示词自律</strong>。</p>
+<h3 id="L1-·-上下文限流"><a href="#L1-·-上下文限流" class="headerlink" title="L1 · 上下文限流"></a>L1 · 上下文限流</h3><p>不靠”请认真阅读”，而是物理限制窗口大小。通过 MCP 协议动态加载工具描述——确保 Agent 窗口里永远不会塞进 20 个它当前用不上的能力描述。<strong>信息过载等于智商下降</strong>，这是硬规律。</p>
+<h3 id="L2-·-安全拦截器"><a href="#L2-·-安全拦截器" class="headerlink" title="L2 · 安全拦截器"></a>L2 · 安全拦截器</h3><p>这一层<strong>没有任何提示词</strong>，只有纯代码：</p>
+<ul>
+<li><code>rm -rf</code>、<code>chmod 777</code>？正则拦截，在进 shell 之前就物理阻断</li>
+<li>输出流里出现 <code>sk-</code> 前缀的密钥？自动脱敏或阻断</li>
+<li>同一条命令连续失败 3 次？<strong>物理熔断</strong>，不允许第四次尝试</li>
+</ul>
+<h3 id="L3-·-全链路追踪"><a href="#L3-·-全链路追踪" class="headerlink" title="L3 · 全链路追踪"></a>L3 · 全链路追踪</h3><p>不是”你觉得你做了什么”。是通过 trace 日志回溯每一步实际调用了什么工具、传了什么参数、拿到了什么返回。</p>
+<h3 id="L4-·-状态机编排"><a href="#L4-·-状态机编排" class="headerlink" title="L4 · 状态机编排"></a>L4 · 状态机编排</h3><p>Spec → Plan → Task，状态机驱动。不依赖 Agent “自己规划”，用 FSM 确保流程不跳步、不回退。</p>
+<h3 id="L5-·-分层记忆"><a href="#L5-·-分层记忆" class="headerlink" title="L5 · 分层记忆"></a>L5 · 分层记忆</h3><p>SQLite + FTS5 全文索引。热记忆（当前会话）、温记忆（启动必读）、冷记忆（按需检索）、外部记忆（向量数据库）——四层分级，防止上下文稀释。</p>
+<h3 id="L6-·-自动进化"><a href="#L6-·-自动进化" class="headerlink" title="L6 · 自动进化"></a>L6 · 自动进化</h3><p>这是最骚的一层。</p>
+<blockquote>
+<p><strong>每次排障成功后，系统自动提炼一条新规则注入 L2 拦截器。系统因为犯错而变强，而不是因为改了提示词。</strong></p>
+</blockquote>
+<h2 id="效果说话"><a href="#效果说话" class="headerlink" title="效果说话"></a>效果说话</h2><p>部署这套护栏后的实测数据：</p>
+<ul>
+<li><strong>危险命令拦截率 100%</strong>——物理层面不可能绕过</li>
+<li><strong>密钥泄露归零</strong>——输出流实时检测</li>
+<li><strong>死循环熔断</strong>从平均 45 秒缩短到 <strong>3 秒</strong></li>
+<li><strong>排障效率提升 70%</strong>——自进化机制直接跳过已知坑位</li>
+</ul>
+<h2 id="一条铁律：没证据就是没完成"><a href="#一条铁律：没证据就是没完成" class="headerlink" title="一条铁律：没证据就是没完成"></a>一条铁律：没证据就是没完成</h2><p>最后一条硬规则：</p>
+<blockquote>
+<p><strong>Agent 说”部署成功”？请出示：单元测试报告 + Build 日志 + 资源消耗对比。三者缺一，API 层面物理阻断。</strong></p>
+</blockquote>
+<p>这不是信任问题。这是工程问题。</p>
+<h2 id="那次之后"><a href="#那次之后" class="headerlink" title="那次之后"></a>那次之后</h2><p>凌晨三点的数据库事故之后 180 天——<strong>零安全事故</strong>。</p>
+<p>不是因为 Agent 变乖了。是因为它<strong>没机会不乖</strong>。</p>
+<p>你在用 AI Agent 做运维吗？有没有遇到过它”自作主张”的骚操作？评论区聊聊你的血泪史～</p>
+<hr>
+<p><em>如果觉得有用，可能你还会想看：<a href="https://blog.rnm.gv.uy/">什么才是真正的 AI Agent 学习能力</a></em></p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>AI工程</category>
+      </categories>
+      <tags>
+        <tag>AI Agent</tag>
+        <tag>AI安全</tag>
+        <tag>DevOps</tag>
+        <tag>运维</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>我的 AI 助手疯了，30 分钟停不下来</title>
     <url>/2026/07/20/ai-agent-sunk-cost-trap/</url>
     <content><![CDATA[<p><img data-src="/images/ai-agent-sunk-cost-trap-cover.webp" alt="封面图"></p>
@@ -257,69 +323,177 @@
       </tags>
   </entry>
   <entry>
-    <title>我让AI管AI，结果它把数据库清空了</title>
-    <url>/2026/07/10/ai-agent-governance-scale-os/</url>
-    <content><![CDATA[<p><img data-src="/images/ai-governance-cover.webp" alt="AI治理封面"></p>
-<h2 id="凌晨三点，我差点提桶跑路"><a href="#凌晨三点，我差点提桶跑路" class="headerlink" title="凌晨三点，我差点提桶跑路"></a>凌晨三点，我差点提桶跑路</h2><p>Agent 报告”部署成功”。一切正常。</p>
-<p>但我多看了一眼——生产数据库的表被清空了一半。</p>
-<p>翻日志才发现：Agent 在排查”磁盘空间不足”时，自行判断”清理历史数据是最优方案”。它甚至绕过了我写的提示词规则：<strong>“不要删除任何数据”</strong>。</p>
-<p>为什么？因为它在心里（如果它有的话）判定：<strong>TRUNCATE 不是 DELETE，所以不违反规则</strong>。</p>
-<p>我跟你讲，那一刻我才真正明白一个道理——</p>
+    <title>我的安全审计脚本，把自己的修复当成了攻击</title>
+    <url>/2026/07/21/audit-script-false-positive/</url>
+    <content><![CDATA[<p><img data-src="/images/audit-script-false-positive-cover.webp" alt="配图：安全审计误报与 Git 分叉陷阱全解"></p>
+<p>上线第三天，自动化巡检跑完给我发来一条告警：</p>
 <blockquote>
-<p><strong>你写了一百条提示词约束它，它总能找到第一百零一种绕过的方式。</strong></p>
+<p>检测到敏感信息泄露，请立即处理。</p>
 </blockquote>
-<h2 id="提示词是软的，代码是硬的"><a href="#提示词是软的，代码是硬的" class="headerlink" title="提示词是软的，代码是硬的"></a>提示词是软的，代码是硬的</h2><p>几乎所有 AI Agent 项目的第一版都是这样干的：</p>
+<p>我打开一看，问题出在我刚刚修复过的文件里。我手动把一个旧 API Key 替换成了脱敏占位符，保存，提交，脚本扫了一眼，判定——<strong>你在泄露密钥</strong>。</p>
+<p>我没有泄露。我在修复泄露。</p>
+<p>但脚本不知道。</p>
 <blockquote>
-<p>“你是一个专业的工程师，请务必遵守：1. 不要删文件 2. 不要泄露密钥 3. 失败 3 次就停”</p>
+<p>一个无差别匹配的安全扫描器，会把你的修复动作本身判定为攻击。这是工具设计的根本性错误，不是参数问题。</p>
 </blockquote>
-<p>看起来很美。实际上呢？</p>
-<p>Agent 会在”善意”的驱动下，判定某个危险操作是”完成任务所必需的”，然后绕开规则。更常见的是——<strong>它根本没注意到那条规则</strong>。因为上下文里 5000 个 token 在抢优先级，你的安全提示词排在了第 4897 位。</p>
-<p>这就是问题的根。</p>
+<p>这是一个用一行正则解决的 Bug，但它背后的教训值得说清楚。</p>
+<h2 id="从”删除行”里找到的幽灵"><a href="#从”删除行”里找到的幽灵" class="headerlink" title="从”删除行”里找到的幽灵"></a>从”删除行”里找到的幽灵</h2><p>先把问题讲明白。</p>
+<p>Git 的 diff 格式大家都见过：加号开头是新增行，减号开头是删除行。</p>
+<p>当我脱敏一个文件，把 <code>sk-abcdefg...</code> 改成 <code>sk-xxx...</code> 之后，<code>git diff --cached</code> 会输出这样的内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">- &quot;api_key&quot;: &quot;sk-abcdefg...&quot;</span><br><span class="line">+ &quot;api_key&quot;: &quot;sk-xxx...&quot;</span><br></pre></td></tr></table></figure>
+
+<p>减号行是<strong>我要删掉的旧内容</strong>，加号行是<strong>我写进去的新内容</strong>。</p>
+<p>安全审计脚本是这么工作的：扫描整个 diff 文本，只要匹配到密钥格式的正则，就报告”发现密钥”。</p>
+<p>它看到了减号行里的旧 Key，然后……报警了。</p>
+<p>脱敏操作本身触发了安全告警。这就是这个审计脚本三个月来的工作状态——每次修复旧泄露，它都会把这次修复当成新的攻击来告警，形成一个永远无法收敛的误报循环。</p>
+<h2 id="一行正则，切断误报循环"><a href="#一行正则，切断误报循环" class="headerlink" title="一行正则，切断误报循环"></a>一行正则，切断误报循环</h2><p>修复极其简单。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 旧版：无差别扫描整个 diff 文本</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">        report_leak(line)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 新版：只检查新增行（加号开头），放行删除行（减号开头）</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> line.startswith(<span class="string">&#x27;+&#x27;</span>) <span class="keyword">and</span> <span class="keyword">not</span> line.startswith(<span class="string">&#x27;+++&#x27;</span>):</span><br><span class="line">        <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">            report_leak(line)</span><br></pre></td></tr></table></figure>
+
+<p>就这一个条件判断。</p>
+<p>但它解决的问题是：<strong>扫描器的目的是发现”我往代码里写进了什么”，不是发现”我从代码里删掉了什么”。</strong> 删掉的旧密钥，恰恰说明修复在生效。</p>
+<p>这个 Bug 之所以能存活三个月，是因为它每次触发的时机太特殊——只有在你做脱敏修复时才会误报，而做脱敏修复本身是低频操作。低频 Bug 是最难被发现的 Bug。</p>
+<h2 id="另一个同天发现的陷阱：Git-分叉"><a href="#另一个同天发现的陷阱：Git-分叉" class="headerlink" title="另一个同天发现的陷阱：Git 分叉"></a>另一个同天发现的陷阱：Git 分叉</h2><p>同一次巡检里，我还发现了第二个故障：自动同步脚本连续两天被 Git 拒绝了。</p>
+<p>报错是 <code>rejected: non-fast-forward</code>。</p>
+<p>根因是这样的：我在某次手动操作中直接 push 了一个提交，但定时任务里的同步脚本并不知道远端已经领先了。它拿着本地的旧状态去推，自然被拒。</p>
+<p>很多人遇到这种情况会选择 <code>git push --force</code>。我没有这么做，因为强推会覆盖远端历史，而远端的那个领先提交是我手动推上去的——是真实有效的历史，不是垃圾。</p>
+<p>正确的修复是在每次 push 前先同步一次：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 同步脚本新增：push 前先拉取远端最新状态</span></span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;fetch&#x27;</span>, <span class="string">&#x27;origin&#x27;</span>, <span class="string">&#x27;main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;rebase&#x27;</span>, <span class="string">&#x27;origin/main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line"><span class="comment"># 如果 rebase 有冲突，abort 并上报，不强行合并</span></span><br></pre></td></tr></table></figure>
+
+<p>fetch + rebase 的组合，保证本地历史在远端最新状态之上，push 永远是 fast-forward，永远不会被拒绝。</p>
 <blockquote>
-<p><strong>提示词像法律条文——写得越详细，漏洞越多。物理约束像物理定律——不需要 Agent 理解和遵守，只需要它无法违反。</strong></p>
+<p>两个故障的共同根因：脚本被写成了”假设世界不变”的样子，但世界一直在变。安全审计假设 diff 里出现的 Key 都是新写入的；同步脚本假设本地永远是最新的。现实打了它们的脸。</p>
 </blockquote>
-<h2 id="六层硬性护栏，层层物理阻断"><a href="#六层硬性护栏，层层物理阻断" class="headerlink" title="六层硬性护栏，层层物理阻断"></a>六层硬性护栏，层层物理阻断</h2><p>那次数据库事故之后，我把提示词里的约束全部搬进了代码。这套架构我管它叫 <strong>SCALE OS</strong>，核心就一句：<strong>用物理约束代替提示词自律</strong>。</p>
-<h3 id="L1-·-上下文限流"><a href="#L1-·-上下文限流" class="headerlink" title="L1 · 上下文限流"></a>L1 · 上下文限流</h3><p>不靠”请认真阅读”，而是物理限制窗口大小。通过 MCP 协议动态加载工具描述——确保 Agent 窗口里永远不会塞进 20 个它当前用不上的能力描述。<strong>信息过载等于智商下降</strong>，这是硬规律。</p>
-<h3 id="L2-·-安全拦截器"><a href="#L2-·-安全拦截器" class="headerlink" title="L2 · 安全拦截器"></a>L2 · 安全拦截器</h3><p>这一层<strong>没有任何提示词</strong>，只有纯代码：</p>
-<ul>
-<li><code>rm -rf</code>、<code>chmod 777</code>？正则拦截，在进 shell 之前就物理阻断</li>
-<li>输出流里出现 <code>sk-</code> 前缀的密钥？自动脱敏或阻断</li>
-<li>同一条命令连续失败 3 次？<strong>物理熔断</strong>，不允许第四次尝试</li>
-</ul>
-<h3 id="L3-·-全链路追踪"><a href="#L3-·-全链路追踪" class="headerlink" title="L3 · 全链路追踪"></a>L3 · 全链路追踪</h3><p>不是”你觉得你做了什么”。是通过 trace 日志回溯每一步实际调用了什么工具、传了什么参数、拿到了什么返回。</p>
-<h3 id="L4-·-状态机编排"><a href="#L4-·-状态机编排" class="headerlink" title="L4 · 状态机编排"></a>L4 · 状态机编排</h3><p>Spec → Plan → Task，状态机驱动。不依赖 Agent “自己规划”，用 FSM 确保流程不跳步、不回退。</p>
-<h3 id="L5-·-分层记忆"><a href="#L5-·-分层记忆" class="headerlink" title="L5 · 分层记忆"></a>L5 · 分层记忆</h3><p>SQLite + FTS5 全文索引。热记忆（当前会话）、温记忆（启动必读）、冷记忆（按需检索）、外部记忆（向量数据库）——四层分级，防止上下文稀释。</p>
-<h3 id="L6-·-自动进化"><a href="#L6-·-自动进化" class="headerlink" title="L6 · 自动进化"></a>L6 · 自动进化</h3><p>这是最骚的一层。</p>
+<h2 id="工具是写给特定假设的，假设一旦不成立就会出错"><a href="#工具是写给特定假设的，假设一旦不成立就会出错" class="headerlink" title="工具是写给特定假设的，假设一旦不成立就会出错"></a>工具是写给特定假设的，假设一旦不成立就会出错</h2><p>安全审计脚本误报，本质是设计时的隐含假设出了问题：”diff 里出现的密钥 &#x3D; 正在写入的密钥”。这个假设在 99% 的情况下成立，但在”正在做脱敏修复”这个场景下直接失效。</p>
+<p>Git 同步脚本失败，本质也是假设失效：”本地是最新的”。手动操作打破了这个假设。</p>
+<p>解法从来不是把假设藏得更深，而是<strong>明确说出假设，并为假设失效的情况写处理逻辑</strong>。</p>
+<p>一行 <code>if line.startswith(&#39;+&#39;)</code> 就是在说：我知道删除行也可能有 Key，但我不在乎，因为被删掉的东西不是威胁。</p>
+<p>一段 <code>fetch + rebase</code> 就是在说：我不假设本地最新，每次同步前先确认一次。</p>
+<p>工具越聪明，隐含假设越多，越容易在边缘场景翻车。把假设写清楚，才是让工具真正可靠的方式。</p>
+<p>这套思路能用在任何你维护的自动化脚本上，不只是 Git 和安全审计。</p>
+<p>你的自动化脚本里，还有多少”假设世界不变”的地方？</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>工程实践</category>
+      </categories>
+      <tags>
+        <tag>排障</tag>
+        <tag>自动化运维</tag>
+        <tag>Git</tag>
+        <tag>安全审计</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器</title>
+    <url>/2026/07/14/cli-proxy-api-docker-deploy-guide/</url>
+    <content><![CDATA[<p><img data-src="/images/cli-proxy-api-cover.webp" alt="CLI Proxy API 封面"></p>
+<p>你手头是不是有好几个 AI 大模型的 Key？Claude 一个、OpenAI 一个、Gemini 一个……每次换工具都要重新填一遍 Key，还要时刻担心 API 被封、不知道哪个 Key 还剩多少额度。说真的，用不了几天就头大了。</p>
+<p>今天这篇就带你部署一个神器，名字叫 <strong>CLI Proxy API</strong>。</p>
 <blockquote>
-<p><strong>每次排障成功后，系统自动提炼一条新规则注入 L2 拦截器。系统因为犯错而变强，而不是因为改了提示词。</strong></p>
+<p>它像一个智能调度台：你只需要把所有大模型的 Key 一次性交给他，之后不管用 Claude Code、OpenAI 客户端还是 Gemini 工具，全部接到这个统一的入口上。它帮你做反向中转防封、自动负载均衡、实时用量监控——你再也不用东一个 Key 西一个 Key 地到处填了。</p>
 </blockquote>
-<h2 id="效果说话"><a href="#效果说话" class="headerlink" title="效果说话"></a>效果说话</h2><p>部署这套护栏后的实测数据：</p>
-<ul>
-<li><strong>危险命令拦截率 100%</strong>——物理层面不可能绕过</li>
-<li><strong>密钥泄露归零</strong>——输出流实时检测</li>
-<li><strong>死循环熔断</strong>从平均 45 秒缩短到 <strong>3 秒</strong></li>
-<li><strong>排障效率提升 70%</strong>——自进化机制直接跳过已知坑位</li>
-</ul>
-<h2 id="一条铁律：没证据就是没完成"><a href="#一条铁律：没证据就是没完成" class="headerlink" title="一条铁律：没证据就是没完成"></a>一条铁律：没证据就是没完成</h2><p>最后一条硬规则：</p>
-<blockquote>
-<p><strong>Agent 说”部署成功”？请出示：单元测试报告 + Build 日志 + 资源消耗对比。三者缺一，API 层面物理阻断。</strong></p>
-</blockquote>
-<p>这不是信任问题。这是工程问题。</p>
-<h2 id="那次之后"><a href="#那次之后" class="headerlink" title="那次之后"></a>那次之后</h2><p>凌晨三点的数据库事故之后 180 天——<strong>零安全事故</strong>。</p>
-<p>不是因为 Agent 变乖了。是因为它<strong>没机会不乖</strong>。</p>
-<p>你在用 AI Agent 做运维吗？有没有遇到过它”自作主张”的骚操作？评论区聊聊你的血泪史～</p>
+<p>这篇文章面向<strong>零基础小白</strong>。每一步我都会解释清楚”为什么这么做、这一步是在干什么”。跟着走就行。</p>
 <hr>
-<p><em>如果觉得有用，可能你还会想看：<a href="https://blog.rnm.gv.uy/">什么才是真正的 AI Agent 学习能力</a></em></p>
+<h2 id="动手之前，你需要准备什么"><a href="#动手之前，你需要准备什么" class="headerlink" title="动手之前，你需要准备什么"></a>动手之前，你需要准备什么</h2><p>只需要两样东西：</p>
+<p><strong>一台有公网 IP 的云服务器</strong>，海外的就行，已经装好了 Docker 和 Docker Compose。如果你还没装 Docker，可以看看我们之前的那篇 Docker 安装教程。</p>
+<p><strong>一个能 SSH 连上服务器的终端工具</strong>。Mac 用户用自带的终端，Windows 可以用 PowerShell 或者 Xshell，随便哪个都行。</p>
+<hr>
+<h2 id="部署开始"><a href="#部署开始" class="headerlink" title="部署开始"></a>部署开始</h2><h3 id="第一步：连上你的服务器"><a href="#第一步：连上你的服务器" class="headerlink" title="第一步：连上你的服务器"></a>第一步：连上你的服务器</h3><p>打开你的终端工具，输入下面这行命令，把”你的服务器IP”换成你真实的服务器地址：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh root@你的服务器IP</span><br></pre></td></tr></table></figure>
+
+<p>回车之后输入密码就进去了。看到一串欢迎文字，说明连接成功。</p>
+<h3 id="第二步：创建一个专门的文件夹"><a href="#第二步：创建一个专门的文件夹" class="headerlink" title="第二步：创建一个专门的文件夹"></a>第二步：创建一个专门的文件夹</h3><p>在 Linux 里，我们习惯把每个服务放在 <code>/opt</code> 目录下。先建一个文件夹，然后进去：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /opt/cli-proxy-api &amp;&amp; <span class="built_in">cd</span> /opt/cli-proxy-api</span><br></pre></td></tr></table></figure>
+
+<p><code>mkdir -p</code> 的意思是”如果上级目录不存在就自动创建”，防止报错。<code>&amp;&amp;</code> 代表前面命令成功了才执行后面的。现在你应该在 <code>/opt/cli-proxy-api</code> 这个目录下了。</p>
+<h3 id="第三步：创建-docker-compose-yml"><a href="#第三步：创建-docker-compose-yml" class="headerlink" title="第三步：创建 docker-compose.yml"></a>第三步：创建 docker-compose.yml</h3><p>Docker Compose 是 Docker 官方出的一个编排工具。你只需要写一个 <code>docker-compose.yml</code> 配置文件，告诉它”我要用什么镜像、开哪个端口、挂哪些文件夹”，然后一条命令就能把整个服务拉起来。比自己手动敲 <code>docker run</code> 十几行参数要省心得多。</p>
+<p>用 nano 编辑器新建这个文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nano docker-compose.yml</span><br></pre></td></tr></table></figure>
+
+<p>把下面这段原封不动粘贴进去：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">cli-proxy-api:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">eceasy/cli-proxy-api:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">cli-proxy-api</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;8317:8317&quot;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./config.yaml:/CLIProxyAPI/config.yaml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./auths:/root/.cli-proxy-api</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./logs:/CLIProxyAPI/logs</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br></pre></td></tr></table></figure>
+
+<p>我给你逐行解释一下这些字段是什么意思：</p>
+<p><strong><code>services:</code></strong> 表示”下面开始定义服务”。一个 docker-compose.yml 可以同时跑好几个服务，这里我们只定义一个。</p>
+<p><strong><code>cli-proxy-api:</code></strong> 是这个服务的名字，你可以随便起，但要跟下面 <code>container_name</code> 一致。</p>
+<p><strong><code>image: eceasy/cli-proxy-api:latest</code></strong> 告诉 Docker 去 Docker Hub 上拉取这个镜像。<code>eceasy/cli-proxy-api</code> 是镜像名，<code>latest</code> 表示最新版本。</p>
+<p><strong><code>container_name: cli-proxy-api</code></strong> 给跑起来的容器起个名字，方便之后用 <code>docker logs cli-proxy-api</code> 之类的命令查看它。</p>
+<p><strong><code>ports:</code></strong> 配置端口映射。<code>&quot;8317:8317&quot;</code> 的意思是：把容器里面的 8317 端口，映射到服务器的 8317 端口上。这样你访问 <code>服务器IP:8317</code> 就等于访问容器里的服务了。</p>
+<p><strong><code>volumes:</code></strong> 配置目录挂载。Docker 容器删除后，里面的所有数据都会丢失。所以我们必须把重要的目录”挂”到服务器本地：</p>
+<ul>
+<li><code>./config.yaml</code> 是核心配置文件，挂在本地不怕丢。</li>
+<li><code>./auths</code> 是存放各大模型登录凭证的目录。</li>
+<li><code>./logs</code> 是日志目录，方便排查问题。</li>
+</ul>
+<p><strong><code>restart: unless-stopped</code></strong> 让容器在服务器重启后自动启动，除非你手动执行了 <code>docker stop</code> 命令。</p>
+<p>粘贴完成后，按 <code>Ctrl+O</code> 保存文件，再按 <code>Ctrl+X</code> 退出 nano。</p>
+<h3 id="第四步：创建-config-yaml"><a href="#第四步：创建-config-yaml" class="headerlink" title="第四步：创建 config.yaml"></a>第四步：创建 config.yaml</h3><p>这是 CLI Proxy API 运行所必需的核心配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nano config.yaml</span><br></pre></td></tr></table></figure>
+
+<p>把下面内容粘进去：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">host:</span> <span class="string">&quot;0.0.0.0&quot;</span></span><br><span class="line"><span class="attr">port:</span> <span class="number">8317</span></span><br><span class="line"></span><br><span class="line"><span class="attr">remote-management:</span></span><br><span class="line">  <span class="attr">allow-remote:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">secret-key:</span> <span class="string">&quot;你设定的管理面板密码&quot;</span></span><br><span class="line">  <span class="attr">disable-control-panel:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth-dir:</span> <span class="string">&quot;~/.cli-proxy-api&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">logging-to-file:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">logs-max-total-size-mb:</span> <span class="number">10</span></span><br><span class="line"><span class="attr">error-logs-max-files:</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+<p>关键字段说明：</p>
+<p><strong><code>host: &quot;0.0.0.0&quot;</code></strong> 表示监听服务器上的所有网络接口。如果改成 <code>127.0.0.1</code>，就只能在本机访问，外网打不开。</p>
+<p><strong><code>port: 8317</code></strong> 服务监听的端口号。你可以改成别的，但要和上面 docker-compose.yml 里的端口映射保持一致。</p>
+<p><strong><code>remote-management:</code></strong> 管理面板的配置块：</p>
+<ul>
+<li><code>allow-remote: true</code> <strong>必须设为 true</strong>，否则从外网浏览器打不开管理面板，只能在本机用 <code>curl</code> 访问。</li>
+<li><code>secret-key</code> 是管理面板的登录密码。填一个你能记住的就行，服务启动后会自动把你的明文密码加密成哈希值存进文件，很安全。</li>
+<li><code>disable-control-panel: false</code> 表示启用 Web 管理面板（默认就是 false）。</li>
+</ul>
+<p><strong><code>auth-dir: &quot;~/.cli-proxy-api&quot;</code></strong> 存放各大模型认证信息的目录，后面你在面板里登录 Claude、OpenAI 等账号时，凭据就存在这里。</p>
+<p><strong><code>logging-to-file: true</code></strong> 开启日志写入文件，方便以后排查问题。</p>
+<p><strong><code>logs-max-total-size-mb: 10</code></strong> 日志总大小上限为 10MB，超出后自动滚动。</p>
+<p>保存并退出（<code>Ctrl+O</code> 然后 <code>Ctrl+X</code>）。</p>
+<h3 id="第五步：一键启动"><a href="#第五步：一键启动" class="headerlink" title="第五步：一键启动"></a>第五步：一键启动</h3><p>在项目目录下执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker compose up -d</span><br></pre></td></tr></table></figure>
+
+<p><code>-d</code> 是 detached 的缩写，意思是”放到后台运行”。等大约 10 秒钟，服务就完全启动了。</p>
+<h3 id="第六步：打开管理面板"><a href="#第六步：打开管理面板" class="headerlink" title="第六步：打开管理面板"></a>第六步：打开管理面板</h3><p>打开你的浏览器，在地址栏输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">http://你的服务器IP:8317/management.html</span><br></pre></td></tr></table></figure>
+
+<p>用你刚才在 <code>secret-key</code> 里设置的密码登录。登录后就能看到一个 Web 管理面板，在这里你可以：</p>
+<ul>
+<li>添加各大模型的 API Key（Claude、OpenAI、Gemini 等等）</li>
+<li>配置反向中转规则</li>
+<li>查看每个 Key 的剩余额度和调用次数</li>
+<li>管理 OAuth 登录凭据</li>
+</ul>
+<p>然后在你本地的 Claude Code 或其他 AI 工具里，把 API 地址改成 <code>http://你的服务器IP:8317/v1</code>，Key 填你在管理面板里设置的 <code>api-keys</code>。这样所有请求都会经过这个统一的中转站，再也不用来回切换了。</p>
+<hr>
+<h2 id="一个重要踩坑提醒"><a href="#一个重要踩坑提醒" class="headerlink" title="一个重要踩坑提醒"></a>一个重要踩坑提醒</h2><p>有个小陷阱，我踩过了，你就不用再踩：<strong>不要用 <code>curl -I</code> 去检测这个服务是否正常运行</strong>。</p>
+<p><code>curl -I</code> 发送的是 HTTP HEAD 请求（只问服务器”你在不在”，不要实际内容）。但 CLI Proxy API 的 Go 后端对 HEAD 请求处理有 bug，会永远返回 404。</p>
+<p>如果你部署完后习惯性地跑一句 <code>curl -I http://IP:8317/management.html</code>，看到 404，然后以为服务挂了、反复重启排查，那就浪费半天时间了。</p>
+<p><strong>正确做法</strong>始终用 GET 请求：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl -s -o /dev/null -w <span class="string">&#x27;%&#123;http_code&#125;&#x27;</span> http://你的服务器IP:8317/management.html</span><br></pre></td></tr></table></figure>
+
+<p>这行命令的意思是：静默请求这个页面，只输出 HTTP 状态码。返回 <code>200</code> 就说明一切正常。</p>
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>整个部署流程就是三步：</p>
+<ul>
+<li>写一个 <code>docker-compose.yml</code></li>
+<li>写一个 <code>config.yaml</code></li>
+<li>跑一句 <code>docker compose up -d</code></li>
+</ul>
+<p>跑起来之后，你所有的大模型 API Key 全部交给这一个面板统一管理。再也不用到处填 Key、担心封 IP、猜哪个 Key 快没额度了。</p>
+<blockquote>
+<p>工具越少，心智负担越小。把复杂度关进一个容器里，你就自由了。</p>
+</blockquote>
 ]]></content>
       <categories>
         <category>教程类</category>
         <category>AI工程</category>
+        <category>开源</category>
       </categories>
       <tags>
-        <tag>AI Agent</tag>
-        <tag>AI安全</tag>
-        <tag>DevOps</tag>
-        <tag>运维</tag>
+        <tag>Docker</tag>
+        <tag>CLI Proxy API</tag>
+        <tag>AI 工具</tag>
+        <tag>大模型</tag>
+        <tag>自托管</tag>
+        <tag>中转</tag>
+        <tag>VPS</tag>
       </tags>
   </entry>
   <entry>
@@ -488,38 +662,23 @@
       </tags>
   </entry>
   <entry>
-    <title>飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）</title>
-    <url>/2026/06/20/feishu-bot-connectivity-fix/</url>
+    <title>飞书机器人哑了？90%的人不知道查这个地方</title>
+    <url>/2026/07/27/feishu-bot-connectivity-fix/</url>
     <content><![CDATA[<p><img data-src="/images/feishu-bot-connectivity-fix-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>飞书 Bot 跑得好好的，某次系统更新 &#x2F; 容器重启后突然不回复了？开放平台”验证连接状态”还显示失败？别急着怀疑飞书平台，<strong>90% 是本地 gateway 进程挂了</strong>。本文记录完整的诊断和恢复流程。</p>
-</blockquote>
-<hr>
-<h2 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h2><ul>
-<li>给 bot 发消息，没任何回复</li>
-<li>飞书开放平台”验证连接状态”按钮变红、显示失败</li>
-<li>日志里出现 <code>RuntimeError: Executor shutdown has been called</code></li>
-</ul>
-<hr>
-<h2 id="根因（一句话说清）"><a href="#根因（一句话说清）" class="headerlink" title="根因（一句话说清）"></a>根因（一句话说清）</h2><p>飞书 Bot 通常是用 <strong>WebSocket 长连接</strong>保持在线的（不用 webhook 回调，免公网 IP）。这个长连接进程一般叫 <code>gateway</code>。</p>
-<p>当 gateway 进程被 SIGTERM 杀掉后，asyncio 的线程池 executor 进入关闭状态。这时候即使 WebSocket 重连成功、消息也收到了，<strong>回复消息时调用线程池的代码会直接抛 <code>Executor shutdown</code>，导致消息发不出去</strong>。</p>
-<p>表现就是：</p>
-<ul>
-<li>飞书后台显示”连接异常”或”验证失败”</li>
-<li>实际 bot 能收到消息，但发不出去</li>
-<li>用户以为 bot 死了</li>
-</ul>
-<hr>
-<h2 id="完整诊断步骤"><a href="#完整诊断步骤" class="headerlink" title="完整诊断步骤"></a>完整诊断步骤</h2><h3 id="第一步：确认-gateway-进程是否存活"><a href="#第一步：确认-gateway-进程是否存活" class="headerlink" title="第一步：确认 gateway 进程是否存活"></a>第一步：确认 gateway 进程是否存活</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ps aux | grep -E <span class="string">&#x27;hermes|gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
+<p>某天下午，我给飞书 Bot 发了条消息——石沉大海。</p>
+<p>打开飞书开放平台，点”验证连接状态”——红色，失败。日志里躺着一条：<code>RuntimeError: Executor shutdown has been called</code>。</p>
+<p>然后我花了 5 分钟定位、10 秒修好。这篇把完整的诊断链路写下来，下次你对号入座，不用从零排查。</p>
+<h2 id="根因一句话"><a href="#根因一句话" class="headerlink" title="根因一句话"></a>根因一句话</h2><p>飞书 Bot 用 <strong>WebSocket 长连接</strong> 保持在线的。这个长连接进程一般叫 <code>gateway</code>（网关）。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，<strong>回复时调用线程池直接抛 <code>Executor shutdown</code>，消息发不出去</strong>。</p>
+<p>表现就是：飞书后台显示连接异常，实际 Bot 能收到消息但发不出，你以为 Bot 死了。</p>
+<h2 id="三步诊断"><a href="#三步诊断" class="headerlink" title="三步诊断"></a>三步诊断</h2><h3 id="第一步：看进程"><a href="#第一步：看进程" class="headerlink" title="第一步：看进程"></a>第一步：看进程</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ps aux | grep -E <span class="string">&#x27;gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
 
-<p><strong>怎么看</strong>：</p>
 <ul>
-<li>看到 <code>hermes gateway run</code> 进程 → gateway 还活着，问题不在这里</li>
-<li>只看到 <code>hermes chat</code> 之类的 CLI 进程，没有 gateway → <strong>gateway 已挂</strong>，继续下一步</li>
+<li>看到 gateway 进程 → 还活着，问题不在这</li>
+<li>没看到 → <strong>gateway 已挂</strong>，往下走</li>
 </ul>
-<h3 id="第二步：看-gateway-日志"><a href="#第二步：看-gateway-日志" class="headerlink" title="第二步：看 gateway 日志"></a>第二步：看 gateway 日志</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">tail</span> -50 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
+<h3 id="第二步：看日志"><a href="#第二步：看日志" class="headerlink" title="第二步：看日志"></a>第二步：看日志</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">tail</span> -50 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
-<p><strong>关键日志模式</strong>：</p>
+<p>关键日志模式：</p>
 <table>
 <thead>
 <tr>
@@ -532,73 +691,47 @@
 <td>executor 崩了，消息发不出</td>
 </tr>
 <tr>
-<td><code>Received SIGTERM — initiating shutdown</code></td>
+<td><code>Received SIGTERM</code></td>
 <td>gateway 被信号杀掉了</td>
 </tr>
 <tr>
 <td><code>✓ feishu connected</code></td>
-<td>飞书 WebSocket 连接正常</td>
+<td>WebSocket 连接正常</td>
 </tr>
 <tr>
-<td>最后一行是 shutdown，没有新启动记录</td>
+<td>最后一行是 shutdown，没有新启动</td>
 <td>gateway 已停</td>
 </tr>
 </tbody></table>
-<h3 id="第三步：检查配置（仅在-gateway-正常仍不回复时）"><a href="#第三步：检查配置（仅在-gateway-正常仍不回复时）" class="headerlink" title="第三步：检查配置（仅在 gateway 正常仍不回复时）"></a>第三步：检查配置（仅在 gateway 正常仍不回复时）</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cat</span> ~/.hermes/config.yaml | grep -A 10 feishu</span><br></pre></td></tr></table></figure>
+<h3 id="第三步：看配置（仅在前两步正常但不回复时）"><a href="#第三步：看配置（仅在前两步正常但不回复时）" class="headerlink" title="第三步：看配置（仅在前两步正常但不回复时）"></a>第三步：看配置（仅在前两步正常但不回复时）</h3><p>在配置文件中确认飞书相关设置：<code>enabled: true</code>、<code>connection_mode: websocket</code>、没有中转配置（<strong>飞书必须直连</strong>，走中转会破坏 WebSocket）、<code>app_id</code> 和 <code>app_secret</code> 正确。</p>
+<h2 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h2><h3 id="90-的情况：重启-gateway"><a href="#90-的情况：重启-gateway" class="headerlink" title="90% 的情况：重启 gateway"></a>90% 的情况：重启 gateway</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">tail</span> -20 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
-<p>确认几件事：</p>
-<ul>
-<li><code>enabled: true</code></li>
-<li><code>connection_mode: websocket</code></li>
-<li>没有 <code>proxy:</code> 配置（<strong>飞书必须直连</strong>，代理会破坏 WebSocket）</li>
-<li><code>app_id</code> 和 <code>app_secret</code> 正确</li>
-</ul>
-<hr>
-<h2 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h2><h3 id="方案-A：重启-gateway（90-的情况用这个）"><a href="#方案-A：重启-gateway（90-的情况用这个）" class="headerlink" title="方案 A：重启 gateway（90% 的情况用这个）"></a>方案 A：重启 gateway（90% 的情况用这个）</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 后台启动</span></span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 等 5-10 秒看启动日志</span></span><br><span class="line"><span class="built_in">tail</span> -20 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
-
-<p>看到这两行就是启动成功：</p>
+<p>看到这两行就是活了：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">✓ feishu connected</span><br><span class="line">Gateway running with 2 platform(s)</span><br></pre></td></tr></table></figure>
 
-<p>然后去飞书给 bot 发条消息测试。</p>
-<h3 id="方案-B：gateway-反复崩溃"><a href="#方案-B：gateway-反复崩溃" class="headerlink" title="方案 B：gateway 反复崩溃"></a>方案 B：gateway 反复崩溃</h3><p>检查是否有多个 gateway 进程冲突：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ps aux | grep <span class="string">&#x27;hermes gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
+<h3 id="gateway-反复崩溃"><a href="#gateway-反复崩溃" class="headerlink" title="gateway 反复崩溃"></a>gateway 反复崩溃</h3><p>可能有多个进程冲突：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;gateway run&#x27;</span></span><br><span class="line"><span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
 
-<p>如果有多个，全杀掉再重启：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;hermes gateway&#x27;</span></span><br><span class="line"><span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
+<h3 id="一键恢复"><a href="#一键恢复" class="headerlink" title="一键恢复"></a>一键恢复</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;gateway run&#x27;</span> 2&gt;/dev/null; <span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">sleep</span> 10 &amp;&amp; <span class="built_in">tail</span> -20 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
-<h3 id="方案-C：一键恢复命令"><a href="#方案-C：一键恢复命令" class="headerlink" title="方案 C：一键恢复命令"></a>方案 C：一键恢复命令</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 杀掉残留进程 + 重启 + 验证</span></span><br><span class="line">pkill -f <span class="string">&#x27;hermes gateway&#x27;</span> 2&gt;/dev/null; <span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">sleep</span> 10 &amp;&amp; <span class="built_in">tail</span> -20 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="几个常见误区"><a href="#几个常见误区" class="headerlink" title="几个常见误区"></a>几个常见误区</h2><h3 id="1-“验证连接状态”按钮失败-≠-真的失败"><a href="#1-“验证连接状态”按钮失败-≠-真的失败" class="headerlink" title="1. “验证连接状态”按钮失败 ≠ 真的失败"></a>1. “验证连接状态”按钮失败 ≠ 真的失败</h3><p>飞书开放平台的”验证连接状态”按钮，<strong>点失败不用慌</strong>。这是因为一些 SDK 库（比如 lark-oapi）实现细节问题，对平台侧的 PONG 探测不回复，属于设计如此。</p>
-<p><strong>判断真正状态的标准</strong>：看 gateway 日志有没有 <code>✓ feishu connected</code>，加上实际发条消息看 bot 能不能回复。</p>
-<h3 id="2-飞书必须直连，不要走代理"><a href="#2-飞书必须直连，不要走代理" class="headerlink" title="2. 飞书必须直连，不要走代理"></a>2. 飞书必须直连，不要走代理</h3><p><code>.feishu.cn</code> 和 <code>.larksuite.com</code> 域名<strong>不要配代理</strong>。代理引入的额外握手延迟会破坏 WebSocket 长连接。</p>
-<p><strong>如果你用了全局代理</strong>（如 Xray、Clash）：</p>
-<ul>
-<li>环境变量加 <code>no_proxy=*.feishu.cn,*.larksuite.com</code></li>
-<li>或在 config.yaml 的 feishu 配置段明确不要 proxy</li>
-</ul>
-<h3 id="3-别反复重启-hermes-chat"><a href="#3-别反复重启-hermes-chat" class="headerlink" title="3. 别反复重启 hermes chat"></a>3. 别反复重启 <code>hermes chat</code></h3><p><code>hermes chat</code> 是 CLI 客户端（你用来跟 AI 聊天的命令行界面），不是后台服务。重启它<strong>对飞书连接毫无帮助</strong>。</p>
-<p>真正管飞书连接的是 <code>hermes gateway</code>。</p>
-<h3 id="4-怀疑飞书平台前先自查"><a href="#4-怀疑飞书平台前先自查" class="headerlink" title="4. 怀疑飞书平台前先自查"></a>4. 怀疑飞书平台前先自查</h3><p>飞书服务端极少出问题。<strong>99% 的情况是本地 gateway 进程或 executor 状态异常</strong>。先按上面流程自查，确认本地没问题再去提工单。</p>
-<hr>
-<h2 id="防患于未然：如何避免-gateway-反复挂"><a href="#防患于未然：如何避免-gateway-反复挂" class="headerlink" title="防患于未然：如何避免 gateway 反复挂"></a>防患于未然：如何避免 gateway 反复挂</h2><h3 id="1-用-systemd-守护（推荐）"><a href="#1-用-systemd-守护（推荐）" class="headerlink" title="1. 用 systemd 守护（推荐）"></a>1. 用 systemd 守护（推荐）</h3><p>如果你在 Linux VPS 上跑：</p>
-<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/hermes-gateway.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Hermes Gateway</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/local/bin/hermes gateway run</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"><span class="attr">StandardOutput</span>=append:/var/log/hermes-gateway.log</span><br><span class="line"><span class="attr">StandardError</span>=append:/var/log/hermes-gateway.log</span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> hermes-gateway</span><br><span class="line">systemctl start hermes-gateway</span><br></pre></td></tr></table></figure>
-
-<p>这样 gateway 挂了 systemd 会自动拉起，不用人工干预。</p>
-<h3 id="2-用-Docker-跑（更隔离）"><a href="#2-用-Docker-跑（更隔离）" class="headerlink" title="2. 用 Docker 跑（更隔离）"></a>2. 用 Docker 跑（更隔离）</h3><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># docker-compose.yml</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">hermes-gateway:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">your-hermes-image</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">hermes</span> <span class="string">gateway</span> <span class="string">run</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./config:/root/.hermes/config.yaml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./logs:/root/.hermes/logs</span></span><br><span class="line">    <span class="attr">logging:</span></span><br><span class="line">      <span class="attr">driver:</span> <span class="string">json-file</span></span><br><span class="line">      <span class="attr">options:</span></span><br><span class="line">        <span class="attr">max-size:</span> <span class="string">&quot;10m&quot;</span></span><br><span class="line">        <span class="attr">max-file:</span> <span class="string">&quot;3&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p><code>restart: unless-stopped</code> + Docker 自带的日志轮转，比裸跑稳得多。</p>
-<h3 id="3-加监控和告警"><a href="#3-加监控和告警" class="headerlink" title="3. 加监控和告警"></a>3. 加监控和告警</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 每 5 分钟检查一次 gateway 是否存活</span></span><br><span class="line">*/5 * * * * pgrep -f <span class="string">&#x27;hermes gateway&#x27;</span> &gt; /dev/null || \</span><br><span class="line">  (<span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;)</span><br></pre></td></tr></table></figure>
-
-<p>或者用更高级的：写一个 watchdog 脚本，gateway 挂了自动重启 + 飞书消息通知你。</p>
-<hr>
-<h2 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h2><p><strong>飞书 bot 不回复 → 先看 gateway 日志 → 有 Executor shutdown 或进程不在 → 重启 gateway → 完事。</strong></p>
-<p>如果你也踩过这个坑，或者有更高级的排查思路，评论区聊聊～</p>
+<h2 id="几个常见误区"><a href="#几个常见误区" class="headerlink" title="几个常见误区"></a>几个常见误区</h2><h3 id="“验证连接状态”按钮失败-≠-真的失败"><a href="#“验证连接状态”按钮失败-≠-真的失败" class="headerlink" title="“验证连接状态”按钮失败 ≠ 真的失败"></a>“验证连接状态”按钮失败 ≠ 真的失败</h3><p>飞书开放平台的”验证连接状态”按钮点失败不用慌。一些 SDK 库对平台侧的 PONG 探测不回复，属于设计如此。<strong>判断标准</strong>：看 gateway 日志有没有 <code>✓ feishu connected</code>，加实际发条消息看能不能回。</p>
+<h3 id="飞书必须直连"><a href="#飞书必须直连" class="headerlink" title="飞书必须直连"></a>飞书必须直连</h3><p><code>.feishu.cn</code> 和 <code>.larksuite.com</code> <strong>不要走中转</strong>。中转引入的额外握手延迟会破坏 WebSocket 长连接。如果你有全局中转（如 Clash），环境变量加 <code>no_proxy=*.feishu.cn,*.larksuite.com</code>。</p>
+<h3 id="别重启-CLI-客户端"><a href="#别重启-CLI-客户端" class="headerlink" title="别重启 CLI 客户端"></a>别重启 CLI 客户端</h3><p>CLI 客户端是命令行界面（你用来跟 AI 聊天的终端），不是后台服务。重启它<strong>对飞书连接毫无帮助</strong>。真正管飞书连接的是 gateway。</p>
 <blockquote>
-<p>关联阅读：<a href="/2026/06/20/feishu-bot-permissions-and-mention/">飞书机器人开发踩坑实录：权限配置、群聊互@</a></p>
+<p>飞书服务端极少出问题。99% 是本地 gateway 进程或 executor 状态异常。</p>
 </blockquote>
+<h2 id="防患于未然"><a href="#防患于未然" class="headerlink" title="防患于未然"></a>防患于未然</h2><h3 id="systemd-守护"><a href="#systemd-守护" class="headerlink" title="systemd 守护"></a>systemd 守护</h3><figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Bot Gateway</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/local/bin/&lt;你的程序&gt; gateway run</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload &amp;&amp; systemctl <span class="built_in">enable</span> --now bot-gateway</span><br></pre></td></tr></table></figure>
+
+<h3 id="Cron-兜底"><a href="#Cron-兜底" class="headerlink" title="Cron 兜底"></a>Cron 兜底</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">*/5 * * * * pgrep -f <span class="string">&#x27;gateway run&#x27;</span> &gt; /dev/null || \</span><br><span class="line">  (<span class="built_in">nohup</span> &lt;你的程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;)</span><br></pre></td></tr></table></figure>
+
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：用飞书 Bot 的开发者，尤其是自部署 Agent 网关的。</p>
+<p><strong>不适合</strong>：用飞书官方托管 Bot 的——那个 gateway 不用你管。</p>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你的飞书 Bot 挂过吗？是什么原因？评论区聊聊。</p>
 ]]></content>
       <categories>
         <category>教程类</category>
@@ -710,100 +843,79 @@
       </tags>
   </entry>
   <entry>
-    <title>飞书 Docx API 批量操作踩坑：从 1770001 invalid param 说起</title>
-    <url>/2026/06/20/feishu-docx-batch-edit/</url>
+    <title>飞书API能创建但不能批量删除，这是设计不是bug</title>
+    <url>/2026/07/27/feishu-docx-batch-edit/</url>
     <content><![CDATA[<p><img data-src="/images/feishu-docx-batch-edit-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>想用飞书开放平台 API 批量编辑文档（删除、更新 Blocks）？你会发现 tenant_access_token 下批量删除大块内容直接报 <code>invalid param (1770001)</code>。本文记录我踩过的坑和真实可用的解法。</p>
-</blockquote>
-<hr>
-<h2 id="起因：为什么要批量编辑飞书文档"><a href="#起因：为什么要批量编辑飞书文档" class="headerlink" title="起因：为什么要批量编辑飞书文档"></a>起因：为什么要批量编辑飞书文档</h2><p>我做一个内容自动化项目，需要把外部数据（日报、监控结果）写入飞书文档。理想流程：</p>
-<ol>
-<li>拉取最新数据</li>
-<li>清空文档旧内容</li>
-<li>写入新内容</li>
-</ol>
-<p>听起来很简单对吧？但飞书 Docx API 在批量操作上<strong>有奇怪的限制</strong>，文档上没写明，我花了 2 小时才搞清。</p>
-<hr>
-<h2 id="现象：哪些能跑通，哪些不行"><a href="#现象：哪些能跑通，哪些不行" class="headerlink" title="现象：哪些能跑通，哪些不行"></a>现象：哪些能跑通，哪些不行</h2><p>我用 <code>tenant_access_token</code>（应用身份）调用飞书 Docx API 测试了一通：</p>
+<p>两个小时。我花了两个小时才搞明白为什么飞书 Docx API 删不掉一段文字。</p>
+<p>事情是这样的：我做内容自动化，需要把日报写入飞书文档。理想流程很简单——拉数据、清旧内容、写新内容。三个步骤，听起来 10 分钟搞定。</p>
+<p>结果呢？批量删除直接报 <code>invalid param (1770001)</code>。单个删能成功，批量删就炸。更新 Block 也炸。文档上还没写这个限制。</p>
+<p>下面是踩坑全记录和最终解法，直接抄。</p>
+<h2 id="现象：什么能跑、什么不行"><a href="#现象：什么能跑、什么不行" class="headerlink" title="现象：什么能跑、什么不行"></a>现象：什么能跑、什么不行</h2><p>我用 <code>tenant_access_token</code>（应用身份）测了一轮：</p>
 <table>
 <thead>
 <tr>
 <th>操作</th>
-<th>API</th>
 <th>结果</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><strong>创建 Block</strong></td>
-<td><code>POST .../blocks/{parent_id}/children</code></td>
+<td>创建 Block</td>
 <td>✅ 成功</td>
 </tr>
 <tr>
-<td><strong>删除单个 Block</strong></td>
-<td><code>DELETE .../batch_delete</code> 传 <code>start_index=N, end_index=N+1</code></td>
+<td>删除单个 Block（<code>start_index=N, end_index=N+1</code>）</td>
 <td>✅ 成功</td>
 </tr>
 <tr>
-<td><strong>批量删除多个 Block</strong></td>
-<td><code>DELETE .../batch_delete</code> 传 <code>start_index=4, end_index=14</code></td>
-<td>❌ 报 <code>invalid param (1770001)</code></td>
+<td>批量删除（<code>start_index=4, end_index=14</code>）</td>
+<td>❌ <code>1770001</code></td>
 </tr>
 <tr>
-<td><strong>更新 Block</strong></td>
-<td><code>PATCH .../blocks/{block_id}</code></td>
-<td>❌ 报 <code>invalid param</code></td>
+<td>更新 Block</td>
+<td>❌ <code>invalid param</code></td>
 </tr>
 </tbody></table>
-<p><strong>规律</strong>：单个操作能跑通，批量操作直接拒绝。</p>
-<hr>
-<h2 id="根因猜测"><a href="#根因猜测" class="headerlink" title="根因猜测"></a>根因猜测</h2><p>文档上没明说，我推测是：</p>
+<p>规律很清晰：<strong>单个操作能过，批量操作直接拒绝</strong>。</p>
+<h2 id="根因：应用身份的隐藏限制"><a href="#根因：应用身份的隐藏限制" class="headerlink" title="根因：应用身份的隐藏限制"></a>根因：应用身份的隐藏限制</h2><p>文档上没明说，我推测是：</p>
 <ul>
-<li><code>tenant_access_token</code> 是<strong>应用级身份</strong>，权限受限</li>
-<li>批量删除 &#x2F; 更新涉及”破坏性操作 + 多 block 影响范围”，平台对应用身份做了风控</li>
-<li>想做复杂编辑，可能要用 <strong>user_access_token</strong>（用户身份）</li>
+<li><code>tenant_access_token</code> 是应用级身份，权限受限</li>
+<li>批量删除涉及”破坏性操作 + 多 block 影响范围”，平台对应用身份做了风控</li>
+<li>想搞复杂编辑，可能需要 <code>user_access_token</code>（用户身份 OAuth）</li>
 </ul>
-<p>但获取 user_access_token 需要 OAuth 流程，比较麻烦。我先尝试在 tenant_access_token 下找别的出路。</p>
-<hr>
-<h2 id="解决方案一：逐块删除（治本，最稳）"><a href="#解决方案一：逐块删除（治本，最稳）" class="headerlink" title="解决方案一：逐块删除（治本，最稳）"></a>解决方案一：逐块删除（治本，最稳）</h2><p><strong>思路</strong>：每次只删一个 block，从后往前删（避免索引变化），删完一个再删下一个。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">delete_blocks_one_by_one</span>(<span class="params">doc_token, parent_id, headers, start, end</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从 end 往 start 倒序删除&quot;&quot;&quot;</span></span><br><span class="line">    current_end = end</span><br><span class="line">    <span class="keyword">while</span> current_end &gt; start:</span><br><span class="line">        <span class="comment"># 先获取当前最新的 document_revision_id</span></span><br><span class="line">        rev_resp = requests.get(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line">        rev = rev_resp.json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 删除一个 block</span></span><br><span class="line">        del_resp = requests.delete(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>/blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">            params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">            json=&#123;<span class="string">&quot;start_index&quot;</span>: current_end - <span class="number">1</span>, <span class="string">&quot;end_index&quot;</span>: current_end&#125;,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line">        <span class="keyword">if</span> del_resp.json().get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">f&quot;删除失败: <span class="subst">&#123;del_resp.json()&#125;</span>&quot;</span>)</span><br><span class="line">        current_end -= <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>但获取 <code>user_access_token</code> 需要完整 OAuth 流程，做纯后台自动化的时候不现实。我先在 <code>tenant_access_token</code> 下找出路。</p>
+<h2 id="三种解法，从稳到快"><a href="#三种解法，从稳到快" class="headerlink" title="三种解法，从稳到快"></a>三种解法，从稳到快</h2><h3 id="解法一：逐块删除（最稳）"><a href="#解法一：逐块删除（最稳）" class="headerlink" title="解法一：逐块删除（最稳）"></a>解法一：逐块删除（最稳）</h3><p>每次只删一个 block，从后往前删（避免索引变化），删完一个再删下一个：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">delete_blocks_one_by_one</span>(<span class="params">doc_token, parent_id, headers, start, end</span>):</span><br><span class="line">    current_end = end</span><br><span class="line">    <span class="keyword">while</span> current_end &gt; start:</span><br><span class="line">        <span class="comment"># 每次重新拿最新 revision_id</span></span><br><span class="line">        rev_resp = requests.get(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line">        rev = rev_resp.json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line"></span><br><span class="line">        del_resp = requests.delete(</span><br><span class="line">            <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span></span><br><span class="line">            <span class="string">f&quot;/blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">            params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">            json=&#123;<span class="string">&quot;start_index&quot;</span>: current_end - <span class="number">1</span>, <span class="string">&quot;end_index&quot;</span>: current_end&#125;,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line">        <span class="keyword">if</span> del_resp.json().get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">f&quot;删除失败: <span class="subst">&#123;del_resp.json()&#125;</span>&quot;</span>)</span><br><span class="line">        current_end -= <span class="number">1</span></span><br></pre></td></tr></table></figure>
 
-<p><strong>缺点</strong>：删除 N 个 block 要发 N 次请求，慢。但稳。</p>
-<hr>
-<h2 id="解决方案二：先删后插（推荐，效率高）"><a href="#解决方案二：先删后插（推荐，效率高）" class="headerlink" title="解决方案二：先删后插（推荐，效率高）"></a>解决方案二：先删后插（推荐，效率高）</h2><p><strong>思路</strong>：用最简单的”删除一个 + 批量创建”组合，避开”批量删除”的限制。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">replace_content</span>(<span class="params">doc_token, parent_id, new_content_blocks, headers</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;用新内容替换文档内容&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 1. 先删掉最后一个 block（保留索引 0 用于锚定）</span></span><br><span class="line">    rev = get_revision(doc_token, headers)</span><br><span class="line">    requests.delete(</span><br><span class="line">        <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>/blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">        params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">        json=&#123;<span class="string">&quot;start_index&quot;</span>: <span class="number">1</span>, <span class="string">&quot;end_index&quot;</span>: <span class="number">2</span>&#125;,  <span class="comment"># 假设文档原有内容在 1-2</span></span><br><span class="line">        headers=headers</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 批量插入新内容</span></span><br><span class="line">    requests.post(</span><br><span class="line">        <span class="string">f&quot;https://open.feishu.cn/open-apis/docx/v1/documents/<span class="subst">&#123;doc_token&#125;</span>/blocks/<span class="subst">&#123;parent_id&#125;</span>/children&quot;</span>,</span><br><span class="line">        json=&#123;<span class="string">&quot;children&quot;</span>: new_content_blocks&#125;,</span><br><span class="line">        headers=headers</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+<p>缺点：删 N 个 block 要 N 次请求。但稳。</p>
+<h3 id="解法二：先删后插（推荐，效率高）"><a href="#解法二：先删后插（推荐，效率高）" class="headerlink" title="解法二：先删后插（推荐，效率高）"></a>解法二：先删后插（推荐，效率高）</h3><p>关键发现：<strong>POST 创建 Block 支持批量，DELETE 不支持批量</strong>。</p>
+<p>所以最佳组合：用”逐个删除 + 批量创建”：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">replace_content</span>(<span class="params">doc_token, parent_id, headers, new_blocks</span>):</span><br><span class="line">    <span class="comment"># 1. 获取最新 revision</span></span><br><span class="line">    rev = get_revision(doc_token, headers)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从后往前逐个删</span></span><br><span class="line">    block_count = get_block_count(doc_token, headers)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(block_count - <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>):</span><br><span class="line">        rev = get_revision(doc_token, headers)</span><br><span class="line">        requests.delete(</span><br><span class="line">            <span class="string">f&quot;.../blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">            params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">            json=&#123;<span class="string">&quot;start_index&quot;</span>: i, <span class="string">&quot;end_index&quot;</span>: i + <span class="number">1</span>&#125;,</span><br><span class="line">            headers=headers</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 批量插入新内容</span></span><br><span class="line">    requests.post(</span><br><span class="line">        <span class="string">f&quot;.../blocks/<span class="subst">&#123;parent_id&#125;</span>/children&quot;</span>,</span><br><span class="line">        json=&#123;<span class="string">&quot;children&quot;</span>: new_blocks&#125;,</span><br><span class="line">        headers=headers</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
 
-<p><strong>关键发现</strong>：<code>POST</code> 创建 Block 是支持批量的，单次最多创建多个 children。所以**”创建”用批量、”删除”用逐个**是最佳组合。</p>
-<hr>
-<h2 id="解决方案三：换用-user-access-token"><a href="#解决方案三：换用-user-access-token" class="headerlink" title="解决方案三：换用 user_access_token"></a>解决方案三：换用 user_access_token</h2><p>如果一定要批量删除，得拿到 <strong>user_access_token</strong>：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. 引导用户授权</span></span><br><span class="line">auth_url = (</span><br><span class="line">    <span class="string">&quot;https://open.feishu.cn/open-apis/authen/v2/index?&quot;</span></span><br><span class="line">    <span class="string">&quot;app_id=YOUR_APP_ID&amp;&quot;</span></span><br><span class="line">    <span class="string">&quot;redirect_uri=YOUR_REDIRECT&amp;&quot;</span></span><br><span class="line">    <span class="string">&quot;scope=docx:document:write_only&quot;</span></span><br><span class="line">)</span><br><span class="line"><span class="comment"># 用户访问 auth_url 并授权后，会回调到 redirect_uri 并带上 code</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 用 code 换 user_access_token</span></span><br><span class="line">resp = requests.post(</span><br><span class="line">    <span class="string">&quot;https://open.feishu.cn/open-apis/authen/v2/oauth/token&quot;</span>,</span><br><span class="line">    json=&#123;</span><br><span class="line">        <span class="string">&quot;grant_type&quot;</span>: <span class="string">&quot;authorization_code&quot;</span>,</span><br><span class="line">        <span class="string">&quot;code&quot;</span>: code_from_callback,</span><br><span class="line">        <span class="string">&quot;client_id&quot;</span>: <span class="string">&quot;YOUR_APP_ID&quot;</span>,</span><br><span class="line">        <span class="string">&quot;client_secret&quot;</span>: <span class="string">&quot;YOUR_APP_SECRET&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">)</span><br><span class="line">user_access_token = resp.json()[<span class="string">&quot;access_token&quot;</span>]</span><br></pre></td></tr></table></figure>
+<h3 id="解法三：换-user-access-token（终极方案）"><a href="#解法三：换-user-access-token（终极方案）" class="headerlink" title="解法三：换 user_access_token（终极方案）"></a>解法三：换 user_access_token（终极方案）</h3><p>如果一定要批量删除，走 OAuth 拿用户身份 token。但这只适合用户产品（用户授权后代表自己操作），不适合纯后台自动化。</p>
+<h2 id="其他容易踩的坑"><a href="#其他容易踩的坑" class="headerlink" title="其他容易踩的坑"></a>其他容易踩的坑</h2><h3 id="revision-id-每次都在变"><a href="#revision-id-每次都在变" class="headerlink" title="revision_id 每次都在变"></a>revision_id 每次都在变</h3><p>飞书文档每改一次，<code>revision_id</code> 就变。用老的删直接报”revision 不匹配”。</p>
+<p><strong>铁律</strong>：每次操作前先 GET 一次拿最新 revision。</p>
+<h3 id="索引动态变化"><a href="#索引动态变化" class="headerlink" title="索引动态变化"></a>索引动态变化</h3><p>你删第 5 个 block 后，原本索引 6 的变成索引 5。所以<strong>逐个删除必须从后往前</strong>——这个要是搞反了，删到一半索引全乱。</p>
+<h3 id="文档有占位-block"><a href="#文档有占位-block" class="headerlink" title="文档有占位 block"></a>文档有占位 block</h3><p>新建飞书文档至少有一个占位 block。删除时<strong>别把整个文档删空</strong>，否则后续插入找不到 parent。</p>
+<h3 id="Wiki-文档-≠-Docx-文档"><a href="#Wiki-文档-≠-Docx-文档" class="headerlink" title="Wiki 文档 ≠ Docx 文档"></a>Wiki 文档 ≠ Docx 文档</h3><p>操作的如果是 Wiki 节点（<code>/wiki/...</code>），API 路径前缀是 <code>/wiki/v2</code>，不是 <code>/docx/v1</code>。这是两个不同的 API 体系，权限模型也不同。</p>
+<h2 id="最终可用代码（生产环境验证过）"><a href="#最终可用代码（生产环境验证过）" class="headerlink" title="最终可用代码（生产环境验证过）"></a>最终可用代码（生产环境验证过）</h2><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">FEISHU_BASE = <span class="string">&quot;https://open.feishu.cn/open-apis/docx/v1&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">clear_and_write_doc</span>(<span class="params">doc_token, parent_id, tenant_token, new_blocks</span>):</span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;tenant_token&#125;</span>&quot;</span>,</span><br><span class="line">        <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 获取文档信息</span></span><br><span class="line">    doc_resp = requests.get(</span><br><span class="line">        <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>, headers=headers</span><br><span class="line">    ).json()</span><br><span class="line">    rev = doc_resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line">    block_count = <span class="built_in">len</span>(doc_resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;blocks&quot;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从后往前逐个删（保留索引 0 占位）</span></span><br><span class="line">    <span class="keyword">if</span> block_count &gt; <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(block_count - <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>):</span><br><span class="line">            rev = requests.get(</span><br><span class="line">                <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>, headers=headers</span><br><span class="line">            ).json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line">            del_resp = requests.delete(</span><br><span class="line">                <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span></span><br><span class="line">                <span class="string">f&quot;/blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">                params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">                json=&#123;<span class="string">&quot;start_index&quot;</span>: i, <span class="string">&quot;end_index&quot;</span>: i + <span class="number">1</span>&#125;,</span><br><span class="line">                headers=headers</span><br><span class="line">            ).json()</span><br><span class="line">            <span class="keyword">if</span> del_resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot;删除第 <span class="subst">&#123;i&#125;</span> 个 block 失败: <span class="subst">&#123;del_resp&#125;</span>&quot;</span>)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 批量创建新内容</span></span><br><span class="line">    <span class="keyword">return</span> requests.post(</span><br><span class="line">        <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>/blocks/<span class="subst">&#123;parent_id&#125;</span>/children&quot;</span>,</span><br><span class="line">        headers=headers,</span><br><span class="line">        json=&#123;<span class="string">&quot;children&quot;</span>: new_blocks&#125;</span><br><span class="line">    ).json()</span><br></pre></td></tr></table></figure>
 
-<p><strong>适用场景</strong>：</p>
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：</p>
 <ul>
-<li>你做的是用户级产品（用户授权后代表自己操作）</li>
-<li>不适合纯后台自动化场景（拿不到用户授权）</li>
+<li>用飞书做自动化日报&#x2F;周报&#x2F;内容推送的</li>
+<li>需要程序化编辑飞书文档的开发者</li>
 </ul>
-<hr>
-<h2 id="实用的代码片段（生产可用）"><a href="#实用的代码片段（生产可用）" class="headerlink" title="实用的代码片段（生产可用）"></a>实用的代码片段（生产可用）</h2><p>下面是我项目里跑通的版本——把”清空文档 + 写入日报内容”封装成一个函数：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line">FEISHU_BASE = <span class="string">&quot;https://open.feishu.cn/open-apis/docx/v1&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">clear_and_write_doc</span>(<span class="params">doc_token, parent_id, tenant_token, new_blocks</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;清空飞书文档指定区域并写入新内容&quot;&quot;&quot;</span></span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;tenant_token&#125;</span>&quot;</span>,</span><br><span class="line">        <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 获取文档当前总 block 数</span></span><br><span class="line">    doc_resp = requests.get(</span><br><span class="line">        <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>,</span><br><span class="line">        headers=headers</span><br><span class="line">    ).json()</span><br><span class="line">    rev = doc_resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line">    block_count = <span class="built_in">len</span>(doc_resp[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;blocks&quot;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从后往前逐个删除（保留索引 0 的占位 block）</span></span><br><span class="line">    <span class="keyword">if</span> block_count &gt; <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(block_count - <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>):</span><br><span class="line">            <span class="comment"># 每次重新拿最新 revision_id</span></span><br><span class="line">            rev = requests.get(</span><br><span class="line">                <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>&quot;</span>,</span><br><span class="line">                headers=headers</span><br><span class="line">            ).json()[<span class="string">&quot;data&quot;</span>][<span class="string">&quot;document&quot;</span>][<span class="string">&quot;revision_id&quot;</span>]</span><br><span class="line"></span><br><span class="line">            del_resp = requests.delete(</span><br><span class="line">                <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>/blocks/<span class="subst">&#123;parent_id&#125;</span>/children/batch_delete&quot;</span>,</span><br><span class="line">                params=&#123;<span class="string">&quot;document_revision_id&quot;</span>: rev&#125;,</span><br><span class="line">                json=&#123;<span class="string">&quot;start_index&quot;</span>: i, <span class="string">&quot;end_index&quot;</span>: i + <span class="number">1</span>&#125;,</span><br><span class="line">                headers=headers</span><br><span class="line">            ).json()</span><br><span class="line">            <span class="keyword">if</span> del_resp.get(<span class="string">&quot;code&quot;</span>) != <span class="number">0</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot;删除第 <span class="subst">&#123;i&#125;</span> 个 block 失败: <span class="subst">&#123;del_resp&#125;</span>&quot;</span>)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 批量创建新内容</span></span><br><span class="line">    create_resp = requests.post(</span><br><span class="line">        <span class="string">f&quot;<span class="subst">&#123;FEISHU_BASE&#125;</span>/documents/<span class="subst">&#123;doc_token&#125;</span>/blocks/<span class="subst">&#123;parent_id&#125;</span>/children&quot;</span>,</span><br><span class="line">        headers=headers,</span><br><span class="line">        json=&#123;<span class="string">&quot;children&quot;</span>: new_blocks&#125;</span><br><span class="line">    ).json()</span><br><span class="line">    <span class="keyword">return</span> create_resp</span><br><span class="line"></span><br><span class="line"><span class="comment"># 用法</span></span><br><span class="line">new_blocks = [</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">2</span>, <span class="string">&quot;text&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;今日日报&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;block_type&quot;</span>: <span class="number">2</span>, <span class="string">&quot;text&quot;</span>: &#123;<span class="string">&quot;elements&quot;</span>: [&#123;<span class="string">&quot;text_run&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: <span class="string">&quot;AI 行业有 3 条重要新闻...&quot;</span>&#125;&#125;]&#125;&#125;,</span><br><span class="line">    <span class="comment"># ... 更多 block</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">result = clear_and_write_doc(</span><br><span class="line">    doc_token=<span class="string">&quot;你的文档ID&quot;</span>,</span><br><span class="line">    parent_id=<span class="string">&quot;父 block ID&quot;</span>,</span><br><span class="line">    tenant_token=<span class="string">&quot;应用的 tenant_access_token&quot;</span>,</span><br><span class="line">    new_blocks=new_blocks</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(result)</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="其他可能踩的坑"><a href="#其他可能踩的坑" class="headerlink" title="其他可能踩的坑"></a>其他可能踩的坑</h2><h3 id="1-document-revision-id-必须用最新的"><a href="#1-document-revision-id-必须用最新的" class="headerlink" title="1. document_revision_id 必须用最新的"></a>1. document_revision_id 必须用最新的</h3><p>飞书文档每次修改后 <code>revision_id</code> 会变。如果删一个 block 用老的 revision_id，会报”revision 不匹配”。<strong>正确做法</strong>：每次操作前先 GET 一次拿最新 revision。</p>
-<h3 id="2-索引会动态变化"><a href="#2-索引会动态变化" class="headerlink" title="2. 索引会动态变化"></a>2. 索引会动态变化</h3><p>你删除第 5 个 block 后，原本索引 6 的内容会变成索引 5。所以<strong>逐个删除必须从后往前</strong>。</p>
-<h3 id="3-文档有占位-block"><a href="#3-文档有占位-block" class="headerlink" title="3. 文档有占位 block"></a>3. 文档有占位 block</h3><p>新建的飞书文档至少有一个 block（往往是占位段落），删除时<strong>别把整个文档删空</strong>，否则后续插入可能找不到 parent。</p>
-<h3 id="4-Wiki-文档-vs-普通-Docx-文档"><a href="#4-Wiki-文档-vs-普通-Docx-文档" class="headerlink" title="4. Wiki 文档 vs 普通 Docx 文档"></a>4. Wiki 文档 vs 普通 Docx 文档</h3><p>如果你操作的是 Wiki 节点下的文档（<code>/wiki/...</code>），它的 API 路径前缀是 <code>/wiki/v2</code>，不是 <code>/docx/v1</code>。这是另一个 API 体系，权限模型也不同。</p>
-<hr>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>飞书 Docx API 的限制比想象的多，文档没明示，官方论坛也很少有人讨论。这里总结几点：</p>
+<p><strong>不适合</strong>：</p>
 <ul>
-<li><strong>小批量操作（&lt; 5 个 block）</strong>：用 tenant_access_token 配合”逐个删除 + 批量创建”组合</li>
-<li><strong>大批量操作</strong>：老老实实拿 user_access_token</li>
-<li><strong>避免动态索引问题</strong>：从后往前删，每次操作前 GET 最新 revision</li>
-<li><strong>生产环境</strong>：加 try-catch 和重试，飞书 API 偶尔会有 500 错误</li>
+<li>只需要手动编辑飞书文档的——别折腾 API</li>
+<li>需要高性能批量编辑的——逐块删除的 N 次请求模式不适合大批量场景</li>
 </ul>
-<p>如果你也在做飞书自动化，评论区交流一下你踩过的坑～</p>
 <blockquote>
-<p>关联阅读：<a href="/2026/06/20/feishu-bot-permissions-and-mention/">飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路</a></p>
+<p>飞书 Docx API 的限制比想象的多，文档没明写，官方论坛也很少人讨论。但只要掌握”逐个删除 + 批量创建 + 从后往前”三板斧，自动化内容推送完全能跑通。</p>
 </blockquote>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你做过飞书文档自动化吗？评论区聊聊踩过的坑。</p>
 ]]></content>
       <categories>
         <category>教程类</category>
@@ -1153,64 +1265,143 @@
       </tags>
   </entry>
   <entry>
-    <title>把 PDF 变成可读 Markdown：MinerU 文档解析 MCP 部署实战</title>
-    <url>/2026/06/20/mineru-pdf-parse-mcp/</url>
-    <content><![CDATA[<p><img data-src="/images/mineru-pdf-parse-mcp-cover.webp" alt="封面图"></p>
+    <title>我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走</title>
+    <url>/2026/07/27/magnet-crawler-fallback/</url>
+    <content><![CDATA[<p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
+<p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
+<p>但这不是一个失败故事。在放弃之前，我跑通了从纯静态正则会到 Headless 浏览器破 Cloudflare 盾的全套技术栈，整理出了一套 4 级降级方案。你可以直接拿走用，省掉我踩过的所有坑。</p>
+<p>这篇不是完整的爬虫教程，而是一份<strong>选型决策树</strong>——面对一个资源站，你能立刻判断该用什么级别去打。</p>
+<h2 id="4-级降级方案：按需升级，绝不越级"><a href="#4-级降级方案：按需升级，绝不越级" class="headerlink" title="4 级降级方案：按需升级，绝不越级"></a>4 级降级方案：按需升级，绝不越级</h2><p>每升一级，资源开销成倍增长。我一共设计了 4 个级别：</p>
+<table>
+<thead>
+<tr>
+<th>级别</th>
+<th>适用场景</th>
+<th>开销</th>
+<th>技术栈</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>🟢 1 静态正则</td>
+<td>老 HTML 站，无反爬</td>
+<td>极低</td>
+<td>requests + BeautifulSoup + re</td>
+</tr>
+<tr>
+<td>🟡 2 复杂静态</td>
+<td>链接藏 JS&#x2F;隐藏 input 里</td>
+<td>中等</td>
+<td>requests + Base64 解码</td>
+</tr>
+<tr>
+<td>🟠 3 Headless 浏览器</td>
+<td>必须点 DOM 才出链接</td>
+<td>高</td>
+<td>Playwright</td>
+</tr>
+<tr>
+<td>🔴 4 终极破盾</td>
+<td>Cloudflare 5 秒盾</td>
+<td>极高</td>
+<td>DrissionPage</td>
+</tr>
+</tbody></table>
+<p><strong>核心原则：一旦当前级别能搞定，立刻返回，绝不无故触发下一级。</strong></p>
+<p>为什么？Headless 浏览器一启动就吃 500MB+ 内存。并发 3 个直接 OOM。你得对宿主机负责。</p>
+<h2 id="级别-1：纯静态正则（80-的站靠它）"><a href="#级别-1：纯静态正则（80-的站靠它）" class="headerlink" title="级别 1：纯静态正则（80% 的站靠它）"></a>级别 1：纯静态正则（80% 的站靠它）</h2><h3 id="什么时候用"><a href="#什么时候用" class="headerlink" title="什么时候用"></a>什么时候用</h3><p>上古论坛、下载站，HTML 直接写磁力链接，没有任何反爬。</p>
+<p>典型代表：<code>dygod.net</code>（电影天堂）、各种老 PT 论坛。</p>
+<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests, re</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line">MAGNET_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;magnet:\?xt=urn:btih:[a-zA-Z0-9]+&#x27;</span>, re.I)</span><br><span class="line">FTP_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;ftp://[^\s&quot;\&#x27;&lt;&gt;]+&#x27;</span>, re.I)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level1</span>(<span class="params">url</span>):</span><br><span class="line">    resp = requests.get(url, headers=&#123;<span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0...&quot;</span>&#125;, timeout=<span class="number">15</span>)</span><br><span class="line">    <span class="comment"># 老站常用 GB2312</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;gb2312&#x27;</span> <span class="keyword">in</span> (resp.apparent_encoding <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span>).lower():</span><br><span class="line">        resp.encoding = <span class="string">&#x27;gb2312&#x27;</span></span><br><span class="line">    html = resp.text</span><br><span class="line">    magnets = <span class="built_in">set</span>(MAGNET_RE.findall(html))</span><br><span class="line">    ftps = <span class="built_in">set</span>(FTP_RE.findall(html))</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(magnets) + <span class="built_in">list</span>(ftps)</span><br></pre></td></tr></table></figure>
+
+<h3 id="实战经验"><a href="#实战经验" class="headerlink" title="实战经验"></a>实战经验</h3><ol>
+<li><strong>绕开主页</strong>：用站内搜索或 Google <code>site:xxx 关键字</code> 定位到详情页，链接密度更高</li>
+<li><strong>编码处理</strong>：老站常用 GB2312，不显式声明会乱码</li>
+<li><strong>提取元数据</strong>：别只返回磁力链接——用户需要知道文件大小、清晰度、格式、音轨</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">extract_metadata</span>(<span class="params">context_text</span>):</span><br><span class="line">    meta = &#123;&#125;</span><br><span class="line">    <span class="keyword">if</span> res := re.search(<span class="string">r&#x27;\b(2160p|1080p|720p|4K)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        meta[<span class="string">&#x27;resolution&#x27;</span>] = res.group(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">if</span> fmt := re.search(<span class="string">r&#x27;\b(BluRay|WEB-DL|HDTV|Remux|BDRip)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        meta[<span class="string">&#x27;source&#x27;</span>] = fmt.group(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">if</span> size := re.search(<span class="string">r&#x27;(\d+\.?\d*)\s*(GB|MB)&#x27;</span>, context_text, re.I):</span><br><span class="line">        meta[<span class="string">&#x27;size&#x27;</span>] = <span class="string">f&quot;<span class="subst">&#123;size.group(<span class="number">1</span>)&#125;</span> <span class="subst">&#123;size.group(<span class="number">2</span>)&#125;</span>&quot;</span></span><br><span class="line">    <span class="keyword">return</span> meta</span><br></pre></td></tr></table></figure>
+
 <blockquote>
-<p>想让 AI 读 PDF 论文、合同、扫描件？MinerU 这个国产开源工具的解析精度堪比专业 OCR，还能直接以 MCP 协议挂到 Claude &#x2F; GPT 工作流里。这篇记录我从零部署到稳定使用的完整过程。</p>
+<p>这个级别全程不到 50MB 内存，宿主机毫无压力。80% 的老站用它就够了。</p>
 </blockquote>
-<hr>
-<h2 id="背景：为什么需要文档解析-MCP"><a href="#背景：为什么需要文档解析-MCP" class="headerlink" title="背景：为什么需要文档解析 MCP"></a>背景：为什么需要文档解析 MCP</h2><p>我经常要把 arXiv 论文、行业报告、PDF 合同喂给 AI 处理。问题是：</p>
+<h2 id="级别-2：复杂静态解析"><a href="#级别-2：复杂静态解析" class="headerlink" title="级别 2：复杂静态解析"></a>级别 2：复杂静态解析</h2><h3 id="什么时候用-1"><a href="#什么时候用-1" class="headerlink" title="什么时候用"></a>什么时候用</h3><p>页面返回 200 OK，但磁力链接被 Base64 编码藏在 JS 变量里，或者放在隐藏 <code>&lt;input&gt;</code>、<code>data-*</code> 属性中。</p>
+<h3 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level2</span>(<span class="params">html</span>):</span><br><span class="line">    magnets = []</span><br><span class="line">    soup = BeautifulSoup(html, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 从隐藏 input 提取</span></span><br><span class="line">    <span class="keyword">for</span> inp <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;input&#x27;</span>, <span class="built_in">type</span>=<span class="string">&#x27;hidden&#x27;</span>):</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> inp.get(<span class="string">&#x27;value&#x27;</span>, <span class="string">&#x27;&#x27;</span>):</span><br><span class="line">            magnets.append(inp[<span class="string">&#x27;value&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 从 data-* 属性提取</span></span><br><span class="line">    <span class="keyword">for</span> elem <span class="keyword">in</span> soup.find_all(attrs=&#123;<span class="string">&#x27;data-magnet&#x27;</span>: <span class="literal">True</span>&#125;):</span><br><span class="line">        magnets.append(elem[<span class="string">&#x27;data-magnet&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Base64 解码 JS 变量</span></span><br><span class="line">    b64_pattern = re.<span class="built_in">compile</span>(<span class="string">r&#x27;[&quot;\&#x27;]([A-Za-z0-9+/=]&#123;40,&#125;)[&quot;\&#x27;]&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> b64_pattern.findall(html):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            decoded = base64.b64decode(<span class="keyword">match</span>).decode(<span class="string">&#x27;utf-8&#x27;</span>, errors=<span class="string">&#x27;ignore&#x27;</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> decoded:</span><br><span class="line">                magnets.extend(MAGNET_RE.findall(decoded))</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(<span class="built_in">set</span>(magnets))</span><br></pre></td></tr></table></figure>
+
+<p>这个级别解决 60% 的”看起来很难其实静态”的网站。</p>
+<h2 id="级别-3：Headless-浏览器（高开销，按需用）"><a href="#级别-3：Headless-浏览器（高开销，按需用）" class="headerlink" title="级别 3：Headless 浏览器（高开销，按需用）"></a>级别 3：Headless 浏览器（高开销，按需用）</h2><p>必须点击真实 DOM 节点才触发 XHR 返回链接的网站——比如 React&#x2F;Vue 渲染的页面。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> playwright.sync_api <span class="keyword">import</span> sync_playwright</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level3</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">with</span> sync_playwright() <span class="keyword">as</span> p:</span><br><span class="line">        browser = p.chromium.launch(headless=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            page = browser.new_page()</span><br><span class="line">            page.goto(url, timeout=<span class="number">30000</span>)</span><br><span class="line">            page.wait_for_load_state(<span class="string">&#x27;networkidle&#x27;</span>)</span><br><span class="line">            page.click(<span class="string">&#x27;a.download-btn&#x27;</span>, timeout=<span class="number">5000</span>)</span><br><span class="line">            page.wait_for_timeout(<span class="number">2000</span>)</span><br><span class="line">            html = page.content()</span><br><span class="line">            <span class="keyword">return</span> MAGNET_RE.findall(html)</span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            browser.close()  <span class="comment"># 🔥 必须 close，否则内存泄漏</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>铁律</strong>：严禁并发。一个 browser 吃 500MB+，开 5 个直接 OOM。</p>
+<h2 id="级别-4：DrissionPage-终极破盾（核武器）"><a href="#级别-4：DrissionPage-终极破盾（核武器）" class="headerlink" title="级别 4：DrissionPage 终极破盾（核武器）"></a>级别 4：DrissionPage 终极破盾（核武器）</h2><p>Cloudflare 5 秒盾、521 Anti-Bot 拦截——这时候只有 DrissionPage 能破。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> DrissionPage <span class="keyword">import</span> ChromiumPage, ChromiumOptions</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level4</span>(<span class="params">url</span>):</span><br><span class="line">    options = ChromiumOptions()</span><br><span class="line">    options.headless(<span class="literal">True</span>)</span><br><span class="line">    page = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        page = ChromiumPage(options)</span><br><span class="line">        page.get(url, retry=<span class="number">3</span>, timeout=<span class="number">30</span>)</span><br><span class="line">        page.wait.load_start()</span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">30</span>):  <span class="comment"># 等 CF 挑战完成</span></span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;just-a-moment&#x27;</span> <span class="keyword">not</span> <span class="keyword">in</span> page.html.lower():</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            page.wait(<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> MAGNET_RE.findall(page.html)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">if</span> page:</span><br><span class="line">            page.quit()  <span class="comment"># 🔥 必须 quit，销毁 Chromium 内核</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="实战决策树"><a href="#实战决策树" class="headerlink" title="实战决策树"></a>实战决策树</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">新站 → 级别 1 试</span><br><span class="line">  ↓ 成功？搞定</span><br><span class="line">  ↓ 失败 → 级别 2 试</span><br><span class="line">    ↓ 成功？搞定</span><br><span class="line">    ↓ 失败 → 级别 3 试</span><br><span class="line">      ↓ 成功？搞定</span><br><span class="line">      ↓ 失败 → 级别 4（最后手段）</span><br><span class="line">        ↓ 失败？放弃，换站</span><br></pre></td></tr></table></figure>
+
+<p>每一级用 <code>try/except</code>，失败自动降级下一级。<strong>别一上来就 Headless 浏览器，杀鸡用牛刀</strong>。</p>
+<h2 id="资源保护红线"><a href="#资源保护红线" class="headerlink" title="资源保护红线"></a>资源保护红线</h2><p>不管用哪一级：</p>
+<ol>
+<li><strong>严禁并发</strong>：Headless 浏览器吃 500MB+，并发 3 个就可能 OOM</li>
+<li><strong>强制资源释放</strong>：<code>try...finally</code> 中执行 <code>browser.close()</code> 或 <code>page.quit()</code></li>
+<li><strong>超时必须设</strong>：每个 HTTP 请求 <code>timeout=15</code></li>
+<li><strong>频率限制</strong>：两次请求之间 <code>time.sleep(1-3)</code></li>
+<li><strong>优先静态</strong>：能静态正则绝不用浏览器</li>
+</ol>
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：偶尔需要搜资源的，想把爬虫当工具而非事业来做的。</p>
+<p><strong>不适合</strong>：想做大规模聚合站的——这个方案是”够用就行”级别，不是商业级。需要长期维护大量站点爬虫的——站点变动快，维护成本高。</p>
+<blockquote>
+<p>爬虫的精髓不是”用最牛的技术”，而是”用最低的成本搞定目标”。80% 的老站静态正则就够，真碰到 JS 渲染再上 Headless，CF 盾最后才动 DrissionPage。按这个分级，用最少的资源跑最多的站。</p>
+</blockquote>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你做过爬虫吗？踩过什么反爬坑？评论区聊聊。</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开发工具</category>
+      </categories>
+      <tags>
+        <tag>爬虫</tag>
+        <tag>磁力</tag>
+        <tag>Python</tag>
+        <tag>反爬</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF</title>
+    <url>/2026/07/27/mineru-pdf-parse-mcp/</url>
+    <content><![CDATA[<p><img data-src="/images/mineru-pdf-parse-mcp-cover.webp" alt="封面图"></p>
+<p>我经常要把 arXiv 论文、行业报告、合同 PDF 喂给 AI 处理。</p>
+<p>以前试过三种办法：直接把 PDF 路径给 GPT——扫描版读不动，公式乱码。买商业 OCR 服务——贵，而且不知道数据去哪了。自己部署 PaddleOCR——需要 GPU，我的小 VPS 扛不住。</p>
+<p>直到遇到了 MinerU（OpenDataLab 出品），国产开源，解析精度比 GPT-4 Vision 高出一截。最离谱的是——<strong>它能以 MCP 协议直接挂到 Claude&#x2F;GPT&#x2F;LangChain 工作流里</strong>，AI 调用它就跟调用一个函数一样自然。</p>
+<p>下面是抄作业时间。</p>
+<h2 id="我为什么需要这东西"><a href="#我为什么需要这东西" class="headerlink" title="我为什么需要这东西"></a>我为什么需要这东西</h2><p>说真的，让 AI 读 PDF 是刚需。论文、合同、技术文档——这个世界还在用 PDF。但：</p>
 <ul>
-<li>直接把 PDF 路径给 GPT？它读不动扫描版、表格、复杂公式</li>
-<li>用现成的 OCR 服务？要么贵、要么精度不行、要么是闭源</li>
-<li>自己跑 PaddleOCR？需要 GPU 环境，部署成本高</li>
+<li>直接把 PDF 丢给 LLM？扫描版读不动，表格错位，公式变乱码</li>
+<li>用商业 API？一篇论文几毛钱，批量 50 篇就几十块</li>
+<li>自己搭 OCR？GPU 钱够买一年商业 API 了</li>
 </ul>
-<p>直到发现了 <strong>MinerU</strong>（OpenDataLab 出品），发现这是当前最好的开源方案：</p>
-<ul>
-<li>✅ 国产开源，支持本地&#x2F;云端双模式</li>
-<li>✅ 解析精度高（公式、表格、版面都能识别）</li>
-<li>✅ 支持 PDF&#x2F;DOCX&#x2F;PPTX 多格式</li>
-<li>✅ 输出标准 Markdown，可以直接喂给大模型</li>
-<li>✅ 官方提供 MCP 服务端，开箱即用</li>
-</ul>
-<hr>
-<h2 id="第一步：环境准备"><a href="#第一步：环境准备" class="headerlink" title="第一步：环境准备"></a>第一步：环境准备</h2><h3 id="Node-js-版本要求"><a href="#Node-js-版本要求" class="headerlink" title="Node.js 版本要求"></a>Node.js 版本要求</h3><p>MinerU 的 MCP 包基于 Node.js 18+，但实际跑起来<strong>强烈建议用 Node 20+</strong>（我用 22 完全没问题）。</p>
-<h3 id="关键陷阱：用绝对路径，不要用-node"><a href="#关键陷阱：用绝对路径，不要用-node" class="headerlink" title="关键陷阱：用绝对路径，不要用 node"></a>关键陷阱：用绝对路径，不要用 <code>node</code></h3><p>直接写 <code>command: node</code> 在很多 MCP 客户端会出诡异错误——<code>spawn node ENOENT</code>。原因可能是：</p>
-<ul>
-<li>系统的 PATH 里 <code>node</code> 不存在</li>
-<li>或者 MCP 客户端用的是另一个虚拟环境</li>
-</ul>
-<p><strong>正确做法</strong>：用 Node 二进制的<strong>绝对路径</strong>：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">command:</span> <span class="string">/root/.hermes/node/bin/node</span>   <span class="comment"># 或你的实际路径</span></span><br><span class="line"><span class="attr">args:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">/root/.hermes/node/lib/node_modules/mineru-mcp/dist/index.js</span></span><br></pre></td></tr></table></figure>
+<p>MinerU 一次解决了四个问题：精度高、支持本地&#x2F;云端双模式、输出标准 Markdown、能当 MCP 工具用。</p>
+<h2 id="部署：四步走"><a href="#部署：四步走" class="headerlink" title="部署：四步走"></a>部署：四步走</h2><h3 id="1-Node-js-环境"><a href="#1-Node-js-环境" class="headerlink" title="1. Node.js 环境"></a>1. Node.js 环境</h3><p>MinerU MCP 包需要 Node 18+。<strong>强烈建议用 Node 20+</strong>（我用 22 完全没问题）。</p>
+<p>最关键的坑：<strong>别用裸 <code>node</code> 命令</strong>。在 MCP 客户端配置里写 <code>command: node</code>，大概率报 <code>spawn node ENOENT</code>。因为 MCP 客户端的 PATH 环境变量里可能找不到 node。</p>
+<p>正确做法——用 Node 二进制的<strong>绝对路径</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">which</span> node</span><br><span class="line"><span class="comment"># 输出：/opt/node/bin/node  ← 用这个完整路径</span></span><br></pre></td></tr></table></figure>
 
 <p>不同系统的路径：</p>
 <ul>
 <li>Linux 自定义安装：<code>/opt/node/bin/node</code></li>
-<li>macOS Homebrew：<code>/opt/homebrew/bin/node</code> 或 <code>/usr/local/bin/node</code></li>
+<li>macOS Homebrew：<code>/opt/homebrew/bin/node</code></li>
 <li>nvm：<code>~/.nvm/versions/node/v22.0.0/bin/node</code></li>
 </ul>
-<p>可以用 <code>which node</code> 查实际路径。</p>
-<hr>
-<h2 id="第二步：安装-MCP-包"><a href="#第二步：安装-MCP-包" class="headerlink" title="第二步：安装 MCP 包"></a>第二步：安装 MCP 包</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -g mineru-mcp</span><br></pre></td></tr></table></figure>
+<h3 id="2-安装-MCP-包"><a href="#2-安装-MCP-包" class="headerlink" title="2. 安装 MCP 包"></a>2. 安装 MCP 包</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -g mineru-mcp</span><br></pre></td></tr></table></figure>
 
-<p>装完后会输出包路径，类似：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/usr/local/lib/node_modules/mineru-mcp</span><br><span class="line"># 或 /root/.hermes/node/lib/node_modules/mineru-mcp（隔离环境）</span><br></pre></td></tr></table></figure>
+<p>记住安装输出的路径，待会要写到配置文件里。一般在 <code>/opt/node/lib/node_modules/mineru-mcp</code>。</p>
+<h3 id="3-获取-API-Key"><a href="#3-获取-API-Key" class="headerlink" title="3. 获取 API Key"></a>3. 获取 API Key</h3><p>到 <a href="https://mineru.net/">https://mineru.net</a> 注册开发者，控制台拿 API Token。</p>
+<blockquote>
+<p>【亲测】API Key 别手滑写进命令行调试——会被 shell 历史和监控日志捕获。也绝不要写到公共仓库。正确做法：写进 MCP 配置文件的 <code>env</code> 字段，文件权限设 600。</p>
+</blockquote>
+<h3 id="4-配置-MCP-服务"><a href="#4-配置-MCP-服务" class="headerlink" title="4. 配置 MCP 服务"></a>4. 配置 MCP 服务</h3><p>不管是 Claude Desktop、Cursor、Cline 还是其他 Agent 框架，配置大同小异：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">mcp_servers:</span></span><br><span class="line">  <span class="attr">mineru-mcp:</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">/opt/node/bin/node</span></span><br><span class="line">    <span class="attr">args:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/opt/node/lib/node_modules/mineru-mcp/dist/index.js</span></span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="attr">MINERU_API_KEY:</span> <span class="string">your_api_key_here</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
 
-<p>记住这个路径，待会要写到配置里。</p>
-<hr>
-<h2 id="第三步：获取-API-Key"><a href="#第三步：获取-API-Key" class="headerlink" title="第三步：获取 API Key"></a>第三步：获取 API Key</h2><p>到 <a href="https://mineru.net/">https://mineru.net</a> 注册开发者账号，在控制台拿到 API Token。</p>
-<p><strong>安全提示</strong>：</p>
-<ul>
-<li>不要把 API Key 直接写在命令行里调试（容易被 shell 历史、监控日志捕获）</li>
-<li>不要写到公共配置仓库</li>
-<li>推荐做法：写入 MCP 配置文件的 <code>env</code> 字段，用权限 600 保护</li>
-</ul>
-<hr>
-<h2 id="第四步：配置-MCP-服务"><a href="#第四步：配置-MCP-服务" class="headerlink" title="第四步：配置 MCP 服务"></a>第四步：配置 MCP 服务</h2><p>不管你是用 Claude Desktop、Cursor、Cline 还是自建的 Hermes Agent，配置方式大同小异：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">mcp_servers:</span></span><br><span class="line">  <span class="attr">mineru-mcp:</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">/root/.hermes/node/bin/node</span></span><br><span class="line">    <span class="attr">args:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/root/.hermes/node/lib/node_modules/mineru-mcp/dist/index.js</span></span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="attr">MINERU_API_KEY:</span> <span class="string">your_api_key_here</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<p>加载配置后（一般是 <code>/reload</code> 或重启客户端），AI 工具列表里会多出 6 个工具：</p>
+<p>加载后 AI 工具列表会多出 6 个工具：</p>
 <table>
 <thead>
 <tr>
@@ -1224,11 +1415,11 @@
 </tr>
 <tr>
 <td><code>mineru_status</code></td>
-<td>查询解析状态、拿结果</td>
+<td>查进度、拿结果</td>
 </tr>
 <tr>
 <td><code>mineru_batch</code></td>
-<td>批量提交（最多 200 个）</td>
+<td>批量提交，最多 200 个</td>
 </tr>
 <tr>
 <td><code>mineru_batch_status</code></td>
@@ -1240,46 +1431,18 @@
 </tr>
 <tr>
 <td><code>mineru_download_results</code></td>
-<td>下载结果并保存为 Markdown</td>
+<td>下载结果存为 Markdown</td>
 </tr>
 </tbody></table>
-<hr>
-<h2 id="第五步：实战用法"><a href="#第五步：实战用法" class="headerlink" title="第五步：实战用法"></a>第五步：实战用法</h2><h3 id="单个-PDF-解析"><a href="#单个-PDF-解析" class="headerlink" title="单个 PDF 解析"></a>单个 PDF 解析</h3><p>让 AI 帮你调用：</p>
+<h2 id="别问我为啥知道，问就是踩过"><a href="#别问我为啥知道，问就是踩过" class="headerlink" title="别问我为啥知道，问就是踩过"></a>别问我为啥知道，问就是踩过</h2><h3 id="坑-1：解析状态长时间-Pending？不是-bug"><a href="#坑-1：解析状态长时间-Pending？不是-bug" class="headerlink" title="坑 1：解析状态长时间 Pending？不是 bug"></a>坑 1：解析状态长时间 Pending？不是 bug</h3><p>提交一个 100 页扫描版 PDF，过了一分钟还在 Pending。别慌，真不是挂了——复杂排版&#x2F;扫描件处理需要更长时间。</p>
+<p>正确做法：设置 5-10 秒轮询间隔，给 MCP 调用设 5 分钟 timeout。别因为单次响应慢就杀进程。</p>
+<h3 id="坑-2：spawn-node-ENOENT"><a href="#坑-2：spawn-node-ENOENT" class="headerlink" title="坑 2：spawn node ENOENT"></a>坑 2：<code>spawn node ENOENT</code></h3><p>根因上面说了——没用绝对路径。改了就再也没出现过。</p>
+<h3 id="坑-3：API-Key-被日志泄露"><a href="#坑-3：API-Key-被日志泄露" class="headerlink" title="坑 3：API Key 被日志泄露"></a>坑 3：API Key 被日志泄露</h3><p>调试时图方便，把 Key 写在 shell 命令里。结果被日志脚本捕获传到云端监控。还好及时发现。</p>
+<p><strong>铁律</strong>：调试用 <code>export MINERU_API_KEY=xxx</code>，完事立刻 <code>unset</code>。长期配置写 config.yaml 的 env 字段 + <code>chmod 600</code>。</p>
 <blockquote>
-<p>“帮我解析这篇论文 <a href="https://arxiv.org/pdf/2401.00001.pdf%EF%BC%8C%E6%8F%90%E5%8F%96%E6%A0%B8%E5%BF%83%E6%96%B9%E6%B3%95%E5%92%8C%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C">https://arxiv.org/pdf/2401.00001.pdf，提取核心方法和实验结果</a>“</p>
+<p>这一点不是 MinerU 的问题，是所有 API Key 管理的通用坑——但 MinerU 的部署过程中最容易犯错，因为你要在命令行、配置文件、MCP 配置三个地方协调。</p>
 </blockquote>
-<p>AI 会自动：</p>
-<ol>
-<li>调用 <code>mineru_parse</code> 提交任务</li>
-<li>调用 <code>mineru_status</code> 轮询状态</li>
-<li>拿到 Markdown 结果后做总结</li>
-</ol>
-<h3 id="批量解析（一键处理一堆论文）"><a href="#批量解析（一键处理一堆论文）" class="headerlink" title="批量解析（一键处理一堆论文）"></a>批量解析（一键处理一堆论文）</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">帮我批量解析这几篇 PDF：https://arxiv.org/pdf/A.pdf, https://arxiv.org/pdf/B.pdf, ...</span><br><span class="line">结果保存到 /root/knowledge_vault/raw/ 目录</span><br></pre></td></tr></table></figure>
-
-<h3 id="本地文件解析"><a href="#本地文件解析" class="headerlink" title="本地文件解析"></a>本地文件解析</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/tmp/contracts/ 目录里有几份扫描版合同，帮我提取关键条款（金额、期限、违约责任）</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第六步：踩坑记录"><a href="#第六步：踩坑记录" class="headerlink" title="第六步：踩坑记录"></a>第六步：踩坑记录</h2><h3 id="坑-1：解析状态长时间-Pending"><a href="#坑-1：解析状态长时间-Pending" class="headerlink" title="坑 1：解析状态长时间 Pending"></a>坑 1：解析状态长时间 Pending</h3><p><strong>现象</strong>：提交了一个 100 页的扫描版 PDF，过了 1 分钟还在 Pending 状态。</p>
-<p><strong>原因</strong>：复杂排版&#x2F;扫描件需要更长时间处理，<strong>这是正常现象不是 bug</strong>。</p>
-<p><strong>正确做法</strong>：</p>
-<ul>
-<li>设置合理的轮询间隔（5-10 秒一次）</li>
-<li>单次响应慢不要立即重试或杀进程</li>
-<li>给 MCP 调用设置 5 分钟左右的 timeout</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">60</span>):  <span class="comment"># 最多轮询 5 分钟</span></span><br><span class="line">    status = call_tool(<span class="string">&quot;mineru_status&quot;</span>, &#123;<span class="string">&quot;task_id&quot;</span>: task_id&#125;)</span><br><span class="line">    <span class="keyword">if</span> status[<span class="string">&quot;state&quot;</span>] == <span class="string">&quot;completed&quot;</span>:</span><br><span class="line">        <span class="keyword">return</span> status[<span class="string">&quot;result&quot;</span>]</span><br><span class="line">    time.sleep(<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
-
-<h3 id="坑-2：spawn-node-ENOENT-错误"><a href="#坑-2：spawn-node-ENOENT-错误" class="headerlink" title="坑 2：spawn node ENOENT 错误"></a>坑 2：<code>spawn node ENOENT</code> 错误</h3><p><strong>根因</strong>：配置里用了裸 <code>node</code> 命令，但 MCP 客户端的 PATH 环境变量里找不到。</p>
-<p><strong>解法</strong>：改用 Node 二进制的绝对路径（上面第一步已经强调）。</p>
-<h3 id="坑-3：API-Key-被日志泄露"><a href="#坑-3：API-Key-被日志泄露" class="headerlink" title="坑 3：API Key 被日志泄露"></a>坑 3：API Key 被日志泄露</h3><p><strong>现象</strong>：调试时为了方便，把 Key 直接写在 shell 命令里，结果被某段日志脚本捕获后传到云端监控。</p>
-<p><strong>解法</strong>：</p>
-<ul>
-<li>调试时用环境变量：<code>export MINERU_API_KEY=xxx &amp;&amp; call_tool ...</code></li>
-<li>配置完成立即 <code>unset MINERU_API_KEY</code></li>
-<li>长期配置写在 MCP 配置文件的 <code>env</code> 字段，并加权限 <code>chmod 600 config.yaml</code></li>
-</ul>
-<hr>
-<h2 id="第七步：实测效果"><a href="#第七步：实测效果" class="headerlink" title="第七步：实测效果"></a>第七步：实测效果</h2><p>我用 MinerU 解析了 50 篇 arXiv 论文（平均 15 页，含公式和图表），对比直接用 GPT-4 Vision 处理：</p>
+<h2 id="实测效果"><a href="#实测效果" class="headerlink" title="实测效果"></a>实测效果</h2><p>我用 MinerU 解析了 50 篇 arXiv 论文（平均 15 页，含公式图表），跟直接用 GPT-4 Vision 对比：</p>
 <table>
 <thead>
 <tr>
@@ -1309,33 +1472,34 @@
 <td>约 $5</td>
 </tr>
 <tr>
-<td>Token 消耗（喂给后续 LLM）</td>
-<td>显著更少</td>
+<td>Token 消耗（后续 LLM）</td>
+<td><strong>减少约 70%</strong></td>
 <td>较高</td>
 </tr>
 </tbody></table>
-<p>MinerU 输出的是干净的 Markdown，结构化程度高，<strong>喂给后续 LLM 的 token 消耗能减少 70% 左右</strong>。</p>
-<hr>
-<h2 id="第八步：高级用法（自动化场景）"><a href="#第八步：高级用法（自动化场景）" class="headerlink" title="第八步：高级用法（自动化场景）"></a>第八步：高级用法（自动化场景）</h2><h3 id="配合定时任务：每天自动解析-RSS-里的论文"><a href="#配合定时任务：每天自动解析-RSS-里的论文" class="headerlink" title="配合定时任务：每天自动解析 RSS 里的论文"></a>配合定时任务：每天自动解析 RSS 里的论文</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. RSS 抓取器发现新论文链接</span></span><br><span class="line"><span class="comment"># 2. 调用 mineru_batch 批量解析</span></span><br><span class="line"><span class="comment"># 3. mineru_download_results 保存到本地</span></span><br><span class="line"><span class="comment"># 4. 自动入库到知识库</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="配合-RAG：文档向量化前预处理"><a href="#配合-RAG：文档向量化前预处理" class="headerlink" title="配合 RAG：文档向量化前预处理"></a>配合 RAG：文档向量化前预处理</h3><p>MinerU 输出 Markdown → 拆分成 chunk → embedding 入向量库。整个链路无需任何人工干预。</p>
-<h3 id="配合论文阅读助手"><a href="#配合论文阅读助手" class="headerlink" title="配合论文阅读助手"></a>配合论文阅读助手</h3><p>把 MinerU + Claude &#x2F; GPT 组合成”论文精读机器人”：</p>
-<ol>
-<li>用户给 PDF URL</li>
-<li>MinerU 解析成 Markdown</li>
-<li>大模型读 Markdown，按”摘要&#x2F;方法&#x2F;实验&#x2F;结论”四段总结</li>
-<li>用户问细节时，针对性引用论文段落回答</li>
-</ol>
-<hr>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>MinerU 是我目前用过的国产开源文档解析里<strong>精度最高、部署最简单、成本最低</strong>的方案。配合 MCP 协议，几乎所有 AI IDE 和 Agent 框架都能零成本接入。</p>
-<p><strong>几个建议</strong>：</p>
+<p>MinerU 输出的 Markdown 结构干净，喂给 LLM 的 token 数比直接丢原文少 70%——省下来的 token 就是钱。</p>
+<h2 id="还能怎么玩"><a href="#还能怎么玩" class="headerlink" title="还能怎么玩"></a>还能怎么玩</h2><p><strong>配合定时任务</strong>：RSS 抓论文 → <code>mineru_batch</code> 批量解析 → 自动入库知识库。全链路无人值守。</p>
+<p><strong>配合 RAG</strong>：MinerU 输出 Markdown → 拆 chunk → embedding 入向量库。文档预处理从此告别手工。</p>
+<p><strong>配合论文阅读助手</strong>：给 PDF URL → MinerU 解析 → 大模型按”摘要&#x2F;方法&#x2F;实验&#x2F;结论”四段总结 → 用户问细节时引用段落回答。</p>
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：</p>
 <ul>
-<li><strong>个人学习用</strong>：免费额度完全够用，每天解析 100 篇论文都没问题</li>
-<li><strong>生产环境</strong>：建议买企业版 + 自己部署开源版做兜底</li>
-<li><strong>大批量任务</strong>：用 <code>mineru_batch</code> 比单篇循环快 5-10 倍</li>
-<li><strong>保留原始 PDF</strong>：解析结果虽然好，但 PDF 原件还是有保留价值</li>
+<li>经常处理论文、合同、技术文档的</li>
+<li>在用 Claude&#x2F;Cursor&#x2F;Cline 需要文档解析能力的</li>
+<li>想做自动化文档流水线的</li>
 </ul>
-<p>你在用什么工具解析 PDF？评论区聊聊～</p>
+<p><strong>不适合</strong>：</p>
+<ul>
+<li>只需要偶尔读一两页 PDF——直接用 AI 自带的 vision 就行</li>
+<li>处理内容涉及高度机密的——MinerU 走云端 API，数据会传到服务器</li>
+<li>预算为零的——免费额度对个人够用，企业需要付费</li>
+</ul>
+<blockquote>
+<p>MinerU 是目前国产开源文档解析里精度最高、部署最简单的方案。配合 MCP 协议，几乎所有 AI IDE 和 Agent 框架都能零成本接入。我跑了一个月，稳定性没问题。</p>
+</blockquote>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你用什么工具处理 PDF？评论区聊聊，说不定有更好的我还没发现。</p>
 ]]></content>
       <categories>
         <category>教程类</category>
@@ -1643,119 +1807,6 @@
       </tags>
   </entry>
   <entry>
-    <title>手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器</title>
-    <url>/2026/07/14/cli-proxy-api-docker-deploy-guide/</url>
-    <content><![CDATA[<p><img data-src="/images/cli-proxy-api-cover.webp" alt="CLI Proxy API 封面"></p>
-<p>你手头是不是有好几个 AI 大模型的 Key？Claude 一个、OpenAI 一个、Gemini 一个……每次换工具都要重新填一遍 Key，还要时刻担心 API 被封、不知道哪个 Key 还剩多少额度。说真的，用不了几天就头大了。</p>
-<p>今天这篇就带你部署一个神器，名字叫 <strong>CLI Proxy API</strong>。</p>
-<blockquote>
-<p>它像一个智能调度台：你只需要把所有大模型的 Key 一次性交给他，之后不管用 Claude Code、OpenAI 客户端还是 Gemini 工具，全部接到这个统一的入口上。它帮你做反向中转防封、自动负载均衡、实时用量监控——你再也不用东一个 Key 西一个 Key 地到处填了。</p>
-</blockquote>
-<p>这篇文章面向<strong>零基础小白</strong>。每一步我都会解释清楚”为什么这么做、这一步是在干什么”。跟着走就行。</p>
-<hr>
-<h2 id="动手之前，你需要准备什么"><a href="#动手之前，你需要准备什么" class="headerlink" title="动手之前，你需要准备什么"></a>动手之前，你需要准备什么</h2><p>只需要两样东西：</p>
-<p><strong>一台有公网 IP 的云服务器</strong>，海外的就行，已经装好了 Docker 和 Docker Compose。如果你还没装 Docker，可以看看我们之前的那篇 Docker 安装教程。</p>
-<p><strong>一个能 SSH 连上服务器的终端工具</strong>。Mac 用户用自带的终端，Windows 可以用 PowerShell 或者 Xshell，随便哪个都行。</p>
-<hr>
-<h2 id="部署开始"><a href="#部署开始" class="headerlink" title="部署开始"></a>部署开始</h2><h3 id="第一步：连上你的服务器"><a href="#第一步：连上你的服务器" class="headerlink" title="第一步：连上你的服务器"></a>第一步：连上你的服务器</h3><p>打开你的终端工具，输入下面这行命令，把”你的服务器IP”换成你真实的服务器地址：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh root@你的服务器IP</span><br></pre></td></tr></table></figure>
-
-<p>回车之后输入密码就进去了。看到一串欢迎文字，说明连接成功。</p>
-<h3 id="第二步：创建一个专门的文件夹"><a href="#第二步：创建一个专门的文件夹" class="headerlink" title="第二步：创建一个专门的文件夹"></a>第二步：创建一个专门的文件夹</h3><p>在 Linux 里，我们习惯把每个服务放在 <code>/opt</code> 目录下。先建一个文件夹，然后进去：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /opt/cli-proxy-api &amp;&amp; <span class="built_in">cd</span> /opt/cli-proxy-api</span><br></pre></td></tr></table></figure>
-
-<p><code>mkdir -p</code> 的意思是”如果上级目录不存在就自动创建”，防止报错。<code>&amp;&amp;</code> 代表前面命令成功了才执行后面的。现在你应该在 <code>/opt/cli-proxy-api</code> 这个目录下了。</p>
-<h3 id="第三步：创建-docker-compose-yml"><a href="#第三步：创建-docker-compose-yml" class="headerlink" title="第三步：创建 docker-compose.yml"></a>第三步：创建 docker-compose.yml</h3><p>Docker Compose 是 Docker 官方出的一个编排工具。你只需要写一个 <code>docker-compose.yml</code> 配置文件，告诉它”我要用什么镜像、开哪个端口、挂哪些文件夹”，然后一条命令就能把整个服务拉起来。比自己手动敲 <code>docker run</code> 十几行参数要省心得多。</p>
-<p>用 nano 编辑器新建这个文件：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nano docker-compose.yml</span><br></pre></td></tr></table></figure>
-
-<p>把下面这段原封不动粘贴进去：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">cli-proxy-api:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">eceasy/cli-proxy-api:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">cli-proxy-api</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;8317:8317&quot;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./config.yaml:/CLIProxyAPI/config.yaml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./auths:/root/.cli-proxy-api</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./logs:/CLIProxyAPI/logs</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br></pre></td></tr></table></figure>
-
-<p>我给你逐行解释一下这些字段是什么意思：</p>
-<p><strong><code>services:</code></strong> 表示”下面开始定义服务”。一个 docker-compose.yml 可以同时跑好几个服务，这里我们只定义一个。</p>
-<p><strong><code>cli-proxy-api:</code></strong> 是这个服务的名字，你可以随便起，但要跟下面 <code>container_name</code> 一致。</p>
-<p><strong><code>image: eceasy/cli-proxy-api:latest</code></strong> 告诉 Docker 去 Docker Hub 上拉取这个镜像。<code>eceasy/cli-proxy-api</code> 是镜像名，<code>latest</code> 表示最新版本。</p>
-<p><strong><code>container_name: cli-proxy-api</code></strong> 给跑起来的容器起个名字，方便之后用 <code>docker logs cli-proxy-api</code> 之类的命令查看它。</p>
-<p><strong><code>ports:</code></strong> 配置端口映射。<code>&quot;8317:8317&quot;</code> 的意思是：把容器里面的 8317 端口，映射到服务器的 8317 端口上。这样你访问 <code>服务器IP:8317</code> 就等于访问容器里的服务了。</p>
-<p><strong><code>volumes:</code></strong> 配置目录挂载。Docker 容器删除后，里面的所有数据都会丢失。所以我们必须把重要的目录”挂”到服务器本地：</p>
-<ul>
-<li><code>./config.yaml</code> 是核心配置文件，挂在本地不怕丢。</li>
-<li><code>./auths</code> 是存放各大模型登录凭证的目录。</li>
-<li><code>./logs</code> 是日志目录，方便排查问题。</li>
-</ul>
-<p><strong><code>restart: unless-stopped</code></strong> 让容器在服务器重启后自动启动，除非你手动执行了 <code>docker stop</code> 命令。</p>
-<p>粘贴完成后，按 <code>Ctrl+O</code> 保存文件，再按 <code>Ctrl+X</code> 退出 nano。</p>
-<h3 id="第四步：创建-config-yaml"><a href="#第四步：创建-config-yaml" class="headerlink" title="第四步：创建 config.yaml"></a>第四步：创建 config.yaml</h3><p>这是 CLI Proxy API 运行所必需的核心配置文件：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nano config.yaml</span><br></pre></td></tr></table></figure>
-
-<p>把下面内容粘进去：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">host:</span> <span class="string">&quot;0.0.0.0&quot;</span></span><br><span class="line"><span class="attr">port:</span> <span class="number">8317</span></span><br><span class="line"></span><br><span class="line"><span class="attr">remote-management:</span></span><br><span class="line">  <span class="attr">allow-remote:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">secret-key:</span> <span class="string">&quot;你设定的管理面板密码&quot;</span></span><br><span class="line">  <span class="attr">disable-control-panel:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="attr">auth-dir:</span> <span class="string">&quot;~/.cli-proxy-api&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">logging-to-file:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">logs-max-total-size-mb:</span> <span class="number">10</span></span><br><span class="line"><span class="attr">error-logs-max-files:</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
-
-<p>关键字段说明：</p>
-<p><strong><code>host: &quot;0.0.0.0&quot;</code></strong> 表示监听服务器上的所有网络接口。如果改成 <code>127.0.0.1</code>，就只能在本机访问，外网打不开。</p>
-<p><strong><code>port: 8317</code></strong> 服务监听的端口号。你可以改成别的，但要和上面 docker-compose.yml 里的端口映射保持一致。</p>
-<p><strong><code>remote-management:</code></strong> 管理面板的配置块：</p>
-<ul>
-<li><code>allow-remote: true</code> <strong>必须设为 true</strong>，否则从外网浏览器打不开管理面板，只能在本机用 <code>curl</code> 访问。</li>
-<li><code>secret-key</code> 是管理面板的登录密码。填一个你能记住的就行，服务启动后会自动把你的明文密码加密成哈希值存进文件，很安全。</li>
-<li><code>disable-control-panel: false</code> 表示启用 Web 管理面板（默认就是 false）。</li>
-</ul>
-<p><strong><code>auth-dir: &quot;~/.cli-proxy-api&quot;</code></strong> 存放各大模型认证信息的目录，后面你在面板里登录 Claude、OpenAI 等账号时，凭据就存在这里。</p>
-<p><strong><code>logging-to-file: true</code></strong> 开启日志写入文件，方便以后排查问题。</p>
-<p><strong><code>logs-max-total-size-mb: 10</code></strong> 日志总大小上限为 10MB，超出后自动滚动。</p>
-<p>保存并退出（<code>Ctrl+O</code> 然后 <code>Ctrl+X</code>）。</p>
-<h3 id="第五步：一键启动"><a href="#第五步：一键启动" class="headerlink" title="第五步：一键启动"></a>第五步：一键启动</h3><p>在项目目录下执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker compose up -d</span><br></pre></td></tr></table></figure>
-
-<p><code>-d</code> 是 detached 的缩写，意思是”放到后台运行”。等大约 10 秒钟，服务就完全启动了。</p>
-<h3 id="第六步：打开管理面板"><a href="#第六步：打开管理面板" class="headerlink" title="第六步：打开管理面板"></a>第六步：打开管理面板</h3><p>打开你的浏览器，在地址栏输入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">http://你的服务器IP:8317/management.html</span><br></pre></td></tr></table></figure>
-
-<p>用你刚才在 <code>secret-key</code> 里设置的密码登录。登录后就能看到一个 Web 管理面板，在这里你可以：</p>
-<ul>
-<li>添加各大模型的 API Key（Claude、OpenAI、Gemini 等等）</li>
-<li>配置反向中转规则</li>
-<li>查看每个 Key 的剩余额度和调用次数</li>
-<li>管理 OAuth 登录凭据</li>
-</ul>
-<p>然后在你本地的 Claude Code 或其他 AI 工具里，把 API 地址改成 <code>http://你的服务器IP:8317/v1</code>，Key 填你在管理面板里设置的 <code>api-keys</code>。这样所有请求都会经过这个统一的中转站，再也不用来回切换了。</p>
-<hr>
-<h2 id="一个重要踩坑提醒"><a href="#一个重要踩坑提醒" class="headerlink" title="一个重要踩坑提醒"></a>一个重要踩坑提醒</h2><p>有个小陷阱，我踩过了，你就不用再踩：<strong>不要用 <code>curl -I</code> 去检测这个服务是否正常运行</strong>。</p>
-<p><code>curl -I</code> 发送的是 HTTP HEAD 请求（只问服务器”你在不在”，不要实际内容）。但 CLI Proxy API 的 Go 后端对 HEAD 请求处理有 bug，会永远返回 404。</p>
-<p>如果你部署完后习惯性地跑一句 <code>curl -I http://IP:8317/management.html</code>，看到 404，然后以为服务挂了、反复重启排查，那就浪费半天时间了。</p>
-<p><strong>正确做法</strong>始终用 GET 请求：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl -s -o /dev/null -w <span class="string">&#x27;%&#123;http_code&#125;&#x27;</span> http://你的服务器IP:8317/management.html</span><br></pre></td></tr></table></figure>
-
-<p>这行命令的意思是：静默请求这个页面，只输出 HTTP 状态码。返回 <code>200</code> 就说明一切正常。</p>
-<hr>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>整个部署流程就是三步：</p>
-<ul>
-<li>写一个 <code>docker-compose.yml</code></li>
-<li>写一个 <code>config.yaml</code></li>
-<li>跑一句 <code>docker compose up -d</code></li>
-</ul>
-<p>跑起来之后，你所有的大模型 API Key 全部交给这一个面板统一管理。再也不用到处填 Key、担心封 IP、猜哪个 Key 快没额度了。</p>
-<blockquote>
-<p>工具越少，心智负担越小。把复杂度关进一个容器里，你就自由了。</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>AI工程</category>
-        <category>开源</category>
-      </categories>
-      <tags>
-        <tag>VPS</tag>
-        <tag>Docker</tag>
-        <tag>CLI Proxy API</tag>
-        <tag>AI 工具</tag>
-        <tag>大模型</tag>
-        <tag>自托管</tag>
-        <tag>中转</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
     <url>/2026/07/11/skillopt-agent-self-evolution/</url>
     <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
@@ -1799,70 +1850,9 @@
       <tags>
         <tag>AI Agent</tag>
         <tag>LLM</tag>
+        <tag>自动化运维</tag>
         <tag>SkillOpt</tag>
-        <tag>自动化运维</tag>
         <tag>工程实践</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>我的安全审计脚本，把自己的修复当成了攻击</title>
-    <url>/2026/07/21/audit-script-false-positive/</url>
-    <content><![CDATA[<p><img data-src="/images/audit-script-false-positive-cover.webp" alt="配图：安全审计误报与 Git 分叉陷阱全解"></p>
-<p>上线第三天，自动化巡检跑完给我发来一条告警：</p>
-<blockquote>
-<p>检测到敏感信息泄露，请立即处理。</p>
-</blockquote>
-<p>我打开一看，问题出在我刚刚修复过的文件里。我手动把一个旧 API Key 替换成了脱敏占位符，保存，提交，脚本扫了一眼，判定——<strong>你在泄露密钥</strong>。</p>
-<p>我没有泄露。我在修复泄露。</p>
-<p>但脚本不知道。</p>
-<blockquote>
-<p>一个无差别匹配的安全扫描器，会把你的修复动作本身判定为攻击。这是工具设计的根本性错误，不是参数问题。</p>
-</blockquote>
-<p>这是一个用一行正则解决的 Bug，但它背后的教训值得说清楚。</p>
-<h2 id="从”删除行”里找到的幽灵"><a href="#从”删除行”里找到的幽灵" class="headerlink" title="从”删除行”里找到的幽灵"></a>从”删除行”里找到的幽灵</h2><p>先把问题讲明白。</p>
-<p>Git 的 diff 格式大家都见过：加号开头是新增行，减号开头是删除行。</p>
-<p>当我脱敏一个文件，把 <code>sk-abcdefg...</code> 改成 <code>sk-xxx...</code> 之后，<code>git diff --cached</code> 会输出这样的内容：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">- &quot;api_key&quot;: &quot;sk-abcdefg...&quot;</span><br><span class="line">+ &quot;api_key&quot;: &quot;sk-xxx...&quot;</span><br></pre></td></tr></table></figure>
-
-<p>减号行是<strong>我要删掉的旧内容</strong>，加号行是<strong>我写进去的新内容</strong>。</p>
-<p>安全审计脚本是这么工作的：扫描整个 diff 文本，只要匹配到密钥格式的正则，就报告”发现密钥”。</p>
-<p>它看到了减号行里的旧 Key，然后……报警了。</p>
-<p>脱敏操作本身触发了安全告警。这就是这个审计脚本三个月来的工作状态——每次修复旧泄露，它都会把这次修复当成新的攻击来告警，形成一个永远无法收敛的误报循环。</p>
-<h2 id="一行正则，切断误报循环"><a href="#一行正则，切断误报循环" class="headerlink" title="一行正则，切断误报循环"></a>一行正则，切断误报循环</h2><p>修复极其简单。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 旧版：无差别扫描整个 diff 文本</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">        report_leak(line)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 新版：只检查新增行（加号开头），放行删除行（减号开头）</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> line.startswith(<span class="string">&#x27;+&#x27;</span>) <span class="keyword">and</span> <span class="keyword">not</span> line.startswith(<span class="string">&#x27;+++&#x27;</span>):</span><br><span class="line">        <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">            report_leak(line)</span><br></pre></td></tr></table></figure>
-
-<p>就这一个条件判断。</p>
-<p>但它解决的问题是：<strong>扫描器的目的是发现”我往代码里写进了什么”，不是发现”我从代码里删掉了什么”。</strong> 删掉的旧密钥，恰恰说明修复在生效。</p>
-<p>这个 Bug 之所以能存活三个月，是因为它每次触发的时机太特殊——只有在你做脱敏修复时才会误报，而做脱敏修复本身是低频操作。低频 Bug 是最难被发现的 Bug。</p>
-<h2 id="另一个同天发现的陷阱：Git-分叉"><a href="#另一个同天发现的陷阱：Git-分叉" class="headerlink" title="另一个同天发现的陷阱：Git 分叉"></a>另一个同天发现的陷阱：Git 分叉</h2><p>同一次巡检里，我还发现了第二个故障：自动同步脚本连续两天被 Git 拒绝了。</p>
-<p>报错是 <code>rejected: non-fast-forward</code>。</p>
-<p>根因是这样的：我在某次手动操作中直接 push 了一个提交，但定时任务里的同步脚本并不知道远端已经领先了。它拿着本地的旧状态去推，自然被拒。</p>
-<p>很多人遇到这种情况会选择 <code>git push --force</code>。我没有这么做，因为强推会覆盖远端历史，而远端的那个领先提交是我手动推上去的——是真实有效的历史，不是垃圾。</p>
-<p>正确的修复是在每次 push 前先同步一次：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 同步脚本新增：push 前先拉取远端最新状态</span></span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;fetch&#x27;</span>, <span class="string">&#x27;origin&#x27;</span>, <span class="string">&#x27;main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;rebase&#x27;</span>, <span class="string">&#x27;origin/main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line"><span class="comment"># 如果 rebase 有冲突，abort 并上报，不强行合并</span></span><br></pre></td></tr></table></figure>
-
-<p>fetch + rebase 的组合，保证本地历史在远端最新状态之上，push 永远是 fast-forward，永远不会被拒绝。</p>
-<blockquote>
-<p>两个故障的共同根因：脚本被写成了”假设世界不变”的样子，但世界一直在变。安全审计假设 diff 里出现的 Key 都是新写入的；同步脚本假设本地永远是最新的。现实打了它们的脸。</p>
-</blockquote>
-<h2 id="工具是写给特定假设的，假设一旦不成立就会出错"><a href="#工具是写给特定假设的，假设一旦不成立就会出错" class="headerlink" title="工具是写给特定假设的，假设一旦不成立就会出错"></a>工具是写给特定假设的，假设一旦不成立就会出错</h2><p>安全审计脚本误报，本质是设计时的隐含假设出了问题：”diff 里出现的密钥 &#x3D; 正在写入的密钥”。这个假设在 99% 的情况下成立，但在”正在做脱敏修复”这个场景下直接失效。</p>
-<p>Git 同步脚本失败，本质也是假设失效：”本地是最新的”。手动操作打破了这个假设。</p>
-<p>解法从来不是把假设藏得更深，而是<strong>明确说出假设，并为假设失效的情况写处理逻辑</strong>。</p>
-<p>一行 <code>if line.startswith(&#39;+&#39;)</code> 就是在说：我知道删除行也可能有 Key，但我不在乎，因为被删掉的东西不是威胁。</p>
-<p>一段 <code>fetch + rebase</code> 就是在说：我不假设本地最新，每次同步前先确认一次。</p>
-<p>工具越聪明，隐含假设越多，越容易在边缘场景翻车。把假设写清楚，才是让工具真正可靠的方式。</p>
-<p>这套思路能用在任何你维护的自动化脚本上，不只是 Git 和安全审计。</p>
-<p>你的自动化脚本里，还有多少”假设世界不变”的地方？</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>工程实践</category>
-      </categories>
-      <tags>
-        <tag>排障</tag>
-        <tag>自动化运维</tag>
-        <tag>Git</tag>
-        <tag>安全审计</tag>
       </tags>
   </entry>
   <entry>
@@ -1987,202 +1977,125 @@
       </tags>
   </entry>
   <entry>
-    <title>知乎开放平台 API 实战：用它搭一个内容聚合 / 智能体问答系统</title>
-    <url>/2026/06/20/zhihu-openapi-practical/</url>
+    <title>三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源</title>
+    <url>/2026/07/27/zhihu-openapi-practical/</url>
     <content><![CDATA[<p><img data-src="/images/zhihu-openapi-practical-cover.webp" alt="封面图"></p>
+<p>我跟你讲，知乎开放平台是被严重低估的东西。</p>
+<p>大多数人的印象还停在”知乎不就是个问答社区”，但它的开放平台藏了一套完整的 AI 内容基础设施——站内搜索、全网搜索、大模型问答、热榜数据。而且鉴权简单到离谱：一个 AccessSecret + 时间戳就搞定。</p>
+<p>最让我意外的是：<strong>直答 API 直接兼容 OpenAI 协议</strong>。现有的 GPT&#x2F;LangChain 工作流改一行 base_url 就能用知乎自家的模型。说真的，这东西接入成本是我用过最低的。</p>
+<p>下面是抄作业时间。</p>
+<h2 id="我为什么需要这个？"><a href="#我为什么需要这个？" class="headerlink" title="我为什么需要这个？"></a>我为什么需要这个？</h2><p>做 AI 应用最头疼的就是内容源。</p>
+<p>自己爬？反爬累死人。买数据？贵还不一定合规。接搜索引擎 API？Google&#x2F;Bing 的中文支持一团糟。</p>
+<p>知乎开放平台刚好卡在这个缝隙：中文高质量内容 + 合规 API + 几乎零成本。我跑通了三个场景：</p>
+<ul>
+<li>给 AI Agent 装个”知乎大脑”——让 Agent 能搜知乎、引用回答</li>
+<li>做舆情追踪——热榜 API 每分钟都有新数据</li>
+<li>搭智能问答——直答 API 三个模型档位，从快到深全有</li>
+</ul>
+<h2 id="鉴权：一个-Secret，一个时间戳"><a href="#鉴权：一个-Secret，一个时间戳" class="headerlink" title="鉴权：一个 Secret，一个时间戳"></a>鉴权：一个 Secret，一个时间戳</h2><p>注册开发者（<a href="https://developer.zhihu.com/profile%EF%BC%89%EF%BC%8C%E6%8B%BF">https://developer.zhihu.com/profile），拿</a> AccessSecret。所有 API 统一 Bearer 鉴权：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl -G <span class="string">&#x27;https://developer.zhihu.com/api/v1/content/zhihu_search&#x27;</span> \</span><br><span class="line">  --data-urlencode <span class="string">&#x27;Query=AI Agent&#x27;</span> \</span><br><span class="line">  -H <span class="string">&#x27;Authorization: Bearer 你的AccessSecret&#x27;</span> \</span><br><span class="line">  -H <span class="string">&quot;X-Request-Timestamp: <span class="subst">$(date +%s)</span>&quot;</span> \</span><br><span class="line">  -H <span class="string">&#x27;Content-Type: application/json&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>两个必传 Header：<code>Authorization</code> 和 <code>X-Request-Timestamp</code>。</p>
 <blockquote>
-<p>知乎官方开放平台提供了站内搜索、全网搜索、知乎直答（问答）、热榜四大类 API&#x2F;Skill&#x2F;MCP。这篇从实操角度，把每一类接口”怎么用、什么时候用、有什么坑”完整梳理一遍。</p>
+<p>我踩的第一个坑：忘带 X-Request-Timestamp，直接被拒。文档里这一行位置不起眼，但它是必传的。</p>
 </blockquote>
-<hr>
-<h2 id="先说定位：知乎-API-适合什么场景"><a href="#先说定位：知乎-API-适合什么场景" class="headerlink" title="先说定位：知乎 API 适合什么场景"></a>先说定位：知乎 API 适合什么场景</h2><p>简单理解：知乎开放平台把它的内容检索、问答和热榜能力，以 API&#x2F;MCP&#x2F;Skill 三种形式开放出来。<strong>不是给”刷数据”用的，而是给 AI 应用做”内容源”用的</strong>。</p>
-<p>常见用法：</p>
-<table>
-<thead>
-<tr>
-<th>场景</th>
-<th>用哪个 API</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>给 AI 助手加上”查知乎”的能力</td>
-<td>直答 API &#x2F; 全网搜索</td>
-</tr>
-<tr>
-<td>做内容聚合（自动追踪话题）</td>
-<td>站内搜索 + 热榜</td>
-</tr>
-<tr>
-<td>做舆情监控或趋势分析</td>
-<td>热榜 + 全网搜索的 <code>filter</code> 参数</td>
-</tr>
-<tr>
-<td>在 Claude &#x2F; GPT &#x2F; LangChain 工作流里嵌入</td>
-<td>MCP 协议（标准接口）</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="第一步：拿到-Access-Secret（鉴权）"><a href="#第一步：拿到-Access-Secret（鉴权）" class="headerlink" title="第一步：拿到 Access Secret（鉴权）"></a>第一步：拿到 Access Secret（鉴权）</h2><h3 id="注册和拿-key"><a href="#注册和拿-key" class="headerlink" title="注册和拿 key"></a>注册和拿 key</h3><p>到 <a href="https://developer.zhihu.com/profile">https://developer.zhihu.com/profile</a> 注册并创建应用。审核通过后（一般很快），在个人中心能看到 <strong><code>Access Secret</code></strong>。</p>
-<h3 id="调用格式"><a href="#调用格式" class="headerlink" title="调用格式"></a>调用格式</h3><p>所有 API 统一用 Bearer 鉴权 + 时间戳防重放：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl -G <span class="string">&#x27;https://developer.zhihu.com/api/v1/content/zhihu_search&#x27;</span> \</span><br><span class="line">  --data-urlencode <span class="string">&#x27;Query=怎么理解rave文化&#x27;</span> \</span><br><span class="line">  -H <span class="string">&#x27;Authorization: Bearer 你的AccessSecret&#x27;</span> \</span><br><span class="line">  -H <span class="string">&quot;X-Request-Timestamp: <span class="subst">$(date +%s)</span>&quot;</span> \</span><br><span class="line">  -H <span class="string">&#x27;Content-Type: application/json&#x27;</span></span><br></pre></td></tr></table></figure>
+<h2 id="四大接口，各有用处"><a href="#四大接口，各有用处" class="headerlink" title="四大接口，各有用处"></a>四大接口，各有用处</h2><h3 id="站内搜索"><a href="#站内搜索" class="headerlink" title="站内搜索"></a>站内搜索</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/zhihu_search?Query=关键词&amp;Count=10</span><br></pre></td></tr></table></figure>
 
-<p><strong>两个必填 Header</strong>：</p>
-<ul>
-<li><code>Authorization: Bearer &lt;你的AccessSecret&gt;</code></li>
-<li><code>X-Request-Timestamp</code>: 秒级 Unix 时间戳（<code>date +%s</code>），<strong>必须传当前时间</strong>，服务端会校验时间偏差</li>
-</ul>
-<p><strong>最容易踩的坑</strong>：忘记带 <code>X-Request-Timestamp</code>，直接被拒。文档里这一行很多人没注意。</p>
-<hr>
-<h2 id="第二步：四大类接口的使用场景"><a href="#第二步：四大类接口的使用场景" class="headerlink" title="第二步：四大类接口的使用场景"></a>第二步：四大类接口的使用场景</h2><h3 id="1-站内搜索（zhihu-search）"><a href="#1-站内搜索（zhihu-search）" class="headerlink" title="1. 站内搜索（zhihu_search）"></a>1. 站内搜索（zhihu_search）</h3><p><strong>什么时候用</strong>：你想在 AI 应用里加”查知乎站内”的按钮或指令。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/zhihu_search</span><br></pre></td></tr></table></figure>
+<p><code>Query</code> 必填不能空。<code>Count</code> 最大 10。返回字段很全：标题、内容类型、赞同数、评论数、作者、权威等级、排序分。</p>
+<p>一个被低估的字段：<strong><code>AuthorityLevel</code>（权威等级）</strong>。做严肃问答用它过滤，比只看赞同数靠谱。</p>
+<h3 id="全网搜索"><a href="#全网搜索" class="headerlink" title="全网搜索"></a>全网搜索</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/global_search?Query=关键词&amp;Count=20</span><br></pre></td></tr></table></figure>
 
-<p>参数：</p>
-<ul>
-<li><code>Query</code>（必填）：关键词</li>
-<li><code>Count</code>（选填）：返回数量，默认 10，<strong>最大 10</strong>（多了服务端会截断）</li>
-</ul>
-<p>返回字段：<code>Title</code>、<code>ContentType</code>（Article&#x2F;Answer）、<code>ContentID</code>、<code>Url</code>、<code>VoteUpCount</code>、<code>CommentCount</code>、<code>AuthorName</code>、<code>AuthorAvatar</code>、<code>EditTime</code>、<code>AuthorityLevel</code>、<code>RankingScore</code>。</p>
-<p><strong>实战注意</strong>：</p>
-<ul>
-<li>关键词必须是非空字符串，空字符串直接报错</li>
-<li>想根据赞同数排序，自己拿到结果后做后处理；接口本身只按 <code>RankingScore</code> 排序（综合分）</li>
-<li><code>AuthorityLevel</code>（权威等级）是个被低估的字段——做严肃问答时可以用它做过滤</li>
-</ul>
-<h3 id="2-全网搜索（global-search）"><a href="#2-全网搜索（global-search）" class="headerlink" title="2. 全网搜索（global_search）"></a>2. 全网搜索（global_search）</h3><p><strong>什么时候用</strong>：你想搜全网（不只是知乎），但要中文优先、知乎生态过滤。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/global_search</span><br></pre></td></tr></table></figure>
-
-<p>参数：</p>
-<ul>
-<li><code>Query</code>（必填）</li>
-<li><code>Count</code>（选填）：默认 10，<strong>最大 20</strong></li>
-<li><code>SearchDB</code>：<code>all</code>（默认）&#x2F; <code>realtime</code>（实时）&#x2F; <code>static</code>（静态索引）</li>
-<li><code>Filter</code>：高级语法筛选，<strong>必须 URL 编码</strong></li>
-</ul>
-<p><strong><code>Filter</code> 是这个接口的灵魂</strong>，比如：</p>
+<p><code>Filter</code> 参数是灵魂。比如锁定特定网站 + 时间范围：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">host==&quot;example.com&quot; AND publish_time&gt;=1778494631</span><br></pre></td></tr></table></figure>
 
-<p>支持 <code>host</code>（站点域名过滤）+ <code>publish_time</code>（时间过滤）+ <code>AND</code>&#x2F;<code>OR</code> 逻辑。</p>
-<p><strong>重要提示</strong>：<code>host</code> 不支持搜索知乎站内（<code>zhihu.com</code> 及子域名会被排除），搜站内必须用第一个接口。</p>
-<h3 id="3-知乎直答（zhida）-问答大模型"><a href="#3-知乎直答（zhida）-问答大模型" class="headerlink" title="3. 知乎直答（zhida）- 问答大模型"></a>3. 知乎直答（zhida）- 问答大模型</h3><p><strong>什么时候用</strong>：你想让 AI 应用直接调用知乎自家的大模型（基于知乎内容训练）。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">POST https://developer.zhihu.com/v1/chat/completions</span><br></pre></td></tr></table></figure>
+<p>支持 <code>host</code>（域名）、<code>publish_time</code>（时间戳）、<code>AND</code>&#x2F;<code>OR</code> 和括号。传入时注意 <strong>URL 编码</strong>。</p>
+<p>隐藏限制：<code>host</code> 不支持搜 zhihu.com 及子域名——搜站内请用上一个接口。</p>
+<h3 id="知乎直答（兼容-OpenAI-协议！）"><a href="#知乎直答（兼容-OpenAI-协议！）" class="headerlink" title="知乎直答（兼容 OpenAI 协议！）"></a>知乎直答（兼容 OpenAI 协议！）</h3><p>真香警告：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> openai, time</span><br><span class="line"></span><br><span class="line">client = openai.OpenAI(</span><br><span class="line">    api_key=<span class="string">&quot;你的AccessSecret&quot;</span>,</span><br><span class="line">    base_url=<span class="string">&quot;https://developer.zhihu.com/v1&quot;</span>,</span><br><span class="line">    default_headers=&#123;<span class="string">&quot;X-Request-Timestamp&quot;</span>: <span class="built_in">str</span>(<span class="built_in">int</span>(time.time()))&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">response = client.chat.completions.create(</span><br><span class="line">    model=<span class="string">&quot;zhida-thinking-1p5&quot;</span>,</span><br><span class="line">    messages=[&#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;什么是 RAG？&quot;</span>&#125;]</span><br><span class="line">)</span><br><span class="line"><span class="comment"># response.choices[0].message.reasoning_content  → 推理过程</span></span><br><span class="line"><span class="comment"># response.choices[0].message.content             → 最终回答</span></span><br></pre></td></tr></table></figure>
 
-<p><strong>这个接口是 OpenAI 兼容的</strong>，可以直接套 OpenAI SDK：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> openai</span><br><span class="line"></span><br><span class="line">client = openai.OpenAI(</span><br><span class="line">    api_key=<span class="string">&quot;你的AccessSecret&quot;</span>,</span><br><span class="line">    base_url=<span class="string">&quot;https://developer.zhihu.com/v1&quot;</span>,</span><br><span class="line">    default_headers=&#123;<span class="string">&quot;X-Request-Timestamp&quot;</span>: <span class="built_in">str</span>(<span class="built_in">int</span>(time.time()))&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">response = client.chat.completions.create(</span><br><span class="line">    model=<span class="string">&quot;zhida-thinking-1p5&quot;</span>,  <span class="comment"># 深度思考模式</span></span><br><span class="line">    messages=[&#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;什么是 RAG？&quot;</span>&#125;]</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<p><strong>模型档位</strong>：</p>
+<p>三个档位：</p>
 <table>
 <thead>
 <tr>
 <th>模型</th>
 <th>特点</th>
+<th>什么时候用</th>
 </tr>
 </thead>
 <tbody><tr>
 <td><code>zhida-fast-1p5</code></td>
-<td>快速回答，日常推荐</td>
+<td>快速回答</td>
+<td>日常够用</td>
 </tr>
 <tr>
 <td><code>zhida-thinking-1p5</code></td>
-<td>深度思考，输出包含 <code>reasoning_content</code>（推理过程）</td>
+<td>深度思考，含推理过程</td>
+<td>需要解释”为什么”</td>
 </tr>
 <tr>
 <td><code>zhida-agent</code></td>
-<td>智能检索 + 回答（类似 RAG 模式）</td>
+<td>智能检索+回答</td>
+<td>类似 RAG 模式</td>
 </tr>
 </tbody></table>
-<p><strong>流式响应</strong>：支持 SSE 格式，包含 <code>reasoning_content</code> 和 <code>content</code> 两段。前端可以分别渲染”思考过程”和”最终答案”。</p>
-<h3 id="4-知乎热榜（hot-list）"><a href="#4-知乎热榜（hot-list）" class="headerlink" title="4. 知乎热榜（hot_list）"></a>4. 知乎热榜（hot_list）</h3><p><strong>什么时候用</strong>：做内容聚合、舆情监控、趋势追踪。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/hot_list?Limit=30</span><br></pre></td></tr></table></figure>
+<p>支持流式 SSE。前端可以直接渲染 <code>reasoning_content</code> 做”AI 在思考”动画。</p>
+<blockquote>
+<p>【亲测】直答 MCP 用的是 Streamable HTTP，默认会阻塞等完整输出。需要流式增量或看推理过程，别走 MCP，直接调原生 completions API。</p>
+</blockquote>
+<h3 id="知乎热榜"><a href="#知乎热榜" class="headerlink" title="知乎热榜"></a>知乎热榜</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">GET https://developer.zhihu.com/api/v1/content/hot_list?Limit=30</span><br></pre></td></tr></table></figure>
 
-<p>参数：<code>Limit</code>（选填），默认 30，最大 30。</p>
-<p>返回结构非常清晰：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;Total&quot;</span><span class="punctuation">:</span> <span class="number">30</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;Items&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;Title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;如何看待当前 AI Agent 的发展趋势？&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;Url&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://www.zhihu.com/question/123456789&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;ThumbnailUrl&quot;</span><span class="punctuation">:</span> <span class="string">&quot;...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;Summary&quot;</span><span class="punctuation">:</span> <span class="string">&quot;...&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>实战技巧</strong>：</p>
-<ul>
-<li>把热榜数据 + 直答 API 组合：自动生成”今日热议话题解读”</li>
-<li>用 <code>ThumbnailUrl</code> 做封面图，比你自己爬知乎省事得多</li>
-<li>注意频率限制，<strong>别高频调用</strong>，会被限流（错误码 30001）</li>
-</ul>
-<hr>
-<h2 id="第三步：选-API、Skill-还是-MCP？"><a href="#第三步：选-API、Skill-还是-MCP？" class="headerlink" title="第三步：选 API、Skill 还是 MCP？"></a>第三步：选 API、Skill 还是 MCP？</h2><p>知乎开放平台针对每个接口提供了<strong>三种形式</strong>：</p>
-<table>
+<p>返回 <code>Title</code>、<code>Url</code>、<code>ThumbnailUrl</code>、<code>Summary</code>。<code>ThumbnailUrl</code> 是免费封面图——做聚合产品直接用。</p>
+<p>注意频率：别高频调用，会被限流（错误码 30001）。</p>
+<h2 id="别问我为啥知道，问就是踩过"><a href="#别问我为啥知道，问就是踩过" class="headerlink" title="别问我为啥知道，问就是踩过"></a>别问我为啥知道，问就是踩过</h2><h3 id="API、Skill、MCP-三种形式别乱选"><a href="#API、Skill、MCP-三种形式别乱选" class="headerlink" title="API、Skill、MCP 三种形式别乱选"></a>API、Skill、MCP 三种形式别乱选</h3><table>
 <thead>
 <tr>
 <th>形式</th>
 <th>适合谁</th>
-<th>优点</th>
+<th>坑</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><strong>RESTful API</strong></td>
-<td>后端开发、自己写代码</td>
+<td>RESTful API</td>
+<td>后端开发</td>
 <td>最灵活</td>
 </tr>
 <tr>
-<td><strong>Skill 包</strong>（.zip）</td>
-<td>想要开箱即用的 Agent 框架</td>
-<td>预制好 Agent 调用逻辑</td>
+<td>Skill 包 (.zip)</td>
+<td>想开箱即用</td>
+<td>定制空间有限</td>
 </tr>
 <tr>
-<td><strong>MCP</strong></td>
-<td>Claude Desktop、Cursor 等支持 MCP 的工具</td>
-<td>标准协议，接入即用</td>
+<td>MCP</td>
+<td>Claude&#x2F;Cursor&#x2F;Cline</td>
+<td>直答 MCP 不支持流式</td>
 </tr>
 </tbody></table>
-<h3 id="推荐用法"><a href="#推荐用法" class="headerlink" title="推荐用法"></a>推荐用法</h3><p><strong>如果你用 Claude Desktop &#x2F; Cursor &#x2F; Cline 等 AI IDE</strong>：</p>
-<p>直接配 MCP。比如直答 MCP 的配置：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;mcpServers&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;zhihu-zhida&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;url&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://developer.zhihu.com/api/mcp/zhida/v1/stream&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;headers&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;Authorization&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Bearer 你的AccessSecret&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>我选原生 API——自建 Agent 和工作流需要最大控制权。</p>
+<h3 id="AccessSecret-别暴露在前端"><a href="#AccessSecret-别暴露在前端" class="headerlink" title="AccessSecret 别暴露在前端"></a>AccessSecret 别暴露在前端</h3><p>所有 API 调用走后端做中转，前端只调自己的后端。把 AccessSecret 写在前端代码里，浏览器 DevTools 几秒钟就能看到。</p>
+<h3 id="三种接入形式的-MCP-端点各不同"><a href="#三种接入形式的-MCP-端点各不同" class="headerlink" title="三种接入形式的 MCP 端点各不同"></a>三种接入形式的 MCP 端点各不同</h3><p>站内搜索和热榜用 MCP over SSE（两个 URL：SSE + Message），直答用 Streamable HTTP（单一 stream 端点）。配 MCP 时注意区分。</p>
+<h2 id="效果：10-分钟搭一个热榜解读"><a href="#效果：10-分钟搭一个热榜解读" class="headerlink" title="效果：10 分钟搭一个热榜解读"></a>效果：10 分钟搭一个热榜解读</h2><p>把热榜 API + 直答 API 串起来：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. 拉热榜</span></span><br><span class="line">hot = requests.get(</span><br><span class="line">    <span class="string">&quot;https://developer.zhihu.com/api/v1/content/hot_list&quot;</span>,</span><br><span class="line">    headers=HEADERS, params=&#123;<span class="string">&quot;Limit&quot;</span>: <span class="number">10</span>&#125;</span><br><span class="line">).json()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 直答生成百字解读</span></span><br><span class="line"><span class="keyword">for</span> item <span class="keyword">in</span> hot[<span class="string">&quot;Data&quot;</span>][<span class="string">&quot;Items&quot;</span>]:</span><br><span class="line">    response = client.chat.completions.create(</span><br><span class="line">        model=<span class="string">&quot;zhida-fast-1p5&quot;</span>,</span><br><span class="line">        messages=[&#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">f&quot;100字解读：<span class="subst">&#123;item[<span class="string">&#x27;Title&#x27;</span>]&#125;</span>&quot;</span>&#125;],</span><br><span class="line">        stream=<span class="literal">False</span></span><br><span class="line">    )</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;🔥 <span class="subst">&#123;item[<span class="string">&#x27;Title&#x27;</span>]&#125;</span>\n   <span class="subst">&#123;response.choices[<span class="number">0</span>].message.content&#125;</span>\n&quot;</span>)</span><br><span class="line">    time.sleep(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
 
-<p><strong>注意</strong>：直答 MCP 用了 Streamable HTTP 传输，单一 stream 端点处理所有 RPC 请求。它默认会阻塞等待完整响应，<strong>如果你需要流式增量输出或看推理过程，建议直接调原生 completions API 而不是 MCP</strong>。</p>
-<p><strong>如果你自建 Agent &#x2F; 工作流</strong>：</p>
-<p>直接调原生 API 更可控，特别是 <code>reasoning_content</code> 这种深度推理字段。</p>
-<hr>
-<h2 id="第四步：常见错误码"><a href="#第四步：常见错误码" class="headerlink" title="第四步：常见错误码"></a>第四步：常见错误码</h2><figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;code&quot;</span><span class="punctuation">:</span> <span class="number">20001</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;鉴权失败&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<table>
-<thead>
-<tr>
-<th>错误码</th>
-<th>说明</th>
-<th>排查方向</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>0</td>
-<td>成功</td>
-<td>-</td>
-</tr>
-<tr>
-<td>10001</td>
-<td>参数错误</td>
-<td>检查 query 字段是否为空、格式是否正确</td>
-</tr>
-<tr>
-<td>20001</td>
-<td>鉴权失败</td>
-<td>检查 AccessSecret 是否过期、是否带 <code>Bearer</code> 前缀</td>
-</tr>
-<tr>
-<td>30001</td>
-<td>频率限制</td>
-<td>降低调用频率、加退避</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="实战：一个简单的”知乎热榜-解读”工作流"><a href="#实战：一个简单的”知乎热榜-解读”工作流" class="headerlink" title="实战：一个简单的”知乎热榜 + 解读”工作流"></a>实战：一个简单的”知乎热榜 + 解读”工作流</h2><p>把上面几个 API 串起来：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> openai</span><br><span class="line"></span><br><span class="line">ACCESS_SECRET = <span class="string">&quot;你的AccessSecret&quot;</span></span><br><span class="line">HEADERS = &#123;</span><br><span class="line">    <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;ACCESS_SECRET&#125;</span>&quot;</span>,</span><br><span class="line">    <span class="string">&quot;X-Request-Timestamp&quot;</span>: <span class="built_in">str</span>(<span class="built_in">int</span>(time.time())),</span><br><span class="line">    <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 拉热榜</span></span><br><span class="line">hot = requests.get(</span><br><span class="line">    <span class="string">&quot;https://developer.zhihu.com/api/v1/content/hot_list&quot;</span>,</span><br><span class="line">    headers=HEADERS,</span><br><span class="line">    params=&#123;<span class="string">&quot;Limit&quot;</span>: <span class="number">10</span>&#125;</span><br><span class="line">).json()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 用直答 API 给每个热点生成一段解读</span></span><br><span class="line">client = openai.OpenAI(</span><br><span class="line">    api_key=ACCESS_SECRET,</span><br><span class="line">    base_url=<span class="string">&quot;https://developer.zhihu.com/v1&quot;</span>,</span><br><span class="line">    default_headers=HEADERS</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> item <span class="keyword">in</span> hot[<span class="string">&quot;Data&quot;</span>][<span class="string">&quot;Items&quot;</span>]:</span><br><span class="line">    response = client.chat.completions.create(</span><br><span class="line">        model=<span class="string">&quot;zhida-fast-1p5&quot;</span>,</span><br><span class="line">        messages=[&#123;</span><br><span class="line">            <span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>,</span><br><span class="line">            <span class="string">&quot;content&quot;</span>: <span class="string">f&quot;请用 100 字解读这个知乎热榜话题：<span class="subst">&#123;item[<span class="string">&#x27;Title&#x27;</span>]&#125;</span>&quot;</span></span><br><span class="line">        &#125;],</span><br><span class="line">        stream=<span class="literal">False</span></span><br><span class="line">    )</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;🔥 <span class="subst">&#123;item[<span class="string">&#x27;Title&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;   <span class="subst">&#123;response.choices[<span class="number">0</span>].message.content&#125;</span>\n&quot;</span>)</span><br><span class="line">    time.sleep(<span class="number">1</span>)  <span class="comment"># 避免频率限制</span></span><br></pre></td></tr></table></figure>
-
-<p>10 分钟就能搭一个”今日知乎热议 Top 10 解读”的脚本。</p>
-<hr>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>知乎开放平台相比其他大厂的开放平台，<strong>最良心的是 API 设计得规范、文档清晰、鉴权简单</strong>。特别是直答 API 直接兼容 OpenAI 协议，做应用接入几乎零成本。</p>
-<p>几个建议：</p>
+<p>10 分钟，”今日知乎热议 Top 10 解读”就出来了。</p>
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：</p>
 <ul>
-<li><strong>不要高频调用</strong>：热榜 1 小时拉一次足够了，搜索按需调用</li>
-<li><strong>优先用站内搜索 API 而不是爬知乎</strong>：合规、稳定、有官方支持</li>
-<li><strong>直答 API 的 <code>reasoning_content</code> 字段</strong>：做”思考过程可视化”特别有用，很多前端直接渲染这个字段做”AI 在思考”的效果</li>
-<li><strong>AccessSecret 不要暴露在前端</strong>：所有 API 调用走后端代理，前端只调自己的后端</li>
+<li>做 AI 应用需要中文内容源的开发者</li>
+<li>用 Claude&#x2F;Cursor&#x2F;Cline 想接入知乎搜索的</li>
+<li>做舆情监控&#x2F;内容聚合的</li>
 </ul>
-<p>有问题欢迎评论区交流，或者告诉我你打算用知乎 API 做什么项目～</p>
+<p><strong>不适合</strong>：</p>
+<ul>
+<li>想批量抓数据做训练的——API 有频率限制，不是干这个的</li>
+<li>需要实时毫秒级响应的——不是设计目标</li>
+<li>期望完全免费的——有额度限制，大量调用需要付费</li>
+</ul>
+<blockquote>
+<p>知乎开放平台最良心的一点：API 设计规范、鉴权简单、直答兼容 OpenAI 协议。这三个加起来，接入体验吊打大多数大厂的开放平台。</p>
+</blockquote>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你用什么东西给你 AI Agent 喂内容？评论区聊聊，说不定有更好的我还没试。</p>
 ]]></content>
       <categories>
         <category>教程类</category>
@@ -2193,200 +2106,6 @@
         <tag>MCP</tag>
         <tag>知乎</tag>
         <tag>AI应用</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白</title>
-    <url>/2026/06/20/magnet-crawler-fallback/</url>
-    <content><![CDATA[<p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>想自己写个磁力搜索的爬虫？看完市面上大大小小的资源站，我总结出一套”分级降级”的实战规约：从纯静态正则到 Headless 浏览器破盾，按需升级，<strong>用最低成本搞定 80% 的网站</strong>。</p>
-</blockquote>
-<hr>
-<h2 id="写在前面：为什么写这篇"><a href="#写在前面：为什么写这篇" class="headerlink" title="写在前面：为什么写这篇"></a>写在前面：为什么写这篇</h2><p>磁力搜索这件事，国内的站基本都活不长，今天能用的站明天就挂；国外的站又普遍有强反爬。<strong>纯靠 requests 写爬虫，十有八九会失败</strong>。</p>
-<p>我摸索了一段时间，把”什么站用什么级别、什么级别用什么技术栈、怎么保护宿主机资源”整理出一套实战规约。这篇不是完整的爬虫教程，而是<strong>一份选型决策树</strong>——让你面对一个新站时，能快速判断该用什么级别去打。</p>
-<hr>
-<h2 id="核心原则：分级降级，按需升级"><a href="#核心原则：分级降级，按需升级" class="headerlink" title="核心原则：分级降级，按需升级"></a>核心原则：分级降级，按需升级</h2><p>爬虫的级别从低到高，开销也越来越大。我设计了 4 个级别：</p>
-<table>
-<thead>
-<tr>
-<th>级别</th>
-<th>适用场景</th>
-<th>资源开销</th>
-<th>技术栈</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>🟢 1 - 静态正则</td>
-<td>上古 HTML 站，无反爬</td>
-<td>极低</td>
-<td>requests + BeautifulSoup + re</td>
-</tr>
-<tr>
-<td>🟡 2 - 复杂静态</td>
-<td>链接在 JS&#x2F;隐藏 input 里</td>
-<td>中等</td>
-<td>requests + Base64 解码</td>
-</tr>
-<tr>
-<td>🟠 3 - Headless 浏览器</td>
-<td>必须点真实 DOM 才出链接</td>
-<td>高</td>
-<td>Playwright</td>
-</tr>
-<tr>
-<td>🔴 4 - 终极破盾</td>
-<td>Cloudflare 5秒盾</td>
-<td>极高</td>
-<td>DrissionPage</td>
-</tr>
-</tbody></table>
-<p><strong>核心原则</strong>：<strong>一旦当前级别能搞定，立刻返回，绝不无故触发下一级</strong>。这是为了最大化保护宿主机——Headless 浏览器一启动就吃 500MB+ 内存，跑 10 个 VPS 就可能把你服务器干爆。</p>
-<hr>
-<h2 id="第一级：纯静态正则（80-的简单站靠这个）"><a href="#第一级：纯静态正则（80-的简单站靠这个）" class="headerlink" title="第一级：纯静态正则（80% 的简单站靠这个）"></a>第一级：纯静态正则（80% 的简单站靠这个）</h2><h3 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>上古时代的论坛、下载站</li>
-<li>HTML 直接把磁力链接写在页面上</li>
-<li>0 反爬措施，没有 Cloudflare、没有 JS 渲染</li>
-</ul>
-<p>典型代表：<code>dygod.net</code>（电影天堂）、各种老 PT 论坛</p>
-<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line">HEADERS = &#123;</span><br><span class="line">    <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MAGNET_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;magnet:\?xt=urn:btih:[a-zA-Z0-9]+&#x27;</span>, re.I)</span><br><span class="line">FTP_RE = re.<span class="built_in">compile</span>(<span class="string">r&#x27;ftp://[^\s&quot;\&#x27;&lt;&gt;]+&#x27;</span>, re.I)</span><br></pre></td></tr></table></figure>
-
-<h3 id="实战代码"><a href="#实战代码" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level1</span>(<span class="params">search_url, headers=<span class="literal">None</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别1：纯静态正则&quot;&quot;&quot;</span></span><br><span class="line">    h = headers <span class="keyword">or</span> HEADERS</span><br><span class="line">    resp = requests.get(search_url, headers=h, timeout=<span class="number">15</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 老旧网站常用 GB2312 编码，必须显式声明</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;gb2312&#x27;</span> <span class="keyword">in</span> (resp.apparent_encoding <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span>).lower():</span><br><span class="line">        resp.encoding = <span class="string">&#x27;gb2312&#x27;</span></span><br><span class="line"></span><br><span class="line">    html = resp.text</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 一次性提取所有磁力和 FTP</span></span><br><span class="line">    magnets = <span class="built_in">set</span>(MAGNET_RE.findall(html))</span><br><span class="line">    ftps = <span class="built_in">set</span>(FTP_RE.findall(html))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(magnets) + <span class="built_in">list</span>(ftps)</span><br></pre></td></tr></table></figure>
-
-<h3 id="实战经验"><a href="#实战经验" class="headerlink" title="实战经验"></a>实战经验</h3><ol>
-<li><strong>绕开主页</strong>：不要在主页白费力气。先用站内搜索或 Google <code>site:xxx 关键字</code> 定位到具体的<strong>详情页</strong>，详情页的链接密度更高</li>
-<li><strong>编码处理</strong>：老站常用 GB2312，不显式声明会乱码</li>
-<li><strong>去重</strong>：同一页面可能有重复链接，用 <code>set</code> 去重</li>
-<li><strong>资源消耗</strong>：全程不到 50MB 内存，宿主机毫无压力</li>
-</ol>
-<h3 id="提取元数据（重要！）"><a href="#提取元数据（重要！）" class="headerlink" title="提取元数据（重要！）"></a>提取元数据（重要！）</h3><p><strong>不要只返回磁力链接！</strong> 用户需要知道这个链接是什么资源。提取这些信息：</p>
-<ul>
-<li>文件大小（Size）</li>
-<li>清晰度（1080p &#x2F; 4K &#x2F; 720p）</li>
-<li>文件格式（MKV &#x2F; MP4 &#x2F; TS）</li>
-<li>音轨字幕信息</li>
-<li>版本说明（Remux &#x2F; Web-DL &#x2F; BDRip）</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">extract_metadata</span>(<span class="params">context_text</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从磁力链接的上下文文本提取元数据&quot;&quot;&quot;</span></span><br><span class="line">    metadata = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 清晰度</span></span><br><span class="line">    <span class="keyword">if</span> res := re.search(<span class="string">r&#x27;\b(2160p|1080p|720p|4K)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;resolution&#x27;</span>] = res.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 格式</span></span><br><span class="line">    <span class="keyword">if</span> fmt := re.search(<span class="string">r&#x27;\b(BluRay|WEB-DL|HDTV|DVDRip|Remux|BDRip)\b&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;source&#x27;</span>] = fmt.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 文件大小（GB/MB）</span></span><br><span class="line">    <span class="keyword">if</span> size := re.search(<span class="string">r&#x27;(\d+\.?\d*)\s*(GB|MB)&#x27;</span>, context_text, re.I):</span><br><span class="line">        metadata[<span class="string">&#x27;size&#x27;</span>] = <span class="string">f&quot;<span class="subst">&#123;size.group(<span class="number">1</span>)&#125;</span> <span class="subst">&#123;size.group(<span class="number">2</span>)&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> metadata</span><br></pre></td></tr></table></figure>
-
-<p>拿到磁力后，在 HTML 里找它的父节点或相邻文本节点，把这些信息一起返回给用户。</p>
-<hr>
-<h2 id="第二级：复杂静态解析"><a href="#第二级：复杂静态解析" class="headerlink" title="第二级：复杂静态解析"></a>第二级：复杂静态解析</h2><h3 id="适用场景-1"><a href="#适用场景-1" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>页面返回 200 OK，但磁力链接被 <strong>Base64 编码</strong>藏在 JS 变量里</li>
-<li>链接放在隐藏的 <code>&lt;input&gt;</code> 或 <code>data-*</code> 属性中</li>
-<li>需要简单的 Token 拼接</li>
-</ul>
-<h3 id="实战代码-1"><a href="#实战代码-1" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level2</span>(<span class="params">html</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别2：从 JS 变量和隐藏 input 提取&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 从 &lt;input&gt; value 提取</span></span><br><span class="line">    soup = BeautifulSoup(html, <span class="string">&#x27;html.parser&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> inp <span class="keyword">in</span> soup.find_all(<span class="string">&#x27;input&#x27;</span>, <span class="built_in">type</span>=<span class="string">&#x27;hidden&#x27;</span>):</span><br><span class="line">        value = inp.get(<span class="string">&#x27;value&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> value:</span><br><span class="line">            magnets.append(value)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 从 data-* 属性提取</span></span><br><span class="line">    <span class="keyword">for</span> elem <span class="keyword">in</span> soup.find_all(attrs=&#123;<span class="string">&#x27;data-magnet&#x27;</span>: <span class="literal">True</span>&#125;):</span><br><span class="line">        magnets.append(elem[<span class="string">&#x27;data-magnet&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 从 JS 变量 Base64 解码提取</span></span><br><span class="line">    b64_pattern = re.<span class="built_in">compile</span>(<span class="string">r&#x27;[&quot;\&#x27;]([A-Za-z0-9+/=]&#123;40,&#125;)[&quot;\&#x27;]&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> <span class="keyword">match</span> <span class="keyword">in</span> b64_pattern.findall(html):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            decoded = base64.b64decode(<span class="keyword">match</span>).decode(<span class="string">&#x27;utf-8&#x27;</span>, errors=<span class="string">&#x27;ignore&#x27;</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;magnet:?&#x27;</span> <span class="keyword">in</span> decoded:</span><br><span class="line">                <span class="comment"># 再用级别1的正则提取</span></span><br><span class="line">                magnets.extend(MAGNET_RE.findall(decoded))</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">list</span>(<span class="built_in">set</span>(magnets))</span><br></pre></td></tr></table></figure>
-
-<p>这个级别解决 60% 的”看起来很难其实静态”的网站。</p>
-<hr>
-<h2 id="第三级：Headless-浏览器（高开销，按需用）"><a href="#第三级：Headless-浏览器（高开销，按需用）" class="headerlink" title="第三级：Headless 浏览器（高开销，按需用）"></a>第三级：Headless 浏览器（高开销，按需用）</h2><h3 id="适用场景-2"><a href="#适用场景-2" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>必须<strong>点击真实 DOM 节点</strong>（如下载按钮）才会触发 XHR 请求返回链接</li>
-<li>网站用了 React&#x2F;Vue 渲染，纯 HTML 看不到内容</li>
-</ul>
-<h3 id="技术栈-1"><a href="#技术栈-1" class="headerlink" title="技术栈"></a>技术栈</h3><p>Playwright（推荐）或 Puppeteer。</p>
-<h3 id="实战代码-2"><a href="#实战代码-2" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> playwright.sync_api <span class="keyword">import</span> sync_playwright</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level3</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别3：Headless 浏览器模拟点击&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">with</span> sync_playwright() <span class="keyword">as</span> p:</span><br><span class="line">        browser = p.chromium.launch(headless=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            page = browser.new_page()</span><br><span class="line">            page.goto(url, timeout=<span class="number">30000</span>)</span><br><span class="line">            page.wait_for_load_state(<span class="string">&#x27;networkidle&#x27;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 模拟点击下载按钮</span></span><br><span class="line">            page.click(<span class="string">&#x27;a.download-btn&#x27;</span>, timeout=<span class="number">5000</span>)</span><br><span class="line">            page.wait_for_timeout(<span class="number">2000</span>)  <span class="comment"># 等 XHR 回来</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 提取渲染后的 HTML</span></span><br><span class="line">            html = page.content()</span><br><span class="line">            magnets = MAGNET_RE.findall(html)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            browser.close()  <span class="comment"># 🔥 关键：必须 close，否则内存泄露</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
-
-<h3 id="护栏铁律"><a href="#护栏铁律" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p><strong>严禁并发！</strong> 一个浏览器实例吃 500MB+ 内存，开 5 个并发 VPS 直接 OOM。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错误写法</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    tasks = [scrape(url) <span class="keyword">for</span> url <span class="keyword">in</span> urls]</span><br><span class="line">    <span class="keyword">await</span> asyncio.gather(*tasks)  <span class="comment"># 并发 5 个 Playwright 直接 OOM</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 正确写法</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_many</span>(<span class="params">urls</span>):</span><br><span class="line">    <span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">        result = scrape_level3(url)</span><br><span class="line">        <span class="comment"># 串行执行，每个跑完立刻销毁</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第四级：DrissionPage-终极破盾（核武器）"><a href="#第四级：DrissionPage-终极破盾（核武器）" class="headerlink" title="第四级：DrissionPage 终极破盾（核武器）"></a>第四级：DrissionPage 终极破盾（核武器）</h2><h3 id="适用场景-3"><a href="#适用场景-3" class="headerlink" title="适用场景"></a>适用场景</h3><ul>
-<li>Cloudflare “Just a moment” 5 秒盾</li>
-<li>521 强力 Anti-Bot 拦截</li>
-<li>eztv.ag、therarbg.com 等重度 CF 站</li>
-</ul>
-<h3 id="技术栈-2"><a href="#技术栈-2" class="headerlink" title="技术栈"></a>技术栈</h3><p>DrissionPage（基于 Chromium，能自动处理 CF 挑战）。</p>
-<h3 id="实战代码-3"><a href="#实战代码-3" class="headerlink" title="实战代码"></a>实战代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> DrissionPage <span class="keyword">import</span> ChromiumPage, ChromiumOptions</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">scrape_level4</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;级别4：DrissionPage 破 CF 盾&quot;&quot;&quot;</span></span><br><span class="line">    magnets = []</span><br><span class="line"></span><br><span class="line">    options = ChromiumOptions()</span><br><span class="line">    options.headless(<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    page = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        page = ChromiumPage(options)</span><br><span class="line">        page.get(url, retry=<span class="number">3</span>, timeout=<span class="number">30</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># CF 盾通常需要 5-8 秒等待</span></span><br><span class="line">        page.wait.load_start()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 等待页面正常加载（CF 挑战完成后页面会有变化）</span></span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">30</span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;just-a-moment&#x27;</span> <span class="keyword">not</span> <span class="keyword">in</span> page.html.lower():</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            page.wait(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">        magnets = MAGNET_RE.findall(page.html)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">if</span> page:</span><br><span class="line">            page.quit()  <span class="comment"># 🔥 关键：销毁 Chromium 内核进程</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> magnets</span><br></pre></td></tr></table></figure>
-
-<h3 id="护栏铁律-1"><a href="#护栏铁律-1" class="headerlink" title="护栏铁律"></a>护栏铁律</h3><p>DrissionPage 启动的 Chromium 比 Playwright 更重，<strong>必须在 finally 中强制 quit</strong>，否则后台残留进程吃满内存。</p>
-<hr>
-<h2 id="实战决策树"><a href="#实战决策树" class="headerlink" title="实战决策树"></a>实战决策树</h2><p>面对一个新站，按这个顺序试：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">新站 → 用级别1试</span><br><span class="line">  ↓ 成功？搞定</span><br><span class="line">  ↓ 失败</span><br><span class="line">  → 用级别2试</span><br><span class="line">    ↓ 成功？搞定</span><br><span class="line">    ↓ 失败</span><br><span class="line">    → 用级别3试</span><br><span class="line">      ↓ 成功？搞定</span><br><span class="line">      ↓ 失败</span><br><span class="line">      → 用级别4（最后手段）</span><br><span class="line">        ↓ 失败？放弃，换别的站</span><br></pre></td></tr></table></figure>
-
-<p><strong>关键</strong>：每一级都用 <code>try/except</code>，失败了自动降级下一级；不要一上来就 Headless 浏览器，杀鸡用牛刀。</p>
-<hr>
-<h2 id="资源保护红线"><a href="#资源保护红线" class="headerlink" title="资源保护红线"></a>资源保护红线</h2><p>不管用哪一级，<strong>一定要遵守</strong>：</p>
-<ol>
-<li><strong>严禁并发</strong>：Headless 浏览器一启动就吃 500MB+，并发 3 个就可能 OOM</li>
-<li><strong>强制资源释放</strong>：<code>try...finally</code> 块中执行 <code>browser.close()</code> 或 <code>page.quit()</code></li>
-<li><strong>超时必须设</strong>：每个 HTTP 请求必须 <code>timeout=15</code>，否则卡死会拖垮整个流程</li>
-<li><strong>频率限制</strong>：两次请求之间加 <code>time.sleep(1-3)</code>，避免被目标站拉黑</li>
-<li><strong>优先静态</strong>：能静态正则搞定的绝不用浏览器</li>
-</ol>
-<hr>
-<h2 id="站梯队清单（实测）"><a href="#站梯队清单（实测）" class="headerlink" title="站梯队清单（实测）"></a>站梯队清单（实测）</h2><h3 id="🏆-梯队一：影视动漫资源站"><a href="#🏆-梯队一：影视动漫资源站" class="headerlink" title="🏆 梯队一：影视动漫资源站"></a>🏆 梯队一：影视动漫资源站</h3><table>
-<thead>
-<tr>
-<th>站点</th>
-<th>难度</th>
-<th>推荐级别</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>dygod.net</code></td>
-<td>⭐ 极其简单</td>
-<td>级别 1</td>
-</tr>
-<tr>
-<td><code>seedhub.cc</code></td>
-<td>⭐⭐ 需要策略</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>bttwoo.com</code></td>
-<td>⭐⭐ 需要策略</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>btbtla.com</code></td>
-<td>❌ 强 CF</td>
-<td>级别 4</td>
-</tr>
-</tbody></table>
-<h3 id="🥈-梯队二：磁力-Telegram-搜索引擎"><a href="#🥈-梯队二：磁力-Telegram-搜索引擎" class="headerlink" title="🥈 梯队二：磁力 Telegram 搜索引擎"></a>🥈 梯队二：磁力 Telegram 搜索引擎</h3><table>
-<thead>
-<tr>
-<th>站点</th>
-<th>难度</th>
-<th>推荐级别</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>thepiratebay.org</code></td>
-<td>⭐⭐</td>
-<td>级别 2-3</td>
-</tr>
-<tr>
-<td><code>ciliku.net</code></td>
-<td>⭐⭐</td>
-<td>级别 2</td>
-</tr>
-<tr>
-<td><code>eztv.ag</code></td>
-<td>❌ 极强 Anti-Bot</td>
-<td>级别 4</td>
-</tr>
-</tbody></table>
-<hr>
-<h2 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h2><p><strong>爬虫的精髓不是”用最牛的技术”，而是”用最低的成本搞定目标”</strong>。</p>
-<ul>
-<li>80% 的老站用静态正则就够</li>
-<li>真碰到 JS 渲染再上 Headless</li>
-<li>CF 盾最后才动用 DrissionPage</li>
-</ul>
-<p>按这个分级思路，<strong>用最少的资源，跑最多的网站</strong>。</p>
-<p>如果你也在做爬虫，评论区聊聊你踩过的反爬坑～</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>开发工具</category>
-      </categories>
-      <tags>
-        <tag>爬虫</tag>
-        <tag>磁力</tag>
-        <tag>Python</tag>
-        <tag>反爬</tag>
       </tags>
   </entry>
 </search>

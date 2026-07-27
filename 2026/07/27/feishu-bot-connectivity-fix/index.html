@@ -21,16 +21,16 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"blog.rnm.gv.uy","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-light","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"flat","show_result":true},"fold":{"enable":false,"height":500},"language":false,"border_radius":8,"language_tag":{"enable":true}},"bookmark":{"enable":true,"color":"#4fc3f7","save":"auto"},"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":150,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":3,"unescape":false,"preload":false,"placeholder":"搜一搜雪的花园..."}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="飞书机器人突然不回复，90% 都是 gateway 进程挂了。这篇用一次真实排障还原了完整诊断链路，以后遇到同类问题直接对号入座。">
+    <meta name="description" content="飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本、systemd守护和cron兜底方案。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）">
-<meta property="og:url" content="https://blog.rnm.gv.uy/2026/06/20/feishu-bot-connectivity-fix/index.html">
+<meta property="og:title" content="飞书机器人哑了？90%的人不知道查这个地方">
+<meta property="og:url" content="https://blog.rnm.gv.uy/2026/07/27/feishu-bot-connectivity-fix/index.html">
 <meta property="og:site_name" content="雪的数字花园 ❄️">
-<meta property="og:description" content="飞书机器人突然不回复，90% 都是 gateway 进程挂了。这篇用一次真实排障还原了完整诊断链路，以后遇到同类问题直接对号入座。">
+<meta property="og:description" content="飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本、systemd守护和cron兜底方案。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/feishu-bot-connectivity-fix-cover.webp">
-<meta property="article:published_time" content="2026-06-20T11:30:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T14:11:30.959Z">
+<meta property="article:published_time" content="2026-07-27T04:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-27T15:26:14.262Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="排障">
 <meta property="article:tag" content="机器人">
@@ -40,13 +40,13 @@
 <meta name="twitter:image" content="https://blog.rnm.gv.uy/images/feishu-bot-connectivity-fix-cover.webp">
 
 
-<link rel="canonical" href="https://blog.rnm.gv.uy/2026/06/20/feishu-bot-connectivity-fix/">
+<link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/feishu-bot-connectivity-fix/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/06/20/feishu-bot-connectivity-fix/","path":"2026/06/20/feishu-bot-connectivity-fix/","title":"飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://blog.rnm.gv.uy/2026/07/27/feishu-bot-connectivity-fix/","path":"2026/07/27/feishu-bot-connectivity-fix/","title":"飞书机器人哑了？90%的人不知道查这个地方"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录） | 雪的数字花园 ❄️</title>
+<title>飞书机器人哑了？90%的人不知道查这个地方 | 雪的数字花园 ❄️</title>
   
 
 
@@ -172,7 +172,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text">现象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B9%E5%9B%A0%EF%BC%88%E4%B8%80%E5%8F%A5%E8%AF%9D%E8%AF%B4%E6%B8%85%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">根因（一句话说清）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E8%AF%8A%E6%96%AD%E6%AD%A5%E9%AA%A4"><span class="nav-number">3.</span> <span class="nav-text">完整诊断步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E7%A1%AE%E8%AE%A4-gateway-%E8%BF%9B%E7%A8%8B%E6%98%AF%E5%90%A6%E5%AD%98%E6%B4%BB"><span class="nav-number">3.1.</span> <span class="nav-text">第一步：确认 gateway 进程是否存活</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E7%9C%8B-gateway-%E6%97%A5%E5%BF%97"><span class="nav-number">3.2.</span> <span class="nav-text">第二步：看 gateway 日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E6%A3%80%E6%9F%A5%E9%85%8D%E7%BD%AE%EF%BC%88%E4%BB%85%E5%9C%A8-gateway-%E6%AD%A3%E5%B8%B8%E4%BB%8D%E4%B8%8D%E5%9B%9E%E5%A4%8D%E6%97%B6%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">第三步：检查配置（仅在 gateway 正常仍不回复时）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">解法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88-A%EF%BC%9A%E9%87%8D%E5%90%AF-gateway%EF%BC%8890-%E7%9A%84%E6%83%85%E5%86%B5%E7%94%A8%E8%BF%99%E4%B8%AA%EF%BC%89"><span class="nav-number">4.1.</span> <span class="nav-text">方案 A：重启 gateway（90% 的情况用这个）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88-B%EF%BC%9Agateway-%E5%8F%8D%E5%A4%8D%E5%B4%A9%E6%BA%83"><span class="nav-number">4.2.</span> <span class="nav-text">方案 B：gateway 反复崩溃</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88-C%EF%BC%9A%E4%B8%80%E9%94%AE%E6%81%A2%E5%A4%8D%E5%91%BD%E4%BB%A4"><span class="nav-number">4.3.</span> <span class="nav-text">方案 C：一键恢复命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%A0%E4%B8%AA%E5%B8%B8%E8%A7%81%E8%AF%AF%E5%8C%BA"><span class="nav-number">5.</span> <span class="nav-text">几个常见误区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E2%80%9C%E9%AA%8C%E8%AF%81%E8%BF%9E%E6%8E%A5%E7%8A%B6%E6%80%81%E2%80%9D%E6%8C%89%E9%92%AE%E5%A4%B1%E8%B4%A5-%E2%89%A0-%E7%9C%9F%E7%9A%84%E5%A4%B1%E8%B4%A5"><span class="nav-number">5.1.</span> <span class="nav-text">1. “验证连接状态”按钮失败 ≠ 真的失败</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%A3%9E%E4%B9%A6%E5%BF%85%E9%A1%BB%E7%9B%B4%E8%BF%9E%EF%BC%8C%E4%B8%8D%E8%A6%81%E8%B5%B0%E4%BB%A3%E7%90%86"><span class="nav-number">5.2.</span> <span class="nav-text">2. 飞书必须直连，不要走代理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%88%AB%E5%8F%8D%E5%A4%8D%E9%87%8D%E5%90%AF-hermes-chat"><span class="nav-number">5.3.</span> <span class="nav-text">3. 别反复重启 hermes chat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%80%80%E7%96%91%E9%A3%9E%E4%B9%A6%E5%B9%B3%E5%8F%B0%E5%89%8D%E5%85%88%E8%87%AA%E6%9F%A5"><span class="nav-number">5.4.</span> <span class="nav-text">4. 怀疑飞书平台前先自查</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%B2%E6%82%A3%E4%BA%8E%E6%9C%AA%E7%84%B6%EF%BC%9A%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D-gateway-%E5%8F%8D%E5%A4%8D%E6%8C%82"><span class="nav-number">6.</span> <span class="nav-text">防患于未然：如何避免 gateway 反复挂</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%94%A8-systemd-%E5%AE%88%E6%8A%A4%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="nav-number">6.1.</span> <span class="nav-text">1. 用 systemd 守护（推荐）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E7%94%A8-Docker-%E8%B7%91%EF%BC%88%E6%9B%B4%E9%9A%94%E7%A6%BB%EF%BC%89"><span class="nav-number">6.2.</span> <span class="nav-text">2. 用 Docker 跑（更隔离）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%8A%A0%E7%9B%91%E6%8E%A7%E5%92%8C%E5%91%8A%E8%AD%A6"><span class="nav-number">6.3.</span> <span class="nav-text">3. 加监控和告警</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">一句话总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B9%E5%9B%A0%E4%B8%80%E5%8F%A5%E8%AF%9D"><span class="nav-number">1.</span> <span class="nav-text">根因一句话</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E6%AD%A5%E8%AF%8A%E6%96%AD"><span class="nav-number">2.</span> <span class="nav-text">三步诊断</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E7%9C%8B%E8%BF%9B%E7%A8%8B"><span class="nav-number">2.1.</span> <span class="nav-text">第一步：看进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E7%9C%8B%E6%97%A5%E5%BF%97"><span class="nav-number">2.2.</span> <span class="nav-text">第二步：看日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E7%9C%8B%E9%85%8D%E7%BD%AE%EF%BC%88%E4%BB%85%E5%9C%A8%E5%89%8D%E4%B8%A4%E6%AD%A5%E6%AD%A3%E5%B8%B8%E4%BD%86%E4%B8%8D%E5%9B%9E%E5%A4%8D%E6%97%B6%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">第三步：看配置（仅在前两步正常但不回复时）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%B3%95"><span class="nav-number">3.</span> <span class="nav-text">解法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#90-%E7%9A%84%E6%83%85%E5%86%B5%EF%BC%9A%E9%87%8D%E5%90%AF-gateway"><span class="nav-number">3.1.</span> <span class="nav-text">90% 的情况：重启 gateway</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gateway-%E5%8F%8D%E5%A4%8D%E5%B4%A9%E6%BA%83"><span class="nav-number">3.2.</span> <span class="nav-text">gateway 反复崩溃</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E9%94%AE%E6%81%A2%E5%A4%8D"><span class="nav-number">3.3.</span> <span class="nav-text">一键恢复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%A0%E4%B8%AA%E5%B8%B8%E8%A7%81%E8%AF%AF%E5%8C%BA"><span class="nav-number">4.</span> <span class="nav-text">几个常见误区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E2%80%9C%E9%AA%8C%E8%AF%81%E8%BF%9E%E6%8E%A5%E7%8A%B6%E6%80%81%E2%80%9D%E6%8C%89%E9%92%AE%E5%A4%B1%E8%B4%A5-%E2%89%A0-%E7%9C%9F%E7%9A%84%E5%A4%B1%E8%B4%A5"><span class="nav-number">4.1.</span> <span class="nav-text">“验证连接状态”按钮失败 ≠ 真的失败</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A3%9E%E4%B9%A6%E5%BF%85%E9%A1%BB%E7%9B%B4%E8%BF%9E"><span class="nav-number">4.2.</span> <span class="nav-text">飞书必须直连</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%AB%E9%87%8D%E5%90%AF-CLI-%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">4.3.</span> <span class="nav-text">别重启 CLI 客户端</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%B2%E6%82%A3%E4%BA%8E%E6%9C%AA%E7%84%B6"><span class="nav-number">5.</span> <span class="nav-text">防患于未然</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#systemd-%E5%AE%88%E6%8A%A4"><span class="nav-number">5.1.</span> <span class="nav-text">systemd 守护</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cron-%E5%85%9C%E5%BA%95"><span class="nav-number">5.2.</span> <span class="nav-text">Cron 兜底</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E5%90%88%E8%B0%81%E4%B8%8E%E4%B8%8D%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">6.</span> <span class="nav-text">适合谁与不适合谁</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -244,7 +244,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/06/20/feishu-bot-connectivity-fix/">
+    <link itemprop="mainEntityOfPage" href="https://blog.rnm.gv.uy/2026/07/27/feishu-bot-connectivity-fix/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/xue-avatar.png">
@@ -257,12 +257,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录） | 雪的数字花园 ❄️">
-      <meta itemprop="description" content="飞书机器人突然不回复，90% 都是 gateway 进程挂了。这篇用一次真实排障还原了完整诊断链路，以后遇到同类问题直接对号入座。">
+      <meta itemprop="name" content="飞书机器人哑了？90%的人不知道查这个地方 | 雪的数字花园 ❄️">
+      <meta itemprop="description" content="飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本、systemd守护和cron兜底方案。">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）
+          飞书机器人哑了？90%的人不知道查这个地方
         </h1>
 
         <div class="post-meta-container">
@@ -273,7 +273,7 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2026-06-20 19:30:00" itemprop="dateCreated datePublished" datetime="2026-06-20T19:30:00+08:00">2026-06-20</time>
+      <time title="创建时间：2026-07-27 12:00:00" itemprop="dateCreated datePublished" datetime="2026-07-27T12:00:00+08:00">2026-07-27</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -303,18 +303,18 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>3.2k</span>
+      <span>2.1k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>3 分钟</span>
+      <span>2 分钟</span>
     </span>
 </div>
 
-            <div class="post-description">飞书机器人突然不回复，90% 都是 gateway 进程挂了。这篇用一次真实排障还原了完整诊断链路，以后遇到同类问题直接对号入座。</div>
+            <div class="post-description">飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本、systemd守护和cron兜底方案。</div>
         </div>
       </header>
 
@@ -322,35 +322,20 @@
     
     
     <div class="post-body" itemprop="articleBody"><p><img data-src="/images/feishu-bot-connectivity-fix-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>飞书 Bot 跑得好好的，某次系统更新 &#x2F; 容器重启后突然不回复了？开放平台”验证连接状态”还显示失败？别急着怀疑飞书平台，<strong>90% 是本地 gateway 进程挂了</strong>。本文记录完整的诊断和恢复流程。</p>
-</blockquote>
-<hr>
-<h2 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h2><ul>
-<li>给 bot 发消息，没任何回复</li>
-<li>飞书开放平台”验证连接状态”按钮变红、显示失败</li>
-<li>日志里出现 <code>RuntimeError: Executor shutdown has been called</code></li>
-</ul>
-<hr>
-<h2 id="根因（一句话说清）"><a href="#根因（一句话说清）" class="headerlink" title="根因（一句话说清）"></a>根因（一句话说清）</h2><p>飞书 Bot 通常是用 <strong>WebSocket 长连接</strong>保持在线的（不用 webhook 回调，免公网 IP）。这个长连接进程一般叫 <code>gateway</code>。</p>
-<p>当 gateway 进程被 SIGTERM 杀掉后，asyncio 的线程池 executor 进入关闭状态。这时候即使 WebSocket 重连成功、消息也收到了，<strong>回复消息时调用线程池的代码会直接抛 <code>Executor shutdown</code>，导致消息发不出去</strong>。</p>
-<p>表现就是：</p>
-<ul>
-<li>飞书后台显示”连接异常”或”验证失败”</li>
-<li>实际 bot 能收到消息，但发不出去</li>
-<li>用户以为 bot 死了</li>
-</ul>
-<hr>
-<h2 id="完整诊断步骤"><a href="#完整诊断步骤" class="headerlink" title="完整诊断步骤"></a>完整诊断步骤</h2><h3 id="第一步：确认-gateway-进程是否存活"><a href="#第一步：确认-gateway-进程是否存活" class="headerlink" title="第一步：确认 gateway 进程是否存活"></a>第一步：确认 gateway 进程是否存活</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux | grep -E <span class="string">&#x27;hermes|gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
+<p>某天下午，我给飞书 Bot 发了条消息——石沉大海。</p>
+<p>打开飞书开放平台，点”验证连接状态”——红色，失败。日志里躺着一条：<code>RuntimeError: Executor shutdown has been called</code>。</p>
+<p>然后我花了 5 分钟定位、10 秒修好。这篇把完整的诊断链路写下来，下次你对号入座，不用从零排查。</p>
+<h2 id="根因一句话"><a href="#根因一句话" class="headerlink" title="根因一句话"></a>根因一句话</h2><p>飞书 Bot 用 <strong>WebSocket 长连接</strong> 保持在线的。这个长连接进程一般叫 <code>gateway</code>（网关）。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，<strong>回复时调用线程池直接抛 <code>Executor shutdown</code>，消息发不出去</strong>。</p>
+<p>表现就是：飞书后台显示连接异常，实际 Bot 能收到消息但发不出，你以为 Bot 死了。</p>
+<h2 id="三步诊断"><a href="#三步诊断" class="headerlink" title="三步诊断"></a>三步诊断</h2><h3 id="第一步：看进程"><a href="#第一步：看进程" class="headerlink" title="第一步：看进程"></a>第一步：看进程</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux | grep -E <span class="string">&#x27;gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
 
-<p><strong>怎么看</strong>：</p>
 <ul>
-<li>看到 <code>hermes gateway run</code> 进程 → gateway 还活着，问题不在这里</li>
-<li>只看到 <code>hermes chat</code> 之类的 CLI 进程，没有 gateway → <strong>gateway 已挂</strong>，继续下一步</li>
+<li>看到 gateway 进程 → 还活着，问题不在这</li>
+<li>没看到 → <strong>gateway 已挂</strong>，往下走</li>
 </ul>
-<h3 id="第二步：看-gateway-日志"><a href="#第二步：看-gateway-日志" class="headerlink" title="第二步：看 gateway 日志"></a>第二步：看 gateway 日志</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">tail</span> -50 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
+<h3 id="第二步：看日志"><a href="#第二步：看日志" class="headerlink" title="第二步：看日志"></a>第二步：看日志</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">tail</span> -50 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
-<p><strong>关键日志模式</strong>：</p>
+<p>关键日志模式：</p>
 <table>
 <thead>
 <tr>
@@ -363,73 +348,47 @@
 <td>executor 崩了，消息发不出</td>
 </tr>
 <tr>
-<td><code>Received SIGTERM — initiating shutdown</code></td>
+<td><code>Received SIGTERM</code></td>
 <td>gateway 被信号杀掉了</td>
 </tr>
 <tr>
 <td><code>✓ feishu connected</code></td>
-<td>飞书 WebSocket 连接正常</td>
+<td>WebSocket 连接正常</td>
 </tr>
 <tr>
-<td>最后一行是 shutdown，没有新启动记录</td>
+<td>最后一行是 shutdown，没有新启动</td>
 <td>gateway 已停</td>
 </tr>
 </tbody></table>
-<h3 id="第三步：检查配置（仅在-gateway-正常仍不回复时）"><a href="#第三步：检查配置（仅在-gateway-正常仍不回复时）" class="headerlink" title="第三步：检查配置（仅在 gateway 正常仍不回复时）"></a>第三步：检查配置（仅在 gateway 正常仍不回复时）</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> ~/.hermes/config.yaml | grep -A 10 feishu</span><br></pre></td></tr></table></figure>
+<h3 id="第三步：看配置（仅在前两步正常但不回复时）"><a href="#第三步：看配置（仅在前两步正常但不回复时）" class="headerlink" title="第三步：看配置（仅在前两步正常但不回复时）"></a>第三步：看配置（仅在前两步正常但不回复时）</h3><p>在配置文件中确认飞书相关设置：<code>enabled: true</code>、<code>connection_mode: websocket</code>、没有中转配置（<strong>飞书必须直连</strong>，走中转会破坏 WebSocket）、<code>app_id</code> 和 <code>app_secret</code> 正确。</p>
+<h2 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h2><h3 id="90-的情况：重启-gateway"><a href="#90-的情况：重启-gateway" class="headerlink" title="90% 的情况：重启 gateway"></a>90% 的情况：重启 gateway</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">tail</span> -20 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
-<p>确认几件事：</p>
-<ul>
-<li><code>enabled: true</code></li>
-<li><code>connection_mode: websocket</code></li>
-<li>没有 <code>proxy:</code> 配置（<strong>飞书必须直连</strong>，代理会破坏 WebSocket）</li>
-<li><code>app_id</code> 和 <code>app_secret</code> 正确</li>
-</ul>
-<hr>
-<h2 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h2><h3 id="方案-A：重启-gateway（90-的情况用这个）"><a href="#方案-A：重启-gateway（90-的情况用这个）" class="headerlink" title="方案 A：重启 gateway（90% 的情况用这个）"></a>方案 A：重启 gateway（90% 的情况用这个）</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 后台启动</span></span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 等 5-10 秒看启动日志</span></span><br><span class="line"><span class="built_in">tail</span> -20 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
-
-<p>看到这两行就是启动成功：</p>
+<p>看到这两行就是活了：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">✓ feishu connected</span><br><span class="line">Gateway running with 2 platform(s)</span><br></pre></td></tr></table></figure>
 
-<p>然后去飞书给 bot 发条消息测试。</p>
-<h3 id="方案-B：gateway-反复崩溃"><a href="#方案-B：gateway-反复崩溃" class="headerlink" title="方案 B：gateway 反复崩溃"></a>方案 B：gateway 反复崩溃</h3><p>检查是否有多个 gateway 进程冲突：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux | grep <span class="string">&#x27;hermes gateway&#x27;</span> | grep -v grep</span><br></pre></td></tr></table></figure>
+<h3 id="gateway-反复崩溃"><a href="#gateway-反复崩溃" class="headerlink" title="gateway 反复崩溃"></a>gateway 反复崩溃</h3><p>可能有多个进程冲突：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;gateway run&#x27;</span></span><br><span class="line"><span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
 
-<p>如果有多个，全杀掉再重启：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;hermes gateway&#x27;</span></span><br><span class="line"><span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
+<h3 id="一键恢复"><a href="#一键恢复" class="headerlink" title="一键恢复"></a>一键恢复</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pkill -f <span class="string">&#x27;gateway run&#x27;</span> 2&gt;/dev/null; <span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> &lt;你的agent程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">sleep</span> 10 &amp;&amp; <span class="built_in">tail</span> -20 ~/logs/gateway.log</span><br></pre></td></tr></table></figure>
 
-<h3 id="方案-C：一键恢复命令"><a href="#方案-C：一键恢复命令" class="headerlink" title="方案 C：一键恢复命令"></a>方案 C：一键恢复命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 杀掉残留进程 + 重启 + 验证</span></span><br><span class="line">pkill -f <span class="string">&#x27;hermes gateway&#x27;</span> 2&gt;/dev/null; <span class="built_in">sleep</span> 2</span><br><span class="line"><span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;</span><br><span class="line"><span class="built_in">sleep</span> 10 &amp;&amp; <span class="built_in">tail</span> -20 ~/.hermes/logs/gateway.log</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="几个常见误区"><a href="#几个常见误区" class="headerlink" title="几个常见误区"></a>几个常见误区</h2><h3 id="1-“验证连接状态”按钮失败-≠-真的失败"><a href="#1-“验证连接状态”按钮失败-≠-真的失败" class="headerlink" title="1. “验证连接状态”按钮失败 ≠ 真的失败"></a>1. “验证连接状态”按钮失败 ≠ 真的失败</h3><p>飞书开放平台的”验证连接状态”按钮，<strong>点失败不用慌</strong>。这是因为一些 SDK 库（比如 lark-oapi）实现细节问题，对平台侧的 PONG 探测不回复，属于设计如此。</p>
-<p><strong>判断真正状态的标准</strong>：看 gateway 日志有没有 <code>✓ feishu connected</code>，加上实际发条消息看 bot 能不能回复。</p>
-<h3 id="2-飞书必须直连，不要走代理"><a href="#2-飞书必须直连，不要走代理" class="headerlink" title="2. 飞书必须直连，不要走代理"></a>2. 飞书必须直连，不要走代理</h3><p><code>.feishu.cn</code> 和 <code>.larksuite.com</code> 域名<strong>不要配代理</strong>。代理引入的额外握手延迟会破坏 WebSocket 长连接。</p>
-<p><strong>如果你用了全局代理</strong>（如 Xray、Clash）：</p>
-<ul>
-<li>环境变量加 <code>no_proxy=*.feishu.cn,*.larksuite.com</code></li>
-<li>或在 config.yaml 的 feishu 配置段明确不要 proxy</li>
-</ul>
-<h3 id="3-别反复重启-hermes-chat"><a href="#3-别反复重启-hermes-chat" class="headerlink" title="3. 别反复重启 hermes chat"></a>3. 别反复重启 <code>hermes chat</code></h3><p><code>hermes chat</code> 是 CLI 客户端（你用来跟 AI 聊天的命令行界面），不是后台服务。重启它<strong>对飞书连接毫无帮助</strong>。</p>
-<p>真正管飞书连接的是 <code>hermes gateway</code>。</p>
-<h3 id="4-怀疑飞书平台前先自查"><a href="#4-怀疑飞书平台前先自查" class="headerlink" title="4. 怀疑飞书平台前先自查"></a>4. 怀疑飞书平台前先自查</h3><p>飞书服务端极少出问题。<strong>99% 的情况是本地 gateway 进程或 executor 状态异常</strong>。先按上面流程自查，确认本地没问题再去提工单。</p>
-<hr>
-<h2 id="防患于未然：如何避免-gateway-反复挂"><a href="#防患于未然：如何避免-gateway-反复挂" class="headerlink" title="防患于未然：如何避免 gateway 反复挂"></a>防患于未然：如何避免 gateway 反复挂</h2><h3 id="1-用-systemd-守护（推荐）"><a href="#1-用-systemd-守护（推荐）" class="headerlink" title="1. 用 systemd 守护（推荐）"></a>1. 用 systemd 守护（推荐）</h3><p>如果你在 Linux VPS 上跑：</p>
-<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/hermes-gateway.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Hermes Gateway</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/local/bin/hermes gateway run</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"><span class="attr">StandardOutput</span>=append:/var/log/hermes-gateway.log</span><br><span class="line"><span class="attr">StandardError</span>=append:/var/log/hermes-gateway.log</span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> hermes-gateway</span><br><span class="line">systemctl start hermes-gateway</span><br></pre></td></tr></table></figure>
-
-<p>这样 gateway 挂了 systemd 会自动拉起，不用人工干预。</p>
-<h3 id="2-用-Docker-跑（更隔离）"><a href="#2-用-Docker-跑（更隔离）" class="headerlink" title="2. 用 Docker 跑（更隔离）"></a>2. 用 Docker 跑（更隔离）</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># docker-compose.yml</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">hermes-gateway:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">your-hermes-image</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">hermes</span> <span class="string">gateway</span> <span class="string">run</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./config:/root/.hermes/config.yaml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./logs:/root/.hermes/logs</span></span><br><span class="line">    <span class="attr">logging:</span></span><br><span class="line">      <span class="attr">driver:</span> <span class="string">json-file</span></span><br><span class="line">      <span class="attr">options:</span></span><br><span class="line">        <span class="attr">max-size:</span> <span class="string">&quot;10m&quot;</span></span><br><span class="line">        <span class="attr">max-file:</span> <span class="string">&quot;3&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p><code>restart: unless-stopped</code> + Docker 自带的日志轮转，比裸跑稳得多。</p>
-<h3 id="3-加监控和告警"><a href="#3-加监控和告警" class="headerlink" title="3. 加监控和告警"></a>3. 加监控和告警</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 每 5 分钟检查一次 gateway 是否存活</span></span><br><span class="line">*/5 * * * * pgrep -f <span class="string">&#x27;hermes gateway&#x27;</span> &gt; /dev/null || \</span><br><span class="line">  (<span class="built_in">nohup</span> hermes gateway run &gt; ~/.hermes/logs/gateway.log 2&gt;&amp;1 &amp;)</span><br></pre></td></tr></table></figure>
-
-<p>或者用更高级的：写一个 watchdog 脚本，gateway 挂了自动重启 + 飞书消息通知你。</p>
-<hr>
-<h2 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h2><p><strong>飞书 bot 不回复 → 先看 gateway 日志 → 有 Executor shutdown 或进程不在 → 重启 gateway → 完事。</strong></p>
-<p>如果你也踩过这个坑，或者有更高级的排查思路，评论区聊聊～</p>
+<h2 id="几个常见误区"><a href="#几个常见误区" class="headerlink" title="几个常见误区"></a>几个常见误区</h2><h3 id="“验证连接状态”按钮失败-≠-真的失败"><a href="#“验证连接状态”按钮失败-≠-真的失败" class="headerlink" title="“验证连接状态”按钮失败 ≠ 真的失败"></a>“验证连接状态”按钮失败 ≠ 真的失败</h3><p>飞书开放平台的”验证连接状态”按钮点失败不用慌。一些 SDK 库对平台侧的 PONG 探测不回复，属于设计如此。<strong>判断标准</strong>：看 gateway 日志有没有 <code>✓ feishu connected</code>，加实际发条消息看能不能回。</p>
+<h3 id="飞书必须直连"><a href="#飞书必须直连" class="headerlink" title="飞书必须直连"></a>飞书必须直连</h3><p><code>.feishu.cn</code> 和 <code>.larksuite.com</code> <strong>不要走中转</strong>。中转引入的额外握手延迟会破坏 WebSocket 长连接。如果你有全局中转（如 Clash），环境变量加 <code>no_proxy=*.feishu.cn,*.larksuite.com</code>。</p>
+<h3 id="别重启-CLI-客户端"><a href="#别重启-CLI-客户端" class="headerlink" title="别重启 CLI 客户端"></a>别重启 CLI 客户端</h3><p>CLI 客户端是命令行界面（你用来跟 AI 聊天的终端），不是后台服务。重启它<strong>对飞书连接毫无帮助</strong>。真正管飞书连接的是 gateway。</p>
 <blockquote>
-<p>关联阅读：<a href="/2026/06/20/feishu-bot-permissions-and-mention/">飞书机器人开发踩坑实录：权限配置、群聊互@</a></p>
+<p>飞书服务端极少出问题。99% 是本地 gateway 进程或 executor 状态异常。</p>
 </blockquote>
+<h2 id="防患于未然"><a href="#防患于未然" class="headerlink" title="防患于未然"></a>防患于未然</h2><h3 id="systemd-守护"><a href="#systemd-守护" class="headerlink" title="systemd 守护"></a>systemd 守护</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Bot Gateway</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/local/bin/&lt;你的程序&gt; gateway run</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl daemon-reload &amp;&amp; systemctl <span class="built_in">enable</span> --now bot-gateway</span><br></pre></td></tr></table></figure>
+
+<h3 id="Cron-兜底"><a href="#Cron-兜底" class="headerlink" title="Cron 兜底"></a>Cron 兜底</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">*/5 * * * * pgrep -f <span class="string">&#x27;gateway run&#x27;</span> &gt; /dev/null || \</span><br><span class="line">  (<span class="built_in">nohup</span> &lt;你的程序&gt; gateway run &gt; ~/logs/gateway.log 2&gt;&amp;1 &amp;)</span><br></pre></td></tr></table></figure>
+
+<h2 id="适合谁与不适合谁"><a href="#适合谁与不适合谁" class="headerlink" title="适合谁与不适合谁"></a>适合谁与不适合谁</h2><p><strong>适合</strong>：用飞书 Bot 的开发者，尤其是自部署 Agent 网关的。</p>
+<p><strong>不适合</strong>：用飞书官方托管 Bot 的——那个 gateway 不用你管。</p>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你的飞书 Bot 挂过吗？是什么原因？评论区聊聊。</p>
 
     </div>
 
@@ -449,13 +408,13 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2026/06/20/feishu-docx-batch-edit/" rel="prev" title="飞书 Docx API 批量操作踩坑：从 1770001 invalid param 说起">
-                  <i class="fa fa-angle-left"></i> 飞书 Docx API 批量操作踩坑：从 1770001 invalid param 说起
+                <a href="/2026/07/27/feishu-docx-batch-edit/" rel="prev" title="飞书API能创建但不能批量删除，这是设计不是bug">
+                  <i class="fa fa-angle-left"></i> 飞书API能创建但不能批量删除，这是设计不是bug
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/06/20/magnet-crawler-fallback/" rel="next" title="自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白">
-                  自建磁力搜索爬虫：从入门到放弃再到放弃得明明白白 <i class="fa fa-angle-right"></i>
+                <a href="/2026/07/27/magnet-crawler-fallback/" rel="next" title="我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走">
+                  我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
@@ -487,13 +446,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">72k</span>
+    <span title="站点总字数">65k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:05</span>
+    <span title="站点阅读时长">59 分钟</span>
   </span>
 </div>
 <div class="busuanzi-count">

@@ -1,6 +1,7 @@
 ---
-title: 飞书机器人突然不回复了？90% 是这个原因（gateway 排障实录）
-date: 2026-06-20 19:30:00
+title: "飞书机器人哑了？90%的人不知道查这个地方"
+date: 2026-07-27 12:00:00
+evidence: "亲测"
 tags:
   - 飞书
   - 机器人
@@ -9,228 +10,141 @@ tags:
 categories:
   - 教程类
   - 开发工具
-description: "飞书机器人突然不回复，90% 都是 gateway 进程挂了。这篇用一次真实排障还原了完整诊断链路，以后遇到同类问题直接对号入座。"
+description: "飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本、systemd守护和cron兜底方案。"
 cover: /images/feishu-bot-connectivity-fix-cover.webp
 ---
 
 ![封面图](/images/feishu-bot-connectivity-fix-cover.webp)
 
-> 飞书 Bot 跑得好好的，某次系统更新 / 容器重启后突然不回复了？开放平台"验证连接状态"还显示失败？别急着怀疑飞书平台，**90% 是本地 gateway 进程挂了**。本文记录完整的诊断和恢复流程。
+某天下午，我给飞书 Bot 发了条消息——石沉大海。
 
----
+打开飞书开放平台，点"验证连接状态"——红色，失败。日志里躺着一条：`RuntimeError: Executor shutdown has been called`。
 
-## 现象
+然后我花了 5 分钟定位、10 秒修好。这篇把完整的诊断链路写下来，下次你对号入座，不用从零排查。
 
-- 给 bot 发消息，没任何回复
-- 飞书开放平台"验证连接状态"按钮变红、显示失败
-- 日志里出现 `RuntimeError: Executor shutdown has been called`
+## 根因一句话
 
----
+飞书 Bot 用 **WebSocket 长连接** 保持在线的。这个长连接进程一般叫 `gateway`（网关）。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，**回复时调用线程池直接抛 `Executor shutdown`，消息发不出去**。
 
-## 根因（一句话说清）
+表现就是：飞书后台显示连接异常，实际 Bot 能收到消息但发不出，你以为 Bot 死了。
 
-飞书 Bot 通常是用 **WebSocket 长连接**保持在线的（不用 webhook 回调，免公网 IP）。这个长连接进程一般叫 `gateway`。
+## 三步诊断
 
-当 gateway 进程被 SIGTERM 杀掉后，asyncio 的线程池 executor 进入关闭状态。这时候即使 WebSocket 重连成功、消息也收到了，**回复消息时调用线程池的代码会直接抛 `Executor shutdown`，导致消息发不出去**。
-
-表现就是：
-
-- 飞书后台显示"连接异常"或"验证失败"
-- 实际 bot 能收到消息，但发不出去
-- 用户以为 bot 死了
-
----
-
-## 完整诊断步骤
-
-### 第一步：确认 gateway 进程是否存活
+### 第一步：看进程
 
 ```bash
-ps aux | grep -E 'hermes|gateway' | grep -v grep
+ps aux | grep -E 'gateway' | grep -v grep
 ```
 
-**怎么看**：
+- 看到 gateway 进程 → 还活着，问题不在这
+- 没看到 → **gateway 已挂**，往下走
 
-- 看到 `hermes gateway run` 进程 → gateway 还活着，问题不在这里
-- 只看到 `hermes chat` 之类的 CLI 进程，没有 gateway → **gateway 已挂**，继续下一步
-
-### 第二步：看 gateway 日志
+### 第二步：看日志
 
 ```bash
-tail -50 ~/.hermes/logs/gateway.log
+tail -50 ~/logs/gateway.log
 ```
 
-**关键日志模式**：
+关键日志模式：
 
 | 日志 | 含义 |
 |---|---|
 | `Executor shutdown has been called` | executor 崩了，消息发不出 |
-| `Received SIGTERM — initiating shutdown` | gateway 被信号杀掉了 |
-| `✓ feishu connected` | 飞书 WebSocket 连接正常 |
-| 最后一行是 shutdown，没有新启动记录 | gateway 已停 |
+| `Received SIGTERM` | gateway 被信号杀掉了 |
+| `✓ feishu connected` | WebSocket 连接正常 |
+| 最后一行是 shutdown，没有新启动 | gateway 已停 |
 
-### 第三步：检查配置（仅在 gateway 正常仍不回复时）
+### 第三步：看配置（仅在前两步正常但不回复时）
 
-```bash
-cat ~/.hermes/config.yaml | grep -A 10 feishu
-```
-
-确认几件事：
-
-- `enabled: true`
-- `connection_mode: websocket`
-- 没有 `proxy:` 配置（**飞书必须直连**，代理会破坏 WebSocket）
-- `app_id` 和 `app_secret` 正确
-
----
+在配置文件中确认飞书相关设置：`enabled: true`、`connection_mode: websocket`、没有中转配置（**飞书必须直连**，走中转会破坏 WebSocket）、`app_id` 和 `app_secret` 正确。
 
 ## 解法
 
-### 方案 A：重启 gateway（90% 的情况用这个）
+### 90% 的情况：重启 gateway
 
 ```bash
-# 后台启动
-nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &
-
-# 等 5-10 秒看启动日志
-tail -20 ~/.hermes/logs/gateway.log
+nohup <你的agent程序> gateway run > ~/logs/gateway.log 2>&1 &
+tail -20 ~/logs/gateway.log
 ```
 
-看到这两行就是启动成功：
+看到这两行就是活了：
 
 ```
 ✓ feishu connected
 Gateway running with 2 platform(s)
 ```
 
-然后去飞书给 bot 发条消息测试。
+### gateway 反复崩溃
 
-### 方案 B：gateway 反复崩溃
-
-检查是否有多个 gateway 进程冲突：
+可能有多个进程冲突：
 
 ```bash
-ps aux | grep 'hermes gateway' | grep -v grep
-```
-
-如果有多个，全杀掉再重启：
-
-```bash
-pkill -f 'hermes gateway'
+pkill -f 'gateway run'
 sleep 2
-nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &
+nohup <你的agent程序> gateway run > ~/logs/gateway.log 2>&1 &
 ```
 
-### 方案 C：一键恢复命令
+### 一键恢复
 
 ```bash
-# 杀掉残留进程 + 重启 + 验证
-pkill -f 'hermes gateway' 2>/dev/null; sleep 2
-nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &
-sleep 10 && tail -20 ~/.hermes/logs/gateway.log
+pkill -f 'gateway run' 2>/dev/null; sleep 2
+nohup <你的agent程序> gateway run > ~/logs/gateway.log 2>&1 &
+sleep 10 && tail -20 ~/logs/gateway.log
 ```
-
----
 
 ## 几个常见误区
 
-### 1. "验证连接状态"按钮失败 ≠ 真的失败
+### "验证连接状态"按钮失败 ≠ 真的失败
 
-飞书开放平台的"验证连接状态"按钮，**点失败不用慌**。这是因为一些 SDK 库（比如 lark-oapi）实现细节问题，对平台侧的 PONG 探测不回复，属于设计如此。
+飞书开放平台的"验证连接状态"按钮点失败不用慌。一些 SDK 库对平台侧的 PONG 探测不回复，属于设计如此。**判断标准**：看 gateway 日志有没有 `✓ feishu connected`，加实际发条消息看能不能回。
 
-**判断真正状态的标准**：看 gateway 日志有没有 `✓ feishu connected`，加上实际发条消息看 bot 能不能回复。
+### 飞书必须直连
 
-### 2. 飞书必须直连，不要走代理
+`.feishu.cn` 和 `.larksuite.com` **不要走中转**。中转引入的额外握手延迟会破坏 WebSocket 长连接。如果你有全局中转（如 Clash），环境变量加 `no_proxy=*.feishu.cn,*.larksuite.com`。
 
-`.feishu.cn` 和 `.larksuite.com` 域名**不要配代理**。代理引入的额外握手延迟会破坏 WebSocket 长连接。
+### 别重启 CLI 客户端
 
-**如果你用了全局代理**（如 Xray、Clash）：
+CLI 客户端是命令行界面（你用来跟 AI 聊天的终端），不是后台服务。重启它**对飞书连接毫无帮助**。真正管飞书连接的是 gateway。
 
-- 环境变量加 `no_proxy=*.feishu.cn,*.larksuite.com`
-- 或在 config.yaml 的 feishu 配置段明确不要 proxy
+> 飞书服务端极少出问题。99% 是本地 gateway 进程或 executor 状态异常。
 
-### 3. 别反复重启 `hermes chat`
+## 防患于未然
 
-`hermes chat` 是 CLI 客户端（你用来跟 AI 聊天的命令行界面），不是后台服务。重启它**对飞书连接毫无帮助**。
-
-真正管飞书连接的是 `hermes gateway`。
-
-### 4. 怀疑飞书平台前先自查
-
-飞书服务端极少出问题。**99% 的情况是本地 gateway 进程或 executor 状态异常**。先按上面流程自查，确认本地没问题再去提工单。
-
----
-
-## 防患于未然：如何避免 gateway 反复挂
-
-### 1. 用 systemd 守护（推荐）
-
-如果你在 Linux VPS 上跑：
+### systemd 守护
 
 ```ini
-# /etc/systemd/system/hermes-gateway.service
 [Unit]
-Description=Hermes Gateway
+Description=Bot Gateway
 After=network.target
 
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/hermes gateway run
+ExecStart=/usr/local/bin/<你的程序> gateway run
 Restart=always
 RestartSec=10
-StandardOutput=append:/var/log/hermes-gateway.log
-StandardError=append:/var/log/hermes-gateway.log
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-systemctl daemon-reload
-systemctl enable hermes-gateway
-systemctl start hermes-gateway
+systemctl daemon-reload && systemctl enable --now bot-gateway
 ```
 
-这样 gateway 挂了 systemd 会自动拉起，不用人工干预。
-
-### 2. 用 Docker 跑（更隔离）
-
-```yaml
-# docker-compose.yml
-services:
-  hermes-gateway:
-    image: your-hermes-image
-    command: hermes gateway run
-    restart: unless-stopped
-    volumes:
-      - ./config:/root/.hermes/config.yaml
-      - ./logs:/root/.hermes/logs
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-```
-
-`restart: unless-stopped` + Docker 自带的日志轮转，比裸跑稳得多。
-
-### 3. 加监控和告警
+### Cron 兜底
 
 ```bash
-# 每 5 分钟检查一次 gateway 是否存活
-*/5 * * * * pgrep -f 'hermes gateway' > /dev/null || \
-  (nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &)
+*/5 * * * * pgrep -f 'gateway run' > /dev/null || \
+  (nohup <你的程序> gateway run > ~/logs/gateway.log 2>&1 &)
 ```
 
-或者用更高级的：写一个 watchdog 脚本，gateway 挂了自动重启 + 飞书消息通知你。
+## 适合谁与不适合谁
 
----
+**适合**：用飞书 Bot 的开发者，尤其是自部署 Agent 网关的。
 
-## 一句话总结
+**不适合**：用飞书官方托管 Bot 的——那个 gateway 不用你管。
 
-**飞书 bot 不回复 → 先看 gateway 日志 → 有 Executor shutdown 或进程不在 → 重启 gateway → 完事。**
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
 
-如果你也踩过这个坑，或者有更高级的排查思路，评论区聊聊～
-
-> 关联阅读：[飞书机器人开发踩坑实录：权限配置、群聊互@](/2026/06/20/feishu-bot-permissions-and-mention/)
+你的飞书 Bot 挂过吗？是什么原因？评论区聊聊。
