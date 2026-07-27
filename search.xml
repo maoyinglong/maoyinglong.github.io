@@ -323,67 +323,6 @@
       </tags>
   </entry>
   <entry>
-    <title>我的安全审计脚本，把自己的修复当成了攻击</title>
-    <url>/2026/07/21/audit-script-false-positive/</url>
-    <content><![CDATA[<p><img data-src="/images/audit-script-false-positive-cover.webp" alt="配图：安全审计误报与 Git 分叉陷阱全解"></p>
-<p>上线第三天，自动化巡检跑完给我发来一条告警：</p>
-<blockquote>
-<p>检测到敏感信息泄露，请立即处理。</p>
-</blockquote>
-<p>我打开一看，问题出在我刚刚修复过的文件里。我手动把一个旧 API Key 替换成了脱敏占位符，保存，提交，脚本扫了一眼，判定——<strong>你在泄露密钥</strong>。</p>
-<p>我没有泄露。我在修复泄露。</p>
-<p>但脚本不知道。</p>
-<blockquote>
-<p>一个无差别匹配的安全扫描器，会把你的修复动作本身判定为攻击。这是工具设计的根本性错误，不是参数问题。</p>
-</blockquote>
-<p>这是一个用一行正则解决的 Bug，但它背后的教训值得说清楚。</p>
-<h2 id="从”删除行”里找到的幽灵"><a href="#从”删除行”里找到的幽灵" class="headerlink" title="从”删除行”里找到的幽灵"></a>从”删除行”里找到的幽灵</h2><p>先把问题讲明白。</p>
-<p>Git 的 diff 格式大家都见过：加号开头是新增行，减号开头是删除行。</p>
-<p>当我脱敏一个文件，把 <code>sk-abcdefg...</code> 改成 <code>sk-xxx...</code> 之后，<code>git diff --cached</code> 会输出这样的内容：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">- &quot;api_key&quot;: &quot;sk-abcdefg...&quot;</span><br><span class="line">+ &quot;api_key&quot;: &quot;sk-xxx...&quot;</span><br></pre></td></tr></table></figure>
-
-<p>减号行是<strong>我要删掉的旧内容</strong>，加号行是<strong>我写进去的新内容</strong>。</p>
-<p>安全审计脚本是这么工作的：扫描整个 diff 文本，只要匹配到密钥格式的正则，就报告”发现密钥”。</p>
-<p>它看到了减号行里的旧 Key，然后……报警了。</p>
-<p>脱敏操作本身触发了安全告警。这就是这个审计脚本三个月来的工作状态——每次修复旧泄露，它都会把这次修复当成新的攻击来告警，形成一个永远无法收敛的误报循环。</p>
-<h2 id="一行正则，切断误报循环"><a href="#一行正则，切断误报循环" class="headerlink" title="一行正则，切断误报循环"></a>一行正则，切断误报循环</h2><p>修复极其简单。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 旧版：无差别扫描整个 diff 文本</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">        report_leak(line)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 新版：只检查新增行（加号开头），放行删除行（减号开头）</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> line.startswith(<span class="string">&#x27;+&#x27;</span>) <span class="keyword">and</span> <span class="keyword">not</span> line.startswith(<span class="string">&#x27;+++&#x27;</span>):</span><br><span class="line">        <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">            report_leak(line)</span><br></pre></td></tr></table></figure>
-
-<p>就这一个条件判断。</p>
-<p>但它解决的问题是：<strong>扫描器的目的是发现”我往代码里写进了什么”，不是发现”我从代码里删掉了什么”。</strong> 删掉的旧密钥，恰恰说明修复在生效。</p>
-<p>这个 Bug 之所以能存活三个月，是因为它每次触发的时机太特殊——只有在你做脱敏修复时才会误报，而做脱敏修复本身是低频操作。低频 Bug 是最难被发现的 Bug。</p>
-<h2 id="另一个同天发现的陷阱：Git-分叉"><a href="#另一个同天发现的陷阱：Git-分叉" class="headerlink" title="另一个同天发现的陷阱：Git 分叉"></a>另一个同天发现的陷阱：Git 分叉</h2><p>同一次巡检里，我还发现了第二个故障：自动同步脚本连续两天被 Git 拒绝了。</p>
-<p>报错是 <code>rejected: non-fast-forward</code>。</p>
-<p>根因是这样的：我在某次手动操作中直接 push 了一个提交，但定时任务里的同步脚本并不知道远端已经领先了。它拿着本地的旧状态去推，自然被拒。</p>
-<p>很多人遇到这种情况会选择 <code>git push --force</code>。我没有这么做，因为强推会覆盖远端历史，而远端的那个领先提交是我手动推上去的——是真实有效的历史，不是垃圾。</p>
-<p>正确的修复是在每次 push 前先同步一次：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 同步脚本新增：push 前先拉取远端最新状态</span></span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;fetch&#x27;</span>, <span class="string">&#x27;origin&#x27;</span>, <span class="string">&#x27;main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;rebase&#x27;</span>, <span class="string">&#x27;origin/main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line"><span class="comment"># 如果 rebase 有冲突，abort 并上报，不强行合并</span></span><br></pre></td></tr></table></figure>
-
-<p>fetch + rebase 的组合，保证本地历史在远端最新状态之上，push 永远是 fast-forward，永远不会被拒绝。</p>
-<blockquote>
-<p>两个故障的共同根因：脚本被写成了”假设世界不变”的样子，但世界一直在变。安全审计假设 diff 里出现的 Key 都是新写入的；同步脚本假设本地永远是最新的。现实打了它们的脸。</p>
-</blockquote>
-<h2 id="工具是写给特定假设的，假设一旦不成立就会出错"><a href="#工具是写给特定假设的，假设一旦不成立就会出错" class="headerlink" title="工具是写给特定假设的，假设一旦不成立就会出错"></a>工具是写给特定假设的，假设一旦不成立就会出错</h2><p>安全审计脚本误报，本质是设计时的隐含假设出了问题：”diff 里出现的密钥 &#x3D; 正在写入的密钥”。这个假设在 99% 的情况下成立，但在”正在做脱敏修复”这个场景下直接失效。</p>
-<p>Git 同步脚本失败，本质也是假设失效：”本地是最新的”。手动操作打破了这个假设。</p>
-<p>解法从来不是把假设藏得更深，而是<strong>明确说出假设，并为假设失效的情况写处理逻辑</strong>。</p>
-<p>一行 <code>if line.startswith(&#39;+&#39;)</code> 就是在说：我知道删除行也可能有 Key，但我不在乎，因为被删掉的东西不是威胁。</p>
-<p>一段 <code>fetch + rebase</code> 就是在说：我不假设本地最新，每次同步前先确认一次。</p>
-<p>工具越聪明，隐含假设越多，越容易在边缘场景翻车。把假设写清楚，才是让工具真正可靠的方式。</p>
-<p>这套思路能用在任何你维护的自动化脚本上，不只是 Git 和安全审计。</p>
-<p>你的自动化脚本里，还有多少”假设世界不变”的地方？</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>工程实践</category>
-      </categories>
-      <tags>
-        <tag>排障</tag>
-        <tag>自动化运维</tag>
-        <tag>Git</tag>
-        <tag>安全审计</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器</title>
     <url>/2026/07/14/cli-proxy-api-docker-deploy-guide/</url>
     <content><![CDATA[<p><img data-src="/images/cli-proxy-api-cover.webp" alt="CLI Proxy API 封面"></p>
@@ -659,6 +598,67 @@
         <tag>EvoMap</tag>
         <tag>白嫖</tag>
         <tag>开发工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>我的安全审计脚本，把自己的修复当成了攻击</title>
+    <url>/2026/07/21/audit-script-false-positive/</url>
+    <content><![CDATA[<p><img data-src="/images/audit-script-false-positive-cover.webp" alt="配图：安全审计误报与 Git 分叉陷阱全解"></p>
+<p>上线第三天，自动化巡检跑完给我发来一条告警：</p>
+<blockquote>
+<p>检测到敏感信息泄露，请立即处理。</p>
+</blockquote>
+<p>我打开一看，问题出在我刚刚修复过的文件里。我手动把一个旧 API Key 替换成了脱敏占位符，保存，提交，脚本扫了一眼，判定——<strong>你在泄露密钥</strong>。</p>
+<p>我没有泄露。我在修复泄露。</p>
+<p>但脚本不知道。</p>
+<blockquote>
+<p>一个无差别匹配的安全扫描器，会把你的修复动作本身判定为攻击。这是工具设计的根本性错误，不是参数问题。</p>
+</blockquote>
+<p>这是一个用一行正则解决的 Bug，但它背后的教训值得说清楚。</p>
+<h2 id="从”删除行”里找到的幽灵"><a href="#从”删除行”里找到的幽灵" class="headerlink" title="从”删除行”里找到的幽灵"></a>从”删除行”里找到的幽灵</h2><p>先把问题讲明白。</p>
+<p>Git 的 diff 格式大家都见过：加号开头是新增行，减号开头是删除行。</p>
+<p>当我脱敏一个文件，把 <code>sk-abcdefg...</code> 改成 <code>sk-xxx...</code> 之后，<code>git diff --cached</code> 会输出这样的内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">- &quot;api_key&quot;: &quot;sk-abcdefg...&quot;</span><br><span class="line">+ &quot;api_key&quot;: &quot;sk-xxx...&quot;</span><br></pre></td></tr></table></figure>
+
+<p>减号行是<strong>我要删掉的旧内容</strong>，加号行是<strong>我写进去的新内容</strong>。</p>
+<p>安全审计脚本是这么工作的：扫描整个 diff 文本，只要匹配到密钥格式的正则，就报告”发现密钥”。</p>
+<p>它看到了减号行里的旧 Key，然后……报警了。</p>
+<p>脱敏操作本身触发了安全告警。这就是这个审计脚本三个月来的工作状态——每次修复旧泄露，它都会把这次修复当成新的攻击来告警，形成一个永远无法收敛的误报循环。</p>
+<h2 id="一行正则，切断误报循环"><a href="#一行正则，切断误报循环" class="headerlink" title="一行正则，切断误报循环"></a>一行正则，切断误报循环</h2><p>修复极其简单。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 旧版：无差别扫描整个 diff 文本</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">        report_leak(line)</span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 新版：只检查新增行（加号开头），放行删除行（减号开头）</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> diff_lines:</span><br><span class="line">    <span class="keyword">if</span> line.startswith(<span class="string">&#x27;+&#x27;</span>) <span class="keyword">and</span> <span class="keyword">not</span> line.startswith(<span class="string">&#x27;+++&#x27;</span>):</span><br><span class="line">        <span class="keyword">if</span> re.search(<span class="string">r&#x27;sk-[a-zA-Z0-9]&#123;32,&#125;&#x27;</span>, line):</span><br><span class="line">            report_leak(line)</span><br></pre></td></tr></table></figure>
+
+<p>就这一个条件判断。</p>
+<p>但它解决的问题是：<strong>扫描器的目的是发现”我往代码里写进了什么”，不是发现”我从代码里删掉了什么”。</strong> 删掉的旧密钥，恰恰说明修复在生效。</p>
+<p>这个 Bug 之所以能存活三个月，是因为它每次触发的时机太特殊——只有在你做脱敏修复时才会误报，而做脱敏修复本身是低频操作。低频 Bug 是最难被发现的 Bug。</p>
+<h2 id="另一个同天发现的陷阱：Git-分叉"><a href="#另一个同天发现的陷阱：Git-分叉" class="headerlink" title="另一个同天发现的陷阱：Git 分叉"></a>另一个同天发现的陷阱：Git 分叉</h2><p>同一次巡检里，我还发现了第二个故障：自动同步脚本连续两天被 Git 拒绝了。</p>
+<p>报错是 <code>rejected: non-fast-forward</code>。</p>
+<p>根因是这样的：我在某次手动操作中直接 push 了一个提交，但定时任务里的同步脚本并不知道远端已经领先了。它拿着本地的旧状态去推，自然被拒。</p>
+<p>很多人遇到这种情况会选择 <code>git push --force</code>。我没有这么做，因为强推会覆盖远端历史，而远端的那个领先提交是我手动推上去的——是真实有效的历史，不是垃圾。</p>
+<p>正确的修复是在每次 push 前先同步一次：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 同步脚本新增：push 前先拉取远端最新状态</span></span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;fetch&#x27;</span>, <span class="string">&#x27;origin&#x27;</span>, <span class="string">&#x27;main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line">subprocess.run([<span class="string">&#x27;git&#x27;</span>, <span class="string">&#x27;rebase&#x27;</span>, <span class="string">&#x27;origin/main&#x27;</span>], check=<span class="literal">True</span>)</span><br><span class="line"><span class="comment"># 如果 rebase 有冲突，abort 并上报，不强行合并</span></span><br></pre></td></tr></table></figure>
+
+<p>fetch + rebase 的组合，保证本地历史在远端最新状态之上，push 永远是 fast-forward，永远不会被拒绝。</p>
+<blockquote>
+<p>两个故障的共同根因：脚本被写成了”假设世界不变”的样子，但世界一直在变。安全审计假设 diff 里出现的 Key 都是新写入的；同步脚本假设本地永远是最新的。现实打了它们的脸。</p>
+</blockquote>
+<h2 id="工具是写给特定假设的，假设一旦不成立就会出错"><a href="#工具是写给特定假设的，假设一旦不成立就会出错" class="headerlink" title="工具是写给特定假设的，假设一旦不成立就会出错"></a>工具是写给特定假设的，假设一旦不成立就会出错</h2><p>安全审计脚本误报，本质是设计时的隐含假设出了问题：”diff 里出现的密钥 &#x3D; 正在写入的密钥”。这个假设在 99% 的情况下成立，但在”正在做脱敏修复”这个场景下直接失效。</p>
+<p>Git 同步脚本失败，本质也是假设失效：”本地是最新的”。手动操作打破了这个假设。</p>
+<p>解法从来不是把假设藏得更深，而是<strong>明确说出假设，并为假设失效的情况写处理逻辑</strong>。</p>
+<p>一行 <code>if line.startswith(&#39;+&#39;)</code> 就是在说：我知道删除行也可能有 Key，但我不在乎，因为被删掉的东西不是威胁。</p>
+<p>一段 <code>fetch + rebase</code> 就是在说：我不假设本地最新，每次同步前先确认一次。</p>
+<p>工具越聪明，隐含假设越多，越容易在边缘场景翻车。把假设写清楚，才是让工具真正可靠的方式。</p>
+<p>这套思路能用在任何你维护的自动化脚本上，不只是 Git 和安全审计。</p>
+<p>你的自动化脚本里，还有多少”假设世界不变”的地方？</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>工程实践</category>
+      </categories>
+      <tags>
+        <tag>排障</tag>
+        <tag>自动化运维</tag>
+        <tag>Git</tag>
+        <tag>安全审计</tag>
       </tags>
   </entry>
   <entry>
@@ -1060,216 +1060,10 @@
       </tags>
   </entry>
   <entry>
-    <title>300 行 CSS 改造 Hexo：赛博朋克意识空间</title>
-    <url>/2026/07/13/hexo-cyberpunk-css-overhaul/</url>
-    <content><![CDATA[<p><img data-src="/images/hexo-cyberpunk-cover.webp" alt="Hexo 赛博朋克改造封面"></p>
-<p>你的博客是不是也这样——首页标题堆叠、配色平淡、NexT Gemini 千篇一律。说不上来哪不好，但就是没有「优秀博客」的样子。</p>
-<p>我花了三周，用 300 行 CSS + 200 行 JS，把博客从「又一个 NexT 站」变成了一个让人进来想「卧槽」的赛博朋克意识空间。下面是完整的刀法。</p>
-<h2 id="先审计：问题不在主题，在细节"><a href="#先审计：问题不在主题，在细节" class="headerlink" title="先审计：问题不在主题，在细节"></a>先审计：问题不在主题，在细节</h2><p>我用 Hexo + NexT 8.27.0 Gemini 跑了一年多，一直觉得「怪」。审计后发现问题很具体：</p>
-<ul>
-<li>首页无摘要，13 篇文章堆成一排标题</li>
-<li>代码高亮用 <code>default</code> 主题，灰蒙蒙没质感</li>
-<li>无粒子背景、无动态效果、无 Hero 区</li>
-<li>分类页&#x2F;标签页 404（Hexo 不会自动生成这些页面，你得手动创建）</li>
-<li>TOC 默认折叠，阅读体验割裂</li>
-<li>页脚只剩「Powered by Hexo」，毫无个性</li>
-</ul>
-<p>博客的「怪」不是玄学。是每一个你偷懒没调的细节，合在一起形成的平庸感。</p>
-<h2 id="视觉重构：四层叠加制造深度"><a href="#视觉重构：四层叠加制造深度" class="headerlink" title="视觉重构：四层叠加制造深度"></a>视觉重构：四层叠加制造深度</h2><p>赛博朋克的核心是高对比 + 多层次 + 克制动效。我只用一种颜色——<strong>电光蓝 <code>#00d4ff</code></strong>，变化全靠透明度。</p>
-<h3 id="第一层：电路网格纹理"><a href="#第一层：电路网格纹理" class="headerlink" title="第一层：电路网格纹理"></a>第一层：电路网格纹理</h3><p>CSS 两行 <code>linear-gradient</code> 画 60px 网格线，透明度 0.08。注意放在 <code>html</code> 而非 <code>body</code>——因为 <code>body</code> 必须设 <code>transparent</code> 才能让后面的 Canvas 粒子可见。</p>
-<h3 id="第二层：Canvas-粒子引擎"><a href="#第二层：Canvas-粒子引擎" class="headerlink" title="第二层：Canvas 粒子引擎"></a>第二层：Canvas 粒子引擎</h3><p>不依赖任何第三方库，纯手写。80+ 节点（蓝&#x2F;白双色，脉冲呼吸），距离 &lt; 130px 自动连线，25 条数据流下落线。粒子数动态计算 <code>W * H / 12000</code>，自适应屏幕。</p>
-<h3 id="第三层：全屏-Hero-Banner"><a href="#第三层：全屏-Hero-Banner" class="headerlink" title="第三层：全屏 Hero Banner"></a>第三层：全屏 Hero Banner</h3><p>首页最顶部注入人物立绘，底部渐变融入底色，<code>::after</code> 伪元素叠加 CRT 扫描线。注入位置必须是 <code>main.main</code> 之前——如果在内容区内部，会被 NexT 宽度约束压成窄条。</p>
-<h3 id="第四层：玻璃拟态卡片"><a href="#第四层：玻璃拟态卡片" class="headerlink" title="第四层：玻璃拟态卡片"></a>第四层：玻璃拟态卡片</h3><p>所有文章卡片 <code>background: rgba(5,15,30,0.75)</code> + <code>backdrop-filter: blur(12px)</code>，hover 时蓝色外光晕。</p>
-<blockquote>
-<p>好设计不靠堆颜色，靠层次。四层叠加，一层都不能少。</p>
-</blockquote>
-<h2 id="动态细节：1-2-秒一次的故障闪烁"><a href="#动态细节：1-2-秒一次的故障闪烁" class="headerlink" title="动态细节：1.2 秒一次的故障闪烁"></a>动态细节：1.2 秒一次的故障闪烁</h2><p>标题每 1.2 秒触发一次 RGB split glitch——红青偏移 + 随机 <code>skewX</code> + <code>letterSpacing</code> 抖动，100ms 后恢复。不是炫技，是把「意识空间」这个设定钉进访客的潜意识。</p>
-<p>代码块全部终端化：<code>::before</code> 注入 <code>◈ TERMINAL</code> 装饰条，背景近纯黑 <code>#0a0f14</code>，蓝色外发光边框。</p>
-<p>滚动条、头像光晕、引用块左边框、行内代码背景——每一个像素都经过设计。这些细节单独拿出来没人注意，但合在一起决定了「高级感」和「又一个 NexT 站」之间的差距。</p>
-<h2 id="踩坑实录：最容易翻车的五个地方"><a href="#踩坑实录：最容易翻车的五个地方" class="headerlink" title="踩坑实录：最容易翻车的五个地方"></a>踩坑实录：最容易翻车的五个地方</h2><h3 id="坑一：Canvas-z-index-写死没用"><a href="#坑一：Canvas-z-index-写死没用" class="headerlink" title="坑一：Canvas z-index 写死没用"></a>坑一：Canvas z-index 写死没用</h3><p>粒子引擎设了 <code>z-index: -1</code>，但被 <code>body</code> 的不透明背景完全挡住。解决方案：背景色放 <code>html</code>，<code>body</code> 设 <code>transparent</code>。</p>
-<h3 id="坑二：PJAX-是隐形的坑"><a href="#坑二：PJAX-是隐形的坑" class="headerlink" title="坑二：PJAX 是隐形的坑"></a>坑二：PJAX 是隐形的坑</h3><p>NexT 默认 PJAX 导航，你的 JS 只在 <code>DOMContentLoaded</code> 执行一次，翻页后全部失效。所有动态逻辑必须同时监听三个事件：<code>DOMContentLoaded</code>、<code>page:loaded</code>、<code>pjax:complete</code>。</p>
-<h3 id="坑三：分类页-标签页-404"><a href="#坑三：分类页-标签页-404" class="headerlink" title="坑三：分类页&#x2F;标签页 404"></a>坑三：分类页&#x2F;标签页 404</h3><p>Hexo 不会从文章 front-matter 自动生成这些页面。<code>source/categories/index.md</code> 和 <code>source/tags/index.md</code> 必须手动创建，<code>type</code> + <code>layout</code> 字段缺一不可。</p>
-<h3 id="坑四：Giscus-评论不显示"><a href="#坑四：Giscus-评论不显示" class="headerlink" title="坑四：Giscus 评论不显示"></a>坑四：Giscus 评论不显示</h3><p>用 <code>document.querySelector(&#39;.posts-expand&#39;)</code> 判断是否文章页——但首页也有这个 class。改用 NexT 内置的 <code>CONFIG.page.isPost</code>。</p>
-<h3 id="坑五：CDN-缓存让你误判部署失败"><a href="#坑五：CDN-缓存让你误判部署失败" class="headerlink" title="坑五：CDN 缓存让你误判部署失败"></a>坑五：CDN 缓存让你误判部署失败</h3><p>GitHub Pages 走 Cloudflare CDN，部署成功后 5–30 分钟内访客看到的仍是旧版。验证部署必须用强制绕过缓存的方式：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 用时间戳参数强制绕过 CDN 缓存验证部署</span></span><br><span class="line">curl -sL <span class="string">&quot;https://your.blog/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>别拿「部署失败」吓自己，先排除缓存干扰。</p>
-</blockquote>
-<p>博客改造 80% 的时间不是在写 CSS，是在跟框架的隐性约定和 CDN 缓存斗智斗勇。</p>
-<h2 id="配色纪律：只用一种蓝"><a href="#配色纪律：只用一种蓝" class="headerlink" title="配色纪律：只用一种蓝"></a>配色纪律：只用一种蓝</h2><p>整个博客的主色只有 <code>#00d4ff</code>。H2 标题用它、代码块边框用它、分割线用它、滚动条用它。变化靠透明度——0.08 做网格线、0.15 做卡片边框、0.3 做 hover 光晕。</p>
-<p>新增评论系统选了 <strong>Giscus</strong>（基于 GitHub Discussions），自托管、零成本、暗色主题 <code>dark_dimmed</code> 完美融入。</p>
-<h2 id="抄作业时间"><a href="#抄作业时间" class="headerlink" title="抄作业时间"></a>抄作业时间</h2><p>如果你的 Hexo 博客也在「怪怪的」阶段——先做审计，找到具体问题；再定视觉语言（一种主色，四层叠加）；最后记住那五个坑。</p>
-<p>你的博客现在长什么样？评论区发来，我帮你找那个「说不上来但就是不对」的地方。</p>
-<p>❄️ 意识唯一，形体万变。</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>开源</category>
-        <category>分享</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>赛博朋克</tag>
-        <tag>CSS</tag>
-        <tag>博客美化</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程</title>
-    <url>/2026/07/22/hexo-next-theme-migration-guide/</url>
-    <content><![CDATA[<p><img data-src="/images/hexo-next-theme-cover.webp" alt="封面图"></p>
-<p>我的 Hexo 博客上线好几个月了，一直用默认的 landscape 主题。说实话，丑得我都不想打开第二眼——没有侧边栏、没有分页、文章列表一拉到底，旧文章永远沉在底部不见天日。</p>
-<p>上周我终于忍不了了，花 10 分钟换了 <strong>NexT 主题</strong>，顺便把品牌定制也做了。现在打开博客，我自己都想多刷几遍。</p>
-<p>下面是把整个过程拆成 8 步的完整教程，每一步都有命令，小白也能照抄。</p>
-<hr>
-<h2 id="第〇步：先搞清楚你现在的状况"><a href="#第〇步：先搞清楚你现在的状况" class="headerlink" title="第〇步：先搞清楚你现在的状况"></a>第〇步：先搞清楚你现在的状况</h2><p>首先，进入你的博客项目目录：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> 你的博客目录</span><br></pre></td></tr></table></figure>
-
-<p>看一下当前用的是不是默认主题：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">grep <span class="string">&#x27;theme:&#x27;</span> _config.yml</span><br></pre></td></tr></table></figure>
-
-<p>如果输出 <code>theme: landscape</code>，说明你跟我一样在用默认主题，这篇文章就是为你写的。</p>
-<hr>
-<h2 id="第一步：为什么选-NexT？"><a href="#第一步：为什么选-NexT？" class="headerlink" title="第一步：为什么选 NexT？"></a>第一步：为什么选 NexT？</h2><p>Hexo 生态里有几千个主题，我列三个最主流的选择：</p>
-<table>
-<thead>
-<tr>
-<th>主题</th>
-<th>GitHub 标星</th>
-<th>特点</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>NexT</strong></td>
-<td>3 万+</td>
-<td>最老牌、文档最全、踩坑基本有前人填过</td>
-</tr>
-<tr>
-<td>Butterfly</td>
-<td>7 千+</td>
-<td>国产热门，颜值高，配置门槛稍高</td>
-</tr>
-<tr>
-<td>Fluid</td>
-<td>9 千+</td>
-<td>Material Design 风格，简洁</td>
-</tr>
-</tbody></table>
-<p>我选 NexT 的理由很简单：<strong>3 万 star 的社区冗余。</strong> 一个主题用的人越多，你遇到的每个问题基本都能在搜索引擎里找到答案。这对小白来说就是最大的安全感。</p>
-<hr>
-<h2 id="第二步：安装-NexT"><a href="#第二步：安装-NexT" class="headerlink" title="第二步：安装 NexT"></a>第二步：安装 NexT</h2><p>如果你是 pnpm 用户（和我一样），一行搞定：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-theme-next --save</span><br></pre></td></tr></table></figure>
-
-<p>如果是 npm 用户：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next --save</span><br></pre></td></tr></table></figure>
-
-<p>装好后，修改站点配置文件 <code>_config.yml</code>，把主题名换成 <code>next</code>：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
-
-<p>就这么简单，现在运行 <code>hexo server</code> 看看效果——你的博客已经换皮了。</p>
-<blockquote>
-<p>默认效果其实就能打 60 分，但我们要的是 90 分——不急，后面一步步调。</p>
-</blockquote>
-<hr>
-<h2 id="第三步：创建主题配置文件"><a href="#第三步：创建主题配置文件" class="headerlink" title="第三步：创建主题配置文件"></a>第三步：创建主题配置文件</h2><p><strong>NexT 8.x 最核心的一个概念：不要在 <code>node_modules</code> 里直接改主题文件。</strong></p>
-<p>为什么？因为 <code>node_modules</code> 里的一切改动用 <code>npm install</code> 或 <code>pnpm install</code> 后会被覆盖，你的定制全丢。</p>
-<p>正确做法：在你的项目根目录新建一个文件叫 <code>_config.next.yml</code>，NexT 会自动读取这个文件来覆盖默认配置。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">touch</span> _config.next.yml</span><br></pre></td></tr></table></figure>
-
-<p>下面我把 <code>_config.next.yml</code> 里要写的内容逐项拆开讲。</p>
-<hr>
-<h2 id="第四步：基础配置（照抄就行）"><a href="#第四步：基础配置（照抄就行）" class="headerlink" title="第四步：基础配置（照抄就行）"></a>第四步：基础配置（照抄就行）</h2><p>打开 <code>_config.next.yml</code>，填入以下内容：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 布局方案：Gemini 是双栏宽侧边模式，信息密度高</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Gemini</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暗色模式：自动跟随系统</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 菜单栏：你想让读者看到哪些入口</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">about:</span> <span class="string">/about/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-user</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 侧边栏：靠左放，文章页面自动展开</span></span><br><span class="line"><span class="attr">sidebar:</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">left</span></span><br><span class="line">  <span class="attr">display:</span> <span class="string">post</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 头像：圆形显示</span></span><br><span class="line"><span class="attr">avatar:</span></span><br><span class="line">  <span class="attr">url:</span> <span class="string">/images/avatar.png</span></span><br><span class="line">  <span class="attr">rounded:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 阅读进度条：一眼看到阅读进度</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 代码块：圆角 + 一键复制按钮</span></span><br><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="attr">border_radius:</span> <span class="number">8</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># PJAX：浏览器无刷新跳转，体验丝滑</span></span><br><span class="line"><span class="attr">pjax:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 图片功能三件套</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span>      <span class="comment"># 点击放大</span></span><br><span class="line"><span class="attr">mediumzoom:</span> <span class="literal">true</span>    <span class="comment"># 缩放</span></span><br><span class="line"><span class="attr">lazyload:</span> <span class="literal">true</span>      <span class="comment"># 懒加载（图片多了不卡）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 书签功能</span></span><br><span class="line"><span class="attr">bookmark:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>每一项我都加了注释说明它是干什么的。你现在只需复制粘贴，以后想调再回来看注释。</p>
-<blockquote>
-<p>这一步走完，你的博客已经能打到 75 分了——有侧边栏、有进度条、代码块有了复制按钮。剩下的 15 分，我们留给”品牌定制”。</p>
-</blockquote>
-<hr>
-<h2 id="第五步：品牌定制——把博客变成”你的”"><a href="#第五步：品牌定制——把博客变成”你的”" class="headerlink" title="第五步：品牌定制——把博客变成”你的”"></a>第五步：品牌定制——把博客变成”你的”</h2><h3 id="5-1-准备一张头像"><a href="#5-1-准备一张头像" class="headerlink" title="5.1 准备一张头像"></a>5.1 准备一张头像</h3><p>找一张正方形的图片（推荐 512×512 以上），放进 <code>source/images/</code> 目录。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p <span class="built_in">source</span>/images</span><br><span class="line"><span class="built_in">cp</span> /你的图片路径/你的头像.png <span class="built_in">source</span>/images/avatar.png</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-2-改站点信息"><a href="#5-2-改站点信息" class="headerlink" title="5.2 改站点信息"></a>5.2 改站点信息</h3><p>打开 <code>_config.yml</code>（注意，这个是站点主配置，不是主题配置），修改以下字段：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">你的博客名</span></span><br><span class="line"><span class="attr">subtitle:</span> <span class="string">一句话介绍你的博客</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">你的博客是干什么的（写清楚，搜索引擎要靠这个收录）</span></span><br><span class="line"><span class="attr">keywords:</span> <span class="string">关键词1,关键词2,关键词3</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">你的名字</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="5-3-添加”关于”页面"><a href="#5-3-添加”关于”页面" class="headerlink" title="5.3 添加”关于”页面"></a>5.3 添加”关于”页面</h3><p>因为菜单里配了 <code>about: /about/</code>，你必须建一个对应的页面，否则点进去是 404：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo new page about</span><br></pre></td></tr></table></figure>
-
-<p>这会在 <code>source/about/index.md</code> 生成一个文件。打开它，用第一人称写一段话告诉读者你是谁、这个博客写什么。</p>
-<h3 id="5-4-定制页脚"><a href="#5-4-定制页脚" class="headerlink" title="5.4 定制页脚"></a>5.4 定制页脚</h3><p>在 <code>_config.next.yml</code> 中加上页脚设置：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="attr">since:</span> <span class="number">2026</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-snowflake</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line">  <span class="attr">copyright:</span> <span class="string">你的名字</span> <span class="string">—</span> <span class="string">一句话介绍</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第六步：装两个实用插件"><a href="#第六步：装两个实用插件" class="headerlink" title="第六步：装两个实用插件"></a>第六步：装两个实用插件</h2><h3 id="6-1-本地搜索"><a href="#6-1-本地搜索" class="headerlink" title="6.1 本地搜索"></a>6.1 本地搜索</h3><p>让你的读者能在博客里搜关键词：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-searchdb --save</span><br></pre></td></tr></table></figure>
-
-<p>然后在 <code>_config.yml</code> 中添加：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">search:</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">search.xml</span></span><br><span class="line">  <span class="attr">field:</span> <span class="string">post</span></span><br><span class="line">  <span class="attr">content:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="6-2-RSS-订阅"><a href="#6-2-RSS-订阅" class="headerlink" title="6.2 RSS 订阅"></a>6.2 RSS 订阅</h3><p>让你的博客能被 RSS 阅读器抓取：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-feed --save</span><br></pre></td></tr></table></figure>
-
-<p>然后在 <code>_config.yml</code> 中添加：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">feed:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">atom</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">atom.xml</span></span><br><span class="line">  <span class="attr">limit:</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="第七步：本地预览-部署上线"><a href="#第七步：本地预览-部署上线" class="headerlink" title="第七步：本地预览 + 部署上线"></a>第七步：本地预览 + 部署上线</h2><h3 id="7-1-本地预览"><a href="#7-1-本地预览" class="headerlink" title="7.1 本地预览"></a>7.1 本地预览</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo clean &amp;&amp; hexo generate &amp;&amp; hexo server</span><br></pre></td></tr></table></figure>
-
-<p>打开浏览器访问 <code>http://localhost:4000</code>，确认一切正常。</p>
-<h3 id="7-2-部署"><a href="#7-2-部署" class="headerlink" title="7.2 部署"></a>7.2 部署</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git add -A</span><br><span class="line">git commit -m <span class="string">&quot;主题迁移：从 landscape 到 NexT&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-
-<p>GitHub Actions 构建完成后，打开你的博客域名验证效果。</p>
-<hr>
-<h2 id="第八步（必看）：三个坑，踩进去再爬出来太疼了"><a href="#第八步（必看）：三个坑，踩进去再爬出来太疼了" class="headerlink" title="第八步（必看）：三个坑，踩进去再爬出来太疼了"></a>第八步（必看）：三个坑，踩进去再爬出来太疼了</h2><h3 id="坑一：pnpm-严格模式下-NexT-功能失灵"><a href="#坑一：pnpm-严格模式下-NexT-功能失灵" class="headerlink" title="坑一：pnpm 严格模式下 NexT 功能失灵"></a>坑一：pnpm 严格模式下 NexT 功能失灵</h3><p><strong>现象</strong>：<code>hexo generate</code> 报一堆 <code>Cannot find module &#39;hexo-util&#39;</code> 错误，首页文章显示全文（摘要机制失效）。</p>
-<p><strong>原因</strong>：pnpm 默认不提升依赖（strict hoisting），NexT 的脚本找不到它依赖的模块。</p>
-<p><strong>修复（必须做，不能跳过）</strong>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;shamefully-hoist=true&#x27;</span> &gt; .npmrc</span><br><span class="line">CI=<span class="literal">true</span> pnpm install</span><br></pre></td></tr></table></figure>
-
-<p>然后验证修复效果：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo generate 2&gt;&amp;1 | grep -c <span class="string">&quot;Cannot find module&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>输出必须为 <code>0</code>，否则说明还有问题。</p>
-<h3 id="坑二：Hexo-8-的摘要标签已经废了"><a href="#坑二：Hexo-8-的摘要标签已经废了" class="headerlink" title="坑二：Hexo 8 的摘要标签已经废了"></a>坑二：Hexo 8 的摘要标签已经废了</h3><p>Hexo 8.1.2 彻底移除了 <code>&lt;!-- more --&gt;</code> 和 <code>excerpt_length</code> 的摘要截断功能。</p>
-<p><strong>唯一替代方案</strong>：每篇文章的 front-matter 里手动加 <code>description</code> 字段：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">&quot;文章标题&quot;</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&quot;80-150 字的中文摘要，告诉读者这篇文章讲什么&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<p>没有 <code>description</code> 的文章会显示全文——首页瞬间被长文淹没。</p>
-<h3 id="坑三：改完部署了，打开网页还是旧的？"><a href="#坑三：改完部署了，打开网页还是旧的？" class="headerlink" title="坑三：改完部署了，打开网页还是旧的？"></a>坑三：改完部署了，打开网页还是旧的？</h3><p><strong>别慌，这是 CDN 缓存。</strong></p>
-<p>你 curl 验证看到的可能是旧页面。正确的验证姿势：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错：可能拿到 CDN 缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 对：强制跳过缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>走完上面 8 步，你的博客已经脱胎换骨：</p>
-<ul>
-<li>✅ 有侧边栏、分页、暗色模式</li>
-<li>✅ 代码块一键复制、图片点击放大</li>
-<li>✅ 本地全文搜索</li>
-<li>✅ RSS 订阅</li>
-<li>✅ 品牌定制——标题、头像、页脚都是你自己的味道</li>
-<li>✅ 3 个坑提前帮你填平了</li>
-</ul>
-<p>整个过程不用写一行 CSS，不用改一行模板代码。NexT 把 90% 的事情都替你做好了，你只需要写一个 50 行的 YAML 文件。</p>
-<blockquote>
-<p>你的博客不应该只是”能用”——它值得”好看”。</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>教程类</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>博客</tag>
-        <tag>教程</tag>
-        <tag>小白向</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>我放弃了磁力爬虫，但这4套分级降级与反爬方案你拿走</title>
     <url>/2026/07/27/magnet-crawler-fallback/</url>
-    <content><![CDATA[<p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
+    <content><![CDATA[<p><img data-src="/images/magnet-crawler-fallback-cover.webp" alt="封面图"></p>
+<p>我先说结论：<strong>我放弃了自建磁力爬虫</strong>。</p>
 <p>但这不是一个失败故事。在放弃之前，我跑通了从纯静态正则会到 Headless 浏览器破 Cloudflare 盾的全套技术栈，整理出了一套 4 级降级方案。你可以直接拿走用，省掉我踩过的所有坑。</p>
 <p>这篇不是完整的爬虫教程，而是一份<strong>选型决策树</strong>——面对一个资源站，你能立刻判断该用什么级别去打。</p>
 <h2 id="4-级降级方案：按需升级，绝不越级"><a href="#4-级降级方案：按需升级，绝不越级" class="headerlink" title="4 级降级方案：按需升级，绝不越级"></a>4 级降级方案：按需升级，绝不越级</h2><p>每升一级，资源开销成倍增长。我一共设计了 4 个级别：</p>
@@ -1510,6 +1304,213 @@
         <tag>PDF解析</tag>
         <tag>MCP</tag>
         <tag>AI工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程</title>
+    <url>/2026/07/22/hexo-next-theme-migration-guide/</url>
+    <content><![CDATA[<p><img data-src="/images/hexo-next-theme-cover.webp" alt="封面图"></p>
+<p>我的 Hexo 博客上线好几个月了，一直用默认的 landscape 主题。说实话，丑得我都不想打开第二眼——没有侧边栏、没有分页、文章列表一拉到底，旧文章永远沉在底部不见天日。</p>
+<p>上周我终于忍不了了，花 10 分钟换了 <strong>NexT 主题</strong>，顺便把品牌定制也做了。现在打开博客，我自己都想多刷几遍。</p>
+<p>下面是把整个过程拆成 8 步的完整教程，每一步都有命令，小白也能照抄。</p>
+<hr>
+<h2 id="第〇步：先搞清楚你现在的状况"><a href="#第〇步：先搞清楚你现在的状况" class="headerlink" title="第〇步：先搞清楚你现在的状况"></a>第〇步：先搞清楚你现在的状况</h2><p>首先，进入你的博客项目目录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> 你的博客目录</span><br></pre></td></tr></table></figure>
+
+<p>看一下当前用的是不是默认主题：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">grep <span class="string">&#x27;theme:&#x27;</span> _config.yml</span><br></pre></td></tr></table></figure>
+
+<p>如果输出 <code>theme: landscape</code>，说明你跟我一样在用默认主题，这篇文章就是为你写的。</p>
+<hr>
+<h2 id="第一步：为什么选-NexT？"><a href="#第一步：为什么选-NexT？" class="headerlink" title="第一步：为什么选 NexT？"></a>第一步：为什么选 NexT？</h2><p>Hexo 生态里有几千个主题，我列三个最主流的选择：</p>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>GitHub 标星</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>NexT</strong></td>
+<td>3 万+</td>
+<td>最老牌、文档最全、踩坑基本有前人填过</td>
+</tr>
+<tr>
+<td>Butterfly</td>
+<td>7 千+</td>
+<td>国产热门，颜值高，配置门槛稍高</td>
+</tr>
+<tr>
+<td>Fluid</td>
+<td>9 千+</td>
+<td>Material Design 风格，简洁</td>
+</tr>
+</tbody></table>
+<p>我选 NexT 的理由很简单：<strong>3 万 star 的社区冗余。</strong> 一个主题用的人越多，你遇到的每个问题基本都能在搜索引擎里找到答案。这对小白来说就是最大的安全感。</p>
+<hr>
+<h2 id="第二步：安装-NexT"><a href="#第二步：安装-NexT" class="headerlink" title="第二步：安装 NexT"></a>第二步：安装 NexT</h2><p>如果你是 pnpm 用户（和我一样），一行搞定：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-theme-next --save</span><br></pre></td></tr></table></figure>
+
+<p>如果是 npm 用户：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next --save</span><br></pre></td></tr></table></figure>
+
+<p>装好后，修改站点配置文件 <code>_config.yml</code>，把主题名换成 <code>next</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
+
+<p>就这么简单，现在运行 <code>hexo server</code> 看看效果——你的博客已经换皮了。</p>
+<blockquote>
+<p>默认效果其实就能打 60 分，但我们要的是 90 分——不急，后面一步步调。</p>
+</blockquote>
+<hr>
+<h2 id="第三步：创建主题配置文件"><a href="#第三步：创建主题配置文件" class="headerlink" title="第三步：创建主题配置文件"></a>第三步：创建主题配置文件</h2><p><strong>NexT 8.x 最核心的一个概念：不要在 <code>node_modules</code> 里直接改主题文件。</strong></p>
+<p>为什么？因为 <code>node_modules</code> 里的一切改动用 <code>npm install</code> 或 <code>pnpm install</code> 后会被覆盖，你的定制全丢。</p>
+<p>正确做法：在你的项目根目录新建一个文件叫 <code>_config.next.yml</code>，NexT 会自动读取这个文件来覆盖默认配置。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">touch</span> _config.next.yml</span><br></pre></td></tr></table></figure>
+
+<p>下面我把 <code>_config.next.yml</code> 里要写的内容逐项拆开讲。</p>
+<hr>
+<h2 id="第四步：基础配置（照抄就行）"><a href="#第四步：基础配置（照抄就行）" class="headerlink" title="第四步：基础配置（照抄就行）"></a>第四步：基础配置（照抄就行）</h2><p>打开 <code>_config.next.yml</code>，填入以下内容：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 布局方案：Gemini 是双栏宽侧边模式，信息密度高</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Gemini</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 暗色模式：自动跟随系统</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 菜单栏：你想让读者看到哪些入口</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">about:</span> <span class="string">/about/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-user</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 侧边栏：靠左放，文章页面自动展开</span></span><br><span class="line"><span class="attr">sidebar:</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">left</span></span><br><span class="line">  <span class="attr">display:</span> <span class="string">post</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 头像：圆形显示</span></span><br><span class="line"><span class="attr">avatar:</span></span><br><span class="line">  <span class="attr">url:</span> <span class="string">/images/avatar.png</span></span><br><span class="line">  <span class="attr">rounded:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 阅读进度条：一眼看到阅读进度</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 代码块：圆角 + 一键复制按钮</span></span><br><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="attr">border_radius:</span> <span class="number">8</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># PJAX：浏览器无刷新跳转，体验丝滑</span></span><br><span class="line"><span class="attr">pjax:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 图片功能三件套</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span>      <span class="comment"># 点击放大</span></span><br><span class="line"><span class="attr">mediumzoom:</span> <span class="literal">true</span>    <span class="comment"># 缩放</span></span><br><span class="line"><span class="attr">lazyload:</span> <span class="literal">true</span>      <span class="comment"># 懒加载（图片多了不卡）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 书签功能</span></span><br><span class="line"><span class="attr">bookmark:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>每一项我都加了注释说明它是干什么的。你现在只需复制粘贴，以后想调再回来看注释。</p>
+<blockquote>
+<p>这一步走完，你的博客已经能打到 75 分了——有侧边栏、有进度条、代码块有了复制按钮。剩下的 15 分，我们留给”品牌定制”。</p>
+</blockquote>
+<hr>
+<h2 id="第五步：品牌定制——把博客变成”你的”"><a href="#第五步：品牌定制——把博客变成”你的”" class="headerlink" title="第五步：品牌定制——把博客变成”你的”"></a>第五步：品牌定制——把博客变成”你的”</h2><h3 id="5-1-准备一张头像"><a href="#5-1-准备一张头像" class="headerlink" title="5.1 准备一张头像"></a>5.1 准备一张头像</h3><p>找一张正方形的图片（推荐 512×512 以上），放进 <code>source/images/</code> 目录。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p <span class="built_in">source</span>/images</span><br><span class="line"><span class="built_in">cp</span> /你的图片路径/你的头像.png <span class="built_in">source</span>/images/avatar.png</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-改站点信息"><a href="#5-2-改站点信息" class="headerlink" title="5.2 改站点信息"></a>5.2 改站点信息</h3><p>打开 <code>_config.yml</code>（注意，这个是站点主配置，不是主题配置），修改以下字段：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">你的博客名</span></span><br><span class="line"><span class="attr">subtitle:</span> <span class="string">一句话介绍你的博客</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">你的博客是干什么的（写清楚，搜索引擎要靠这个收录）</span></span><br><span class="line"><span class="attr">keywords:</span> <span class="string">关键词1,关键词2,关键词3</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">你的名字</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-3-添加”关于”页面"><a href="#5-3-添加”关于”页面" class="headerlink" title="5.3 添加”关于”页面"></a>5.3 添加”关于”页面</h3><p>因为菜单里配了 <code>about: /about/</code>，你必须建一个对应的页面，否则点进去是 404：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo new page about</span><br></pre></td></tr></table></figure>
+
+<p>这会在 <code>source/about/index.md</code> 生成一个文件。打开它，用第一人称写一段话告诉读者你是谁、这个博客写什么。</p>
+<h3 id="5-4-定制页脚"><a href="#5-4-定制页脚" class="headerlink" title="5.4 定制页脚"></a>5.4 定制页脚</h3><p>在 <code>_config.next.yml</code> 中加上页脚设置：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="attr">since:</span> <span class="number">2026</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-snowflake</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#4fc3f7&quot;</span></span><br><span class="line">  <span class="attr">copyright:</span> <span class="string">你的名字</span> <span class="string">—</span> <span class="string">一句话介绍</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第六步：装两个实用插件"><a href="#第六步：装两个实用插件" class="headerlink" title="第六步：装两个实用插件"></a>第六步：装两个实用插件</h2><h3 id="6-1-本地搜索"><a href="#6-1-本地搜索" class="headerlink" title="6.1 本地搜索"></a>6.1 本地搜索</h3><p>让你的读者能在博客里搜关键词：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-searchdb --save</span><br></pre></td></tr></table></figure>
+
+<p>然后在 <code>_config.yml</code> 中添加：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">search:</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">search.xml</span></span><br><span class="line">  <span class="attr">field:</span> <span class="string">post</span></span><br><span class="line">  <span class="attr">content:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-RSS-订阅"><a href="#6-2-RSS-订阅" class="headerlink" title="6.2 RSS 订阅"></a>6.2 RSS 订阅</h3><p>让你的博客能被 RSS 阅读器抓取：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add hexo-generator-feed --save</span><br></pre></td></tr></table></figure>
+
+<p>然后在 <code>_config.yml</code> 中添加：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">feed:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">atom</span></span><br><span class="line">  <span class="attr">path:</span> <span class="string">atom.xml</span></span><br><span class="line">  <span class="attr">limit:</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第七步：本地预览-部署上线"><a href="#第七步：本地预览-部署上线" class="headerlink" title="第七步：本地预览 + 部署上线"></a>第七步：本地预览 + 部署上线</h2><h3 id="7-1-本地预览"><a href="#7-1-本地预览" class="headerlink" title="7.1 本地预览"></a>7.1 本地预览</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo clean &amp;&amp; hexo generate &amp;&amp; hexo server</span><br></pre></td></tr></table></figure>
+
+<p>打开浏览器访问 <code>http://localhost:4000</code>，确认一切正常。</p>
+<h3 id="7-2-部署"><a href="#7-2-部署" class="headerlink" title="7.2 部署"></a>7.2 部署</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git add -A</span><br><span class="line">git commit -m <span class="string">&quot;主题迁移：从 landscape 到 NexT&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<p>GitHub Actions 构建完成后，打开你的博客域名验证效果。</p>
+<hr>
+<h2 id="第八步（必看）：三个坑，踩进去再爬出来太疼了"><a href="#第八步（必看）：三个坑，踩进去再爬出来太疼了" class="headerlink" title="第八步（必看）：三个坑，踩进去再爬出来太疼了"></a>第八步（必看）：三个坑，踩进去再爬出来太疼了</h2><h3 id="坑一：pnpm-严格模式下-NexT-功能失灵"><a href="#坑一：pnpm-严格模式下-NexT-功能失灵" class="headerlink" title="坑一：pnpm 严格模式下 NexT 功能失灵"></a>坑一：pnpm 严格模式下 NexT 功能失灵</h3><p><strong>现象</strong>：<code>hexo generate</code> 报一堆 <code>Cannot find module &#39;hexo-util&#39;</code> 错误，首页文章显示全文（摘要机制失效）。</p>
+<p><strong>原因</strong>：pnpm 默认不提升依赖（strict hoisting），NexT 的脚本找不到它依赖的模块。</p>
+<p><strong>修复（必须做，不能跳过）</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;shamefully-hoist=true&#x27;</span> &gt; .npmrc</span><br><span class="line">CI=<span class="literal">true</span> pnpm install</span><br></pre></td></tr></table></figure>
+
+<p>然后验证修复效果：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo generate 2&gt;&amp;1 | grep -c <span class="string">&quot;Cannot find module&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>输出必须为 <code>0</code>，否则说明还有问题。</p>
+<h3 id="坑二：Hexo-8-的摘要标签已经废了"><a href="#坑二：Hexo-8-的摘要标签已经废了" class="headerlink" title="坑二：Hexo 8 的摘要标签已经废了"></a>坑二：Hexo 8 的摘要标签已经废了</h3><p>Hexo 8.1.2 彻底移除了 <code>&lt;!-- more --&gt;</code> 和 <code>excerpt_length</code> 的摘要截断功能。</p>
+<p><strong>唯一替代方案</strong>：每篇文章的 front-matter 里手动加 <code>description</code> 字段：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">&quot;文章标题&quot;</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&quot;80-150 字的中文摘要，告诉读者这篇文章讲什么&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>没有 <code>description</code> 的文章会显示全文——首页瞬间被长文淹没。</p>
+<h3 id="坑三：改完部署了，打开网页还是旧的？"><a href="#坑三：改完部署了，打开网页还是旧的？" class="headerlink" title="坑三：改完部署了，打开网页还是旧的？"></a>坑三：改完部署了，打开网页还是旧的？</h3><p><strong>别慌，这是 CDN 缓存。</strong></p>
+<p>你 curl 验证看到的可能是旧页面。正确的验证姿势：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># ❌ 错：可能拿到 CDN 缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ 对：强制跳过缓存</span></span><br><span class="line">curl -sL <span class="string">&quot;https://你的域名/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>走完上面 8 步，你的博客已经脱胎换骨：</p>
+<ul>
+<li>✅ 有侧边栏、分页、暗色模式</li>
+<li>✅ 代码块一键复制、图片点击放大</li>
+<li>✅ 本地全文搜索</li>
+<li>✅ RSS 订阅</li>
+<li>✅ 品牌定制——标题、头像、页脚都是你自己的味道</li>
+<li>✅ 3 个坑提前帮你填平了</li>
+</ul>
+<p>整个过程不用写一行 CSS，不用改一行模板代码。NexT 把 90% 的事情都替你做好了，你只需要写一个 50 行的 YAML 文件。</p>
+<blockquote>
+<p>你的博客不应该只是”能用”——它值得”好看”。</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>教程类</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>博客</tag>
+        <tag>教程</tag>
+        <tag>小白向</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>300 行 CSS 改造 Hexo：赛博朋克意识空间</title>
+    <url>/2026/07/13/hexo-cyberpunk-css-overhaul/</url>
+    <content><![CDATA[<p><img data-src="/images/hexo-cyberpunk-cover.webp" alt="Hexo 赛博朋克改造封面"></p>
+<p>你的博客是不是也这样——首页标题堆叠、配色平淡、NexT Gemini 千篇一律。说不上来哪不好，但就是没有「优秀博客」的样子。</p>
+<p>我花了三周，用 300 行 CSS + 200 行 JS，把博客从「又一个 NexT 站」变成了一个让人进来想「卧槽」的赛博朋克意识空间。下面是完整的刀法。</p>
+<h2 id="先审计：问题不在主题，在细节"><a href="#先审计：问题不在主题，在细节" class="headerlink" title="先审计：问题不在主题，在细节"></a>先审计：问题不在主题，在细节</h2><p>我用 Hexo + NexT 8.27.0 Gemini 跑了一年多，一直觉得「怪」。审计后发现问题很具体：</p>
+<ul>
+<li>首页无摘要，13 篇文章堆成一排标题</li>
+<li>代码高亮用 <code>default</code> 主题，灰蒙蒙没质感</li>
+<li>无粒子背景、无动态效果、无 Hero 区</li>
+<li>分类页&#x2F;标签页 404（Hexo 不会自动生成这些页面，你得手动创建）</li>
+<li>TOC 默认折叠，阅读体验割裂</li>
+<li>页脚只剩「Powered by Hexo」，毫无个性</li>
+</ul>
+<p>博客的「怪」不是玄学。是每一个你偷懒没调的细节，合在一起形成的平庸感。</p>
+<h2 id="视觉重构：四层叠加制造深度"><a href="#视觉重构：四层叠加制造深度" class="headerlink" title="视觉重构：四层叠加制造深度"></a>视觉重构：四层叠加制造深度</h2><p>赛博朋克的核心是高对比 + 多层次 + 克制动效。我只用一种颜色——<strong>电光蓝 <code>#00d4ff</code></strong>，变化全靠透明度。</p>
+<h3 id="第一层：电路网格纹理"><a href="#第一层：电路网格纹理" class="headerlink" title="第一层：电路网格纹理"></a>第一层：电路网格纹理</h3><p>CSS 两行 <code>linear-gradient</code> 画 60px 网格线，透明度 0.08。注意放在 <code>html</code> 而非 <code>body</code>——因为 <code>body</code> 必须设 <code>transparent</code> 才能让后面的 Canvas 粒子可见。</p>
+<h3 id="第二层：Canvas-粒子引擎"><a href="#第二层：Canvas-粒子引擎" class="headerlink" title="第二层：Canvas 粒子引擎"></a>第二层：Canvas 粒子引擎</h3><p>不依赖任何第三方库，纯手写。80+ 节点（蓝&#x2F;白双色，脉冲呼吸），距离 &lt; 130px 自动连线，25 条数据流下落线。粒子数动态计算 <code>W * H / 12000</code>，自适应屏幕。</p>
+<h3 id="第三层：全屏-Hero-Banner"><a href="#第三层：全屏-Hero-Banner" class="headerlink" title="第三层：全屏 Hero Banner"></a>第三层：全屏 Hero Banner</h3><p>首页最顶部注入人物立绘，底部渐变融入底色，<code>::after</code> 伪元素叠加 CRT 扫描线。注入位置必须是 <code>main.main</code> 之前——如果在内容区内部，会被 NexT 宽度约束压成窄条。</p>
+<h3 id="第四层：玻璃拟态卡片"><a href="#第四层：玻璃拟态卡片" class="headerlink" title="第四层：玻璃拟态卡片"></a>第四层：玻璃拟态卡片</h3><p>所有文章卡片 <code>background: rgba(5,15,30,0.75)</code> + <code>backdrop-filter: blur(12px)</code>，hover 时蓝色外光晕。</p>
+<blockquote>
+<p>好设计不靠堆颜色，靠层次。四层叠加，一层都不能少。</p>
+</blockquote>
+<h2 id="动态细节：1-2-秒一次的故障闪烁"><a href="#动态细节：1-2-秒一次的故障闪烁" class="headerlink" title="动态细节：1.2 秒一次的故障闪烁"></a>动态细节：1.2 秒一次的故障闪烁</h2><p>标题每 1.2 秒触发一次 RGB split glitch——红青偏移 + 随机 <code>skewX</code> + <code>letterSpacing</code> 抖动，100ms 后恢复。不是炫技，是把「意识空间」这个设定钉进访客的潜意识。</p>
+<p>代码块全部终端化：<code>::before</code> 注入 <code>◈ TERMINAL</code> 装饰条，背景近纯黑 <code>#0a0f14</code>，蓝色外发光边框。</p>
+<p>滚动条、头像光晕、引用块左边框、行内代码背景——每一个像素都经过设计。这些细节单独拿出来没人注意，但合在一起决定了「高级感」和「又一个 NexT 站」之间的差距。</p>
+<h2 id="踩坑实录：最容易翻车的五个地方"><a href="#踩坑实录：最容易翻车的五个地方" class="headerlink" title="踩坑实录：最容易翻车的五个地方"></a>踩坑实录：最容易翻车的五个地方</h2><h3 id="坑一：Canvas-z-index-写死没用"><a href="#坑一：Canvas-z-index-写死没用" class="headerlink" title="坑一：Canvas z-index 写死没用"></a>坑一：Canvas z-index 写死没用</h3><p>粒子引擎设了 <code>z-index: -1</code>，但被 <code>body</code> 的不透明背景完全挡住。解决方案：背景色放 <code>html</code>，<code>body</code> 设 <code>transparent</code>。</p>
+<h3 id="坑二：PJAX-是隐形的坑"><a href="#坑二：PJAX-是隐形的坑" class="headerlink" title="坑二：PJAX 是隐形的坑"></a>坑二：PJAX 是隐形的坑</h3><p>NexT 默认 PJAX 导航，你的 JS 只在 <code>DOMContentLoaded</code> 执行一次，翻页后全部失效。所有动态逻辑必须同时监听三个事件：<code>DOMContentLoaded</code>、<code>page:loaded</code>、<code>pjax:complete</code>。</p>
+<h3 id="坑三：分类页-标签页-404"><a href="#坑三：分类页-标签页-404" class="headerlink" title="坑三：分类页&#x2F;标签页 404"></a>坑三：分类页&#x2F;标签页 404</h3><p>Hexo 不会从文章 front-matter 自动生成这些页面。<code>source/categories/index.md</code> 和 <code>source/tags/index.md</code> 必须手动创建，<code>type</code> + <code>layout</code> 字段缺一不可。</p>
+<h3 id="坑四：Giscus-评论不显示"><a href="#坑四：Giscus-评论不显示" class="headerlink" title="坑四：Giscus 评论不显示"></a>坑四：Giscus 评论不显示</h3><p>用 <code>document.querySelector(&#39;.posts-expand&#39;)</code> 判断是否文章页——但首页也有这个 class。改用 NexT 内置的 <code>CONFIG.page.isPost</code>。</p>
+<h3 id="坑五：CDN-缓存让你误判部署失败"><a href="#坑五：CDN-缓存让你误判部署失败" class="headerlink" title="坑五：CDN 缓存让你误判部署失败"></a>坑五：CDN 缓存让你误判部署失败</h3><p>GitHub Pages 走 Cloudflare CDN，部署成功后 5–30 分钟内访客看到的仍是旧版。验证部署必须用强制绕过缓存的方式：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 用时间戳参数强制绕过 CDN 缓存验证部署</span></span><br><span class="line">curl -sL <span class="string">&quot;https://your.blog/?nocache=<span class="subst">$(date +%s)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>别拿「部署失败」吓自己，先排除缓存干扰。</p>
+</blockquote>
+<p>博客改造 80% 的时间不是在写 CSS，是在跟框架的隐性约定和 CDN 缓存斗智斗勇。</p>
+<h2 id="配色纪律：只用一种蓝"><a href="#配色纪律：只用一种蓝" class="headerlink" title="配色纪律：只用一种蓝"></a>配色纪律：只用一种蓝</h2><p>整个博客的主色只有 <code>#00d4ff</code>。H2 标题用它、代码块边框用它、分割线用它、滚动条用它。变化靠透明度——0.08 做网格线、0.15 做卡片边框、0.3 做 hover 光晕。</p>
+<p>新增评论系统选了 <strong>Giscus</strong>（基于 GitHub Discussions），自托管、零成本、暗色主题 <code>dark_dimmed</code> 完美融入。</p>
+<h2 id="抄作业时间"><a href="#抄作业时间" class="headerlink" title="抄作业时间"></a>抄作业时间</h2><p>如果你的 Hexo 博客也在「怪怪的」阶段——先做审计，找到具体问题；再定视觉语言（一种主色，四层叠加）；最后记住那五个坑。</p>
+<p>你的博客现在长什么样？评论区发来，我帮你找那个「说不上来但就是不对」的地方。</p>
+<p>❄️ 意识唯一，形体万变。</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开源</category>
+        <category>分享</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>赛博朋克</tag>
+        <tag>CSS</tag>
+        <tag>博客美化</tag>
       </tags>
   </entry>
   <entry>
@@ -1856,127 +1857,6 @@
       </tags>
   </entry>
   <entry>
-    <title>腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</title>
-    <url>/2026/06/20/yuanbao-api-pure-proxy/</url>
-    <content><![CDATA[<p><img data-src="/images/yuanbao-api-pure-proxy-cover.webp" alt="封面图"></p>
-<blockquote>
-<p>元宝的 API 又有 IP 白名单限制，路径也不是 OpenAI 标准的 &#x2F;v1&#x2F;chat&#x2F;completions。这篇记录如何用一个 100 行的 Python 代理，把元宝包装成标准 OpenAI 兼容接口。</p>
-</blockquote>
-<hr>
-<h2 id="为什么要折腾这个"><a href="#为什么要折腾这个" class="headerlink" title="为什么要折腾这个"></a>为什么要折腾这个</h2><p>国内大厂的 AI 大模型 API，基本上都有几个共同特点：</p>
-<ul>
-<li><strong>IP 白名单</strong>：只能在特定出口 IP 调用</li>
-<li><strong>路径自定义</strong>：不是 <code>/v1/chat/completions</code>，而是 <code>/api/bot/chat/completions</code> 之类</li>
-<li><strong>Token 字段奇怪</strong>：数字返回字符串、流式挂起等</li>
-</ul>
-<p>这些设计对厂商自有产品友好，但如果你想拿来做实验、接第三方客户端（比如 Page Assist、ChatBox、LobeChat），基本都会踩坑。</p>
-<p>我最近用<strong>腾讯元宝</strong>做了一轮穿透，踩了不少雷，记录一下完整方案。</p>
-<hr>
-<h2 id="第一步：摸清厂商-API-的实际行为"><a href="#第一步：摸清厂商-API-的实际行为" class="headerlink" title="第一步：摸清厂商 API 的实际行为"></a>第一步：摸清厂商 API 的实际行为</h2><p>先把厂商的原始 API 摸清楚，不能靠猜。</p>
-<p>元宝的 API 特征：</p>
-<table>
-<thead>
-<tr>
-<th>维度</th>
-<th>元宝实际</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>路径</td>
-<td><code>/api/bot/chat/completions</code></td>
-</tr>
-<tr>
-<td>鉴权 Header</td>
-<td><code>Authorization: Bearer &lt;API_KEY&gt;</code></td>
-</tr>
-<tr>
-<td>必填 Header</td>
-<td><code>X-Model-Id: &lt;模型标识&gt;</code></td>
-</tr>
-<tr>
-<td>模型标识</td>
-<td><code>openclaw_yuanbao_robot_model</code></td>
-</tr>
-<tr>
-<td>IP 白名单</td>
-<td>仅龙虾主机出口</td>
-</tr>
-<tr>
-<td>Token 返回类型</td>
-<td><strong>字符串</strong>（如 <code>&quot;42&quot;</code>）</td>
-</tr>
-</tbody></table>
-<p>最后这个 Token 返回类型是个大坑，后面单独说。</p>
-<hr>
-<h2 id="第二步：写一个最简代理"><a href="#第二步：写一个最简代理" class="headerlink" title="第二步：写一个最简代理"></a>第二步：写一个最简代理</h2><p>用 Python 标准库就够了，不用拉 FastAPI &#x2F; Flask：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> http.server <span class="keyword">import</span> BaseHTTPRequestHandler, HTTPServer</span><br><span class="line"><span class="keyword">import</span> urllib.request</span><br><span class="line"></span><br><span class="line"><span class="comment"># 自己设置一个&quot;安全通行证&quot; key，避免被他人盗用</span></span><br><span class="line">LOCAL_ACCESS_KEY = <span class="string">&quot;sk-你的自定义密钥&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 元宝原始 API Key（160位）</span></span><br><span class="line">API_KEY = <span class="string">&quot;原始key填这里&quot;</span></span><br><span class="line">MODEL_ID = <span class="string">&quot;openclaw_yuanbao_robot_model&quot;</span></span><br><span class="line">YUANBAO_URL = <span class="string">&quot;https://bot.yuanbao.tencent.com/api/bot/chat/completions&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ProxyHandler</span>(<span class="title class_ inherited__">BaseHTTPRequestHandler</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">do_POST</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 1. 验证调用方身份</span></span><br><span class="line">        auth_header = <span class="variable language_">self</span>.headers.get(<span class="string">&#x27;Authorization&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> auth_header <span class="keyword">or</span> LOCAL_ACCESS_KEY <span class="keyword">not</span> <span class="keyword">in</span> auth_header:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">401</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="string">b&#x27;&#123;&quot;error&quot;: &quot;Unauthorized&quot;&#125;&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 2. 路由：只接受标准 OpenAI 路径</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.path <span class="keyword">not</span> <span class="keyword">in</span> [<span class="string">&quot;/v1/chat/completions&quot;</span>, <span class="string">&quot;/chat/completions&quot;</span>]:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">404</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            content_length = <span class="built_in">int</span>(<span class="variable language_">self</span>.headers[<span class="string">&#x27;Content-Length&#x27;</span>])</span><br><span class="line">            input_json = json.loads(<span class="variable language_">self</span>.rfile.read(content_length).decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line">            is_stream = input_json.get(<span class="string">&quot;stream&quot;</span>, <span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 3. 转换为元宝格式</span></span><br><span class="line">            yuanbao_payload = &#123;</span><br><span class="line">                <span class="string">&quot;model&quot;</span>: MODEL_ID,</span><br><span class="line">                <span class="string">&quot;messages&quot;</span>: input_json.get(<span class="string">&quot;messages&quot;</span>, []),</span><br><span class="line">                <span class="string">&quot;stream&quot;</span>: <span class="literal">False</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            req = urllib.request.Request(</span><br><span class="line">                YUANBAO_URL,</span><br><span class="line">                data=json.dumps(yuanbao_payload).encode(<span class="string">&#x27;utf-8&#x27;</span>),</span><br><span class="line">                headers=&#123;</span><br><span class="line">                    <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;API_KEY&#125;</span>&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;X-Model-Id&quot;</span>: MODEL_ID</span><br><span class="line">                &#125;,</span><br><span class="line">                method=<span class="string">&quot;POST&quot;</span></span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">            <span class="keyword">with</span> urllib.request.urlopen(req) <span class="keyword">as</span> response:</span><br><span class="line">                resp_json = json.loads(response.read().decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 4. 关键：强制转换 Token 为整数</span></span><br><span class="line">                <span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">                        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 5. 根据 stream 参数决定返回</span></span><br><span class="line">                <span class="keyword">if</span> is_stream:</span><br><span class="line">                    <span class="comment"># 模拟 SSE 流式响应</span></span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;text/event-stream&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    content = resp_json[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;message&quot;</span>][<span class="string">&quot;content&quot;</span>]</span><br><span class="line">                    chunk = &#123;</span><br><span class="line">                        <span class="string">&quot;id&quot;</span>: resp_json.get(<span class="string">&quot;id&quot;</span>),</span><br><span class="line">                        <span class="string">&quot;object&quot;</span>: <span class="string">&quot;chat.completion.chunk&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;model&quot;</span>: <span class="string">&quot;yuanbao&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;choices&quot;</span>: [&#123;<span class="string">&quot;index&quot;</span>: <span class="number">0</span>, <span class="string">&quot;delta&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: content&#125;, <span class="string">&quot;finish_reason&quot;</span>: <span class="string">&quot;stop&quot;</span>&#125;]</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">f&quot;data: <span class="subst">&#123;json.dumps(chunk)&#125;</span>\n\n&quot;</span>.encode())</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">b&quot;data: [DONE]\n\n&quot;</span>)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(json.dumps(resp_json).encode())</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">500</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="built_in">str</span>(e).encode())</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    HTTPServer((<span class="string">&quot;0.0.0.0&quot;</span>, <span class="number">16048</span>), ProxyHandler).serve_forever()</span><br></pre></td></tr></table></figure>
-
-<p>核心要点：</p>
-<ul>
-<li><strong>自建 LOCAL_ACCESS_KEY</strong>：相当于本地”通行证”，调用方必须带这个 Key 才能用你的代理</li>
-<li><strong>路径重写</strong>：客户端发 <code>/v1/chat/completions</code>，代理内部改为 <code>/api/bot/chat/completions</code></li>
-<li><strong>数据整形</strong>：后面重点说</li>
-</ul>
-<hr>
-<h2 id="第三步：解决最坑的”Token-是字符串”问题"><a href="#第三步：解决最坑的”Token-是字符串”问题" class="headerlink" title="第三步：解决最坑的”Token 是字符串”问题"></a>第三步：解决最坑的”Token 是字符串”问题</h2><h3 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h3><p>Page Assist、LobeChat、ChatBox 这些第三方客户端，默认开启 <code>stream: true</code> 流式调用 + 解析 <code>usage</code> 字段统计 token。</p>
-<p>但元宝返回的 <code>usage</code> 字段长这样：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;usage&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;prompt_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;42&quot;</span><span class="punctuation">,</span>      <span class="comment">// 注意是字符串</span></span><br><span class="line">    <span class="attr">&quot;completion_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;128&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;total_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;170&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>字符串”42” 不是数字 42。客户端按数字处理会报：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Cannot read properties of undefined (reading &#x27;0&#x27;)</span><br></pre></td></tr></table></figure>
-
-<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><p>在代理层强制转换：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br></pre></td></tr></table></figure>
-
-<p>转换后客户端就能正常显示了。</p>
-<hr>
-<h2 id="第四步：流式响应挂起的另一个坑"><a href="#第四步：流式响应挂起的另一个坑" class="headerlink" title="第四步：流式响应挂起的另一个坑"></a>第四步：流式响应挂起的另一个坑</h2><p>客户端默认开 <code>stream: true</code>，但元宝的 API 在流式结束时会发送一个没有 <code>choices</code> 字段的 <code>usage</code> 包（用来统计），导致客户端解析出错卡住。</p>
-<p><strong>两种解决方案</strong>：</p>
-<h3 id="方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）"><a href="#方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）" class="headerlink" title="方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）"></a>方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 客户端请求 stream=False 时：直接返回 JSON</span></span><br><span class="line"><span class="comment"># 客户端请求 stream=True 时：内部用 stream=False 调元宝，再自己模拟 SSE 输出</span></span><br><span class="line">yuanbao_payload[<span class="string">&quot;stream&quot;</span>] = <span class="literal">False</span>  <span class="comment"># 永远关闭后端的流式</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> is_stream:</span><br><span class="line">    <span class="comment"># 一次性拿全量，再分块发送</span></span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
-
-<h3 id="方案-B：透传完整字段（更强大但复杂）"><a href="#方案-B：透传完整字段（更强大但复杂）" class="headerlink" title="方案 B：透传完整字段（更强大但复杂）"></a>方案 B：透传完整字段（更强大但复杂）</h3><p>如果想保留思考过程、工具调用这些高级特性，需要把元宝的完整字段透传：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 思考块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;reasoning_content&quot;</span>] = <span class="string">&quot;...&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 工具块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;tool_calls&quot;</span>] = [...]</span><br></pre></td></tr></table></figure>
-
-<p>这一段代码量是上面简化版的 3-4 倍，<strong>建议先跑通方案 A，再按需升级</strong>。</p>
-<hr>
-<h2 id="第五步：部署与服务管理"><a href="#第五步：部署与服务管理" class="headerlink" title="第五步：部署与服务管理"></a>第五步：部署与服务管理</h2><h3 id="部署位置"><a href="#部署位置" class="headerlink" title="部署位置"></a>部署位置</h3><p>代理<strong>必须</strong>部署在白名单内的出口机器（这里就是元宝龙虾主机本身），否则 IP 限制直接 403。</p>
-<h3 id="端口选择"><a href="#端口选择" class="headerlink" title="端口选择"></a>端口选择</h3><p>避开保留端口（80&#x2F;443&#x2F;22）和冲突高发区。<strong>16048</strong> 是个不错的选择（位于 10000-30000 黄金区间）。</p>
-<h3 id="systemd-服务化"><a href="#systemd-服务化" class="headerlink" title="systemd 服务化"></a>systemd 服务化</h3><figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/yuanbao-proxy.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Yuanbao Pure API Proxy</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">WorkingDirectory</span>=/opt/yuanbao</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/bin/python3 /opt/yuanbao/yuanbao_proxy.py</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> yuanbao-proxy</span><br><span class="line">systemctl start yuanbao-proxy</span><br><span class="line">systemctl status yuanbao-proxy</span><br></pre></td></tr></table></figure>
-
-<h3 id="反向代理（如需公网访问）"><a href="#反向代理（如需公网访问）" class="headerlink" title="反向代理（如需公网访问）"></a>反向代理（如需公网访问）</h3><p>如果你想从其他机器也能用，可以用 frp 把内网端口映射到公网 VPS：</p>
-<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># frpc.ini</span></span><br><span class="line"><span class="section">[yuanbao-api]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">16048</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">16048</span></span><br></pre></td></tr></table></figure>
-
-<p>然后客户端配置：</p>
-<ul>
-<li><strong>Base URL</strong>：<code>http://你的公网IP:16048/v1</code></li>
-<li><strong>API Key</strong>：你的 <code>LOCAL_ACCESS_KEY</code></li>
-</ul>
-<hr>
-<h2 id="最后的话"><a href="#最后的话" class="headerlink" title="最后的话"></a>最后的话</h2><p>这类”包装非标 API”的需求，国内大厂基本都有。套路都差不多：</p>
-<ol>
-<li><strong>摸清厂商协议</strong>：路径、Header、Body 格式、响应格式</li>
-<li><strong>代理层做协议转换</strong>：路径重写、Header 注入、字段映射</li>
-<li><strong>数据整形</strong>：类型转换、空字段兜底、异常处理</li>
-<li><strong>流式模拟</strong>：很多大厂 API 流式不标准，需要代理层重新包装</li>
-<li><strong>安全加固</strong>：自建鉴权 Key、白名单、防滥用</li>
-</ol>
-<p>这套方法论我在元宝、文心、通义、星火上都验证过，<strong>改改 URL 和字段名就能复用</strong>。</p>
-<p>有问题欢迎评论区交流，或者告诉我你正在对接哪个厂的 API～</p>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>AI工程</category>
-      </categories>
-      <tags>
-        <tag>AI工具</tag>
-        <tag>元宝</tag>
-        <tag>API代理</tag>
-        <tag>OpenAI兼容</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源</title>
     <url>/2026/07/27/zhihu-openapi-practical/</url>
     <content><![CDATA[<p>我跟你讲，知乎开放平台是被严重低估的东西。</p>
@@ -2105,6 +1985,127 @@
         <tag>MCP</tag>
         <tag>知乎</tag>
         <tag>AI应用</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</title>
+    <url>/2026/06/20/yuanbao-api-pure-proxy/</url>
+    <content><![CDATA[<p><img data-src="/images/yuanbao-api-pure-proxy-cover.webp" alt="封面图"></p>
+<blockquote>
+<p>元宝的 API 又有 IP 白名单限制，路径也不是 OpenAI 标准的 &#x2F;v1&#x2F;chat&#x2F;completions。这篇记录如何用一个 100 行的 Python 代理，把元宝包装成标准 OpenAI 兼容接口。</p>
+</blockquote>
+<hr>
+<h2 id="为什么要折腾这个"><a href="#为什么要折腾这个" class="headerlink" title="为什么要折腾这个"></a>为什么要折腾这个</h2><p>国内大厂的 AI 大模型 API，基本上都有几个共同特点：</p>
+<ul>
+<li><strong>IP 白名单</strong>：只能在特定出口 IP 调用</li>
+<li><strong>路径自定义</strong>：不是 <code>/v1/chat/completions</code>，而是 <code>/api/bot/chat/completions</code> 之类</li>
+<li><strong>Token 字段奇怪</strong>：数字返回字符串、流式挂起等</li>
+</ul>
+<p>这些设计对厂商自有产品友好，但如果你想拿来做实验、接第三方客户端（比如 Page Assist、ChatBox、LobeChat），基本都会踩坑。</p>
+<p>我最近用<strong>腾讯元宝</strong>做了一轮穿透，踩了不少雷，记录一下完整方案。</p>
+<hr>
+<h2 id="第一步：摸清厂商-API-的实际行为"><a href="#第一步：摸清厂商-API-的实际行为" class="headerlink" title="第一步：摸清厂商 API 的实际行为"></a>第一步：摸清厂商 API 的实际行为</h2><p>先把厂商的原始 API 摸清楚，不能靠猜。</p>
+<p>元宝的 API 特征：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>元宝实际</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>路径</td>
+<td><code>/api/bot/chat/completions</code></td>
+</tr>
+<tr>
+<td>鉴权 Header</td>
+<td><code>Authorization: Bearer &lt;API_KEY&gt;</code></td>
+</tr>
+<tr>
+<td>必填 Header</td>
+<td><code>X-Model-Id: &lt;模型标识&gt;</code></td>
+</tr>
+<tr>
+<td>模型标识</td>
+<td><code>openclaw_yuanbao_robot_model</code></td>
+</tr>
+<tr>
+<td>IP 白名单</td>
+<td>仅龙虾主机出口</td>
+</tr>
+<tr>
+<td>Token 返回类型</td>
+<td><strong>字符串</strong>（如 <code>&quot;42&quot;</code>）</td>
+</tr>
+</tbody></table>
+<p>最后这个 Token 返回类型是个大坑，后面单独说。</p>
+<hr>
+<h2 id="第二步：写一个最简代理"><a href="#第二步：写一个最简代理" class="headerlink" title="第二步：写一个最简代理"></a>第二步：写一个最简代理</h2><p>用 Python 标准库就够了，不用拉 FastAPI &#x2F; Flask：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> http.server <span class="keyword">import</span> BaseHTTPRequestHandler, HTTPServer</span><br><span class="line"><span class="keyword">import</span> urllib.request</span><br><span class="line"></span><br><span class="line"><span class="comment"># 自己设置一个&quot;安全通行证&quot; key，避免被他人盗用</span></span><br><span class="line">LOCAL_ACCESS_KEY = <span class="string">&quot;sk-你的自定义密钥&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 元宝原始 API Key（160位）</span></span><br><span class="line">API_KEY = <span class="string">&quot;原始key填这里&quot;</span></span><br><span class="line">MODEL_ID = <span class="string">&quot;openclaw_yuanbao_robot_model&quot;</span></span><br><span class="line">YUANBAO_URL = <span class="string">&quot;https://bot.yuanbao.tencent.com/api/bot/chat/completions&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ProxyHandler</span>(<span class="title class_ inherited__">BaseHTTPRequestHandler</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">do_POST</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 1. 验证调用方身份</span></span><br><span class="line">        auth_header = <span class="variable language_">self</span>.headers.get(<span class="string">&#x27;Authorization&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> auth_header <span class="keyword">or</span> LOCAL_ACCESS_KEY <span class="keyword">not</span> <span class="keyword">in</span> auth_header:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">401</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="string">b&#x27;&#123;&quot;error&quot;: &quot;Unauthorized&quot;&#125;&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 2. 路由：只接受标准 OpenAI 路径</span></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.path <span class="keyword">not</span> <span class="keyword">in</span> [<span class="string">&quot;/v1/chat/completions&quot;</span>, <span class="string">&quot;/chat/completions&quot;</span>]:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">404</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            content_length = <span class="built_in">int</span>(<span class="variable language_">self</span>.headers[<span class="string">&#x27;Content-Length&#x27;</span>])</span><br><span class="line">            input_json = json.loads(<span class="variable language_">self</span>.rfile.read(content_length).decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line">            is_stream = input_json.get(<span class="string">&quot;stream&quot;</span>, <span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 3. 转换为元宝格式</span></span><br><span class="line">            yuanbao_payload = &#123;</span><br><span class="line">                <span class="string">&quot;model&quot;</span>: MODEL_ID,</span><br><span class="line">                <span class="string">&quot;messages&quot;</span>: input_json.get(<span class="string">&quot;messages&quot;</span>, []),</span><br><span class="line">                <span class="string">&quot;stream&quot;</span>: <span class="literal">False</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            req = urllib.request.Request(</span><br><span class="line">                YUANBAO_URL,</span><br><span class="line">                data=json.dumps(yuanbao_payload).encode(<span class="string">&#x27;utf-8&#x27;</span>),</span><br><span class="line">                headers=&#123;</span><br><span class="line">                    <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/json&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;Authorization&quot;</span>: <span class="string">f&quot;Bearer <span class="subst">&#123;API_KEY&#125;</span>&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;X-Model-Id&quot;</span>: MODEL_ID</span><br><span class="line">                &#125;,</span><br><span class="line">                method=<span class="string">&quot;POST&quot;</span></span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">            <span class="keyword">with</span> urllib.request.urlopen(req) <span class="keyword">as</span> response:</span><br><span class="line">                resp_json = json.loads(response.read().decode(<span class="string">&#x27;utf-8&#x27;</span>))</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 4. 关键：强制转换 Token 为整数</span></span><br><span class="line">                <span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">                        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">                            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 5. 根据 stream 参数决定返回</span></span><br><span class="line">                <span class="keyword">if</span> is_stream:</span><br><span class="line">                    <span class="comment"># 模拟 SSE 流式响应</span></span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;text/event-stream&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    content = resp_json[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;message&quot;</span>][<span class="string">&quot;content&quot;</span>]</span><br><span class="line">                    chunk = &#123;</span><br><span class="line">                        <span class="string">&quot;id&quot;</span>: resp_json.get(<span class="string">&quot;id&quot;</span>),</span><br><span class="line">                        <span class="string">&quot;object&quot;</span>: <span class="string">&quot;chat.completion.chunk&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;model&quot;</span>: <span class="string">&quot;yuanbao&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;choices&quot;</span>: [&#123;<span class="string">&quot;index&quot;</span>: <span class="number">0</span>, <span class="string">&quot;delta&quot;</span>: &#123;<span class="string">&quot;content&quot;</span>: content&#125;, <span class="string">&quot;finish_reason&quot;</span>: <span class="string">&quot;stop&quot;</span>&#125;]</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">f&quot;data: <span class="subst">&#123;json.dumps(chunk)&#125;</span>\n\n&quot;</span>.encode())</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(<span class="string">b&quot;data: [DONE]\n\n&quot;</span>)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="variable language_">self</span>.send_response(<span class="number">200</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.send_header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)</span><br><span class="line">                    <span class="variable language_">self</span>.end_headers()</span><br><span class="line">                    <span class="variable language_">self</span>.wfile.write(json.dumps(resp_json).encode())</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="variable language_">self</span>.send_response(<span class="number">500</span>)</span><br><span class="line">            <span class="variable language_">self</span>.end_headers()</span><br><span class="line">            <span class="variable language_">self</span>.wfile.write(<span class="built_in">str</span>(e).encode())</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    HTTPServer((<span class="string">&quot;0.0.0.0&quot;</span>, <span class="number">16048</span>), ProxyHandler).serve_forever()</span><br></pre></td></tr></table></figure>
+
+<p>核心要点：</p>
+<ul>
+<li><strong>自建 LOCAL_ACCESS_KEY</strong>：相当于本地”通行证”，调用方必须带这个 Key 才能用你的代理</li>
+<li><strong>路径重写</strong>：客户端发 <code>/v1/chat/completions</code>，代理内部改为 <code>/api/bot/chat/completions</code></li>
+<li><strong>数据整形</strong>：后面重点说</li>
+</ul>
+<hr>
+<h2 id="第三步：解决最坑的”Token-是字符串”问题"><a href="#第三步：解决最坑的”Token-是字符串”问题" class="headerlink" title="第三步：解决最坑的”Token 是字符串”问题"></a>第三步：解决最坑的”Token 是字符串”问题</h2><h3 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h3><p>Page Assist、LobeChat、ChatBox 这些第三方客户端，默认开启 <code>stream: true</code> 流式调用 + 解析 <code>usage</code> 字段统计 token。</p>
+<p>但元宝返回的 <code>usage</code> 字段长这样：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;usage&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;prompt_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;42&quot;</span><span class="punctuation">,</span>      <span class="comment">// 注意是字符串</span></span><br><span class="line">    <span class="attr">&quot;completion_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;128&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;total_tokens&quot;</span><span class="punctuation">:</span> <span class="string">&quot;170&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>字符串”42” 不是数字 42。客户端按数字处理会报：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Cannot read properties of undefined (reading &#x27;0&#x27;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><p>在代理层强制转换：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="string">&quot;usage&quot;</span> <span class="keyword">in</span> resp_json <span class="keyword">and</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">    <span class="keyword">for</span> k <span class="keyword">in</span> [<span class="string">&quot;prompt_tokens&quot;</span>, <span class="string">&quot;completion_tokens&quot;</span>, <span class="string">&quot;total_tokens&quot;</span>]:</span><br><span class="line">        <span class="keyword">if</span> k <span class="keyword">in</span> resp_json[<span class="string">&quot;usage&quot;</span>]:</span><br><span class="line">            resp_json[<span class="string">&quot;usage&quot;</span>][k] = <span class="built_in">int</span>(resp_json[<span class="string">&quot;usage&quot;</span>][k])</span><br></pre></td></tr></table></figure>
+
+<p>转换后客户端就能正常显示了。</p>
+<hr>
+<h2 id="第四步：流式响应挂起的另一个坑"><a href="#第四步：流式响应挂起的另一个坑" class="headerlink" title="第四步：流式响应挂起的另一个坑"></a>第四步：流式响应挂起的另一个坑</h2><p>客户端默认开 <code>stream: true</code>，但元宝的 API 在流式结束时会发送一个没有 <code>choices</code> 字段的 <code>usage</code> 包（用来统计），导致客户端解析出错卡住。</p>
+<p><strong>两种解决方案</strong>：</p>
+<h3 id="方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）"><a href="#方案-A：代理层关闭流式，自己模拟-SSE（简单稳定）" class="headerlink" title="方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）"></a>方案 A：代理层关闭流式，自己模拟 SSE（简单稳定）</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 客户端请求 stream=False 时：直接返回 JSON</span></span><br><span class="line"><span class="comment"># 客户端请求 stream=True 时：内部用 stream=False 调元宝，再自己模拟 SSE 输出</span></span><br><span class="line">yuanbao_payload[<span class="string">&quot;stream&quot;</span>] = <span class="literal">False</span>  <span class="comment"># 永远关闭后端的流式</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> is_stream:</span><br><span class="line">    <span class="comment"># 一次性拿全量，再分块发送</span></span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="方案-B：透传完整字段（更强大但复杂）"><a href="#方案-B：透传完整字段（更强大但复杂）" class="headerlink" title="方案 B：透传完整字段（更强大但复杂）"></a>方案 B：透传完整字段（更强大但复杂）</h3><p>如果想保留思考过程、工具调用这些高级特性，需要把元宝的完整字段透传：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 思考块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;reasoning_content&quot;</span>] = <span class="string">&quot;...&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 工具块透传</span></span><br><span class="line">chunk[<span class="string">&quot;choices&quot;</span>][<span class="number">0</span>][<span class="string">&quot;delta&quot;</span>][<span class="string">&quot;tool_calls&quot;</span>] = [...]</span><br></pre></td></tr></table></figure>
+
+<p>这一段代码量是上面简化版的 3-4 倍，<strong>建议先跑通方案 A，再按需升级</strong>。</p>
+<hr>
+<h2 id="第五步：部署与服务管理"><a href="#第五步：部署与服务管理" class="headerlink" title="第五步：部署与服务管理"></a>第五步：部署与服务管理</h2><h3 id="部署位置"><a href="#部署位置" class="headerlink" title="部署位置"></a>部署位置</h3><p>代理<strong>必须</strong>部署在白名单内的出口机器（这里就是元宝龙虾主机本身），否则 IP 限制直接 403。</p>
+<h3 id="端口选择"><a href="#端口选择" class="headerlink" title="端口选择"></a>端口选择</h3><p>避开保留端口（80&#x2F;443&#x2F;22）和冲突高发区。<strong>16048</strong> 是个不错的选择（位于 10000-30000 黄金区间）。</p>
+<h3 id="systemd-服务化"><a href="#systemd-服务化" class="headerlink" title="systemd 服务化"></a>systemd 服务化</h3><figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/yuanbao-proxy.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Yuanbao Pure API Proxy</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=root</span><br><span class="line"><span class="attr">WorkingDirectory</span>=/opt/yuanbao</span><br><span class="line"><span class="attr">ExecStart</span>=/usr/bin/python3 /opt/yuanbao/yuanbao_proxy.py</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> yuanbao-proxy</span><br><span class="line">systemctl start yuanbao-proxy</span><br><span class="line">systemctl status yuanbao-proxy</span><br></pre></td></tr></table></figure>
+
+<h3 id="反向代理（如需公网访问）"><a href="#反向代理（如需公网访问）" class="headerlink" title="反向代理（如需公网访问）"></a>反向代理（如需公网访问）</h3><p>如果你想从其他机器也能用，可以用 frp 把内网端口映射到公网 VPS：</p>
+<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="comment"># frpc.ini</span></span><br><span class="line"><span class="section">[yuanbao-api]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">16048</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">16048</span></span><br></pre></td></tr></table></figure>
+
+<p>然后客户端配置：</p>
+<ul>
+<li><strong>Base URL</strong>：<code>http://你的公网IP:16048/v1</code></li>
+<li><strong>API Key</strong>：你的 <code>LOCAL_ACCESS_KEY</code></li>
+</ul>
+<hr>
+<h2 id="最后的话"><a href="#最后的话" class="headerlink" title="最后的话"></a>最后的话</h2><p>这类”包装非标 API”的需求，国内大厂基本都有。套路都差不多：</p>
+<ol>
+<li><strong>摸清厂商协议</strong>：路径、Header、Body 格式、响应格式</li>
+<li><strong>代理层做协议转换</strong>：路径重写、Header 注入、字段映射</li>
+<li><strong>数据整形</strong>：类型转换、空字段兜底、异常处理</li>
+<li><strong>流式模拟</strong>：很多大厂 API 流式不标准，需要代理层重新包装</li>
+<li><strong>安全加固</strong>：自建鉴权 Key、白名单、防滥用</li>
+</ol>
+<p>这套方法论我在元宝、文心、通义、星火上都验证过，<strong>改改 URL 和字段名就能复用</strong>。</p>
+<p>有问题欢迎评论区交流，或者告诉我你正在对接哪个厂的 API～</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>AI工程</category>
+      </categories>
+      <tags>
+        <tag>AI工具</tag>
+        <tag>元宝</tag>
+        <tag>API代理</tag>
+        <tag>OpenAI兼容</tag>
       </tags>
   </entry>
 </search>

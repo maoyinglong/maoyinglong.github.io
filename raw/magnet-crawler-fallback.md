@@ -13,6 +13,9 @@ categories:
 description: "磁力搜索爬虫的4级降级方案：从纯静态正则到Headless浏览器再到DrissionPage破Cloudflare盾，含完整Python代码和实战决策树。"
 cover: /images/magnet-crawler-fallback-cover.webp
 ---
+
+![封面图](/images/magnet-crawler-fallback-cover.webp)
+
 我先说结论：**我放弃了自建磁力爬虫**。
 
 但这不是一个失败故事。在放弃之前，我跑通了从纯静态正则会到 Headless 浏览器破 Cloudflare 盾的全套技术栈，整理出了一套 4 级降级方案。你可以直接拿走用，省掉我踩过的所有坑。
