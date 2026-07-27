@@ -13,6 +13,9 @@ categories:
 description: "飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本。"
 cover: /images/feishu-bot-connectivity-fix-cover.webp
 ---
+
+![封面图](/images/feishu-bot-connectivity-fix-cover.webp)
+
 某天下午，我给飞书 Bot 发了条消息——石沉大海。
 
 打开飞书开放平台，点"验证连接状态"——红色，失败。日志里躺着一条：`RuntimeError: Executor shutdown has been called`。

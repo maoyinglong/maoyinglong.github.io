@@ -28,14 +28,16 @@
 <meta property="og:site_name" content="雪的数字花园 ❄️">
 <meta property="og:description" content="飞书Bot突然不回复的完整诊断流程：gateway进程挂掉的根因（Executor shutdown）、三步诊断法、一键恢复脚本。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/feishu-bot-connectivity-fix-cover.webp">
 <meta property="article:published_time" content="2026-07-27T04:00:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T15:33:11.802Z">
+<meta property="article:modified_time" content="2026-07-27T15:57:47.618Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="排障">
 <meta property="article:tag" content="机器人">
 <meta property="article:tag" content="网关">
 <meta property="article:tag" content="飞书">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/feishu-bot-connectivity-fix-cover.webp">
 
 
 <link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/feishu-bot-connectivity-fix/">
@@ -319,7 +321,8 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>某天下午，我给飞书 Bot 发了条消息——石沉大海。</p>
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/feishu-bot-connectivity-fix-cover.webp" alt="封面图"></p>
+<p>某天下午，我给飞书 Bot 发了条消息——石沉大海。</p>
 <p>打开飞书开放平台，点”验证连接状态”——红色，失败。日志里躺着一条：<code>RuntimeError: Executor shutdown has been called</code>。</p>
 <p>然后我花了 5 分钟定位、10 秒修好。这篇把完整的诊断链路写下来，下次你对号入座，不用从零排查。</p>
 <h2 id="根因一句话"><a href="#根因一句话" class="headerlink" title="根因一句话"></a>根因一句话</h2><p>飞书 Bot 用 <strong>WebSocket 长连接</strong> 保持在线的。这个长连接进程叫 <code>gateway</code>。当 gateway 被 SIGTERM 杀掉后，asyncio 的线程池进入关闭状态。这时候即使 WebSocket 重连成功、消息收到了，<strong>回复时调用线程池直接抛 <code>Executor shutdown</code>，消息发不出去</strong>。</p>
