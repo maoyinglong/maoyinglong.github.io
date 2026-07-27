@@ -28,14 +28,16 @@
 <meta property="og:site_name" content="雪的数字花园 ❄️">
 <meta property="og:description" content="MinerU国产开源文档解析工具部署全流程。比GPT-4 Vision公式识别准25%，以MCP协议直接挂到AI工作流。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.rnm.gv.uy/images/mineru-pdf-parse-mcp-cover.webp">
 <meta property="article:published_time" content="2026-07-27T03:00:00.000Z">
-<meta property="article:modified_time" content="2026-07-27T16:01:31.155Z">
+<meta property="article:modified_time" content="2026-07-27T16:02:49.634Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="AI工具">
 <meta property="article:tag" content="MCP">
 <meta property="article:tag" content="PDF解析">
 <meta property="article:tag" content="自动化">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.rnm.gv.uy/images/mineru-pdf-parse-mcp-cover.webp">
 
 
 <link rel="canonical" href="https://blog.rnm.gv.uy/2026/07/27/mineru-pdf-parse-mcp/">
@@ -319,7 +321,8 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>我经常要把 arXiv 论文、行业报告、合同 PDF 喂给 AI 处理。</p>
+    <div class="post-body" itemprop="articleBody"><p><img data-src="/images/mineru-pdf-parse-mcp-cover.webp" alt="封面图"></p>
+<p>我经常要把 arXiv 论文、行业报告、合同 PDF 喂给 AI 处理。</p>
 <p>以前试过三种办法：直接把 PDF 路径给 GPT——扫描版读不动，公式乱码。买商业 OCR 服务——贵，而且不知道数据去哪了。自己部署 PaddleOCR——需要 GPU，我的小 VPS 扛不住。</p>
 <p>直到遇到了 MinerU（OpenDataLab 出品），国产开源，解析精度比 GPT-4 Vision 高出一截。最离谱的是——<strong>它能以 MCP 协议直接挂到 Claude&#x2F;GPT&#x2F;LangChain 工作流里</strong>，AI 调用它就跟调用一个函数一样自然。</p>
 <p>下面是抄作业时间。</p>

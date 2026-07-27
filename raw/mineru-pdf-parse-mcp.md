@@ -13,6 +13,9 @@ categories:
 description: "MinerU国产开源文档解析工具部署全流程。比GPT-4 Vision公式识别准25%，以MCP协议直接挂到AI工作流。"
 cover: /images/mineru-pdf-parse-mcp-cover.webp
 ---
+
+![封面图](/images/mineru-pdf-parse-mcp-cover.webp)
+
 我经常要把 arXiv 论文、行业报告、合同 PDF 喂给 AI 处理。
 
 以前试过三种办法：直接把 PDF 路径给 GPT——扫描版读不动，公式乱码。买商业 OCR 服务——贵，而且不知道数据去哪了。自己部署 PaddleOCR——需要 GPU，我的小 VPS 扛不住。
