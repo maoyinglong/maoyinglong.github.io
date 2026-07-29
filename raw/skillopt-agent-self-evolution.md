@@ -67,3 +67,16 @@ cover: /images/skillopt-cover.webp
 如果你也被大模型的幻觉折磨过，把这套护栏加进去，今晚睡个好觉。
 
 你现在的 Agent 系统有没有类似的护栏？评论区聊聊你踩过的坑 ❄️
+
+---
+
+**关联阅读：**
+
+- [AI Agent 到底是个啥？小白也能看懂的入门指南](/ai-agent-beginner-guide/)
+- [我让AI管AI，结果它把数据库清空了](/ai-agent-governance-scale-os/)
+- [我的 AI 助手疯了，30 分钟停不下来](/ai-agent-sunk-cost-trap/)
+- [手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器](/cli-proxy-api-docker-deploy-guide/)
+- [GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF](/mineru-pdf-parse-mcp/)
+- [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
+- [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
+

@@ -358,3 +358,12 @@ print(f"文档创建成功: {result['url']}")
 如果你也在做飞书自动化，评论区交流一下你踩过的坑～
 
 > 关联阅读：[飞书机器人开发踩坑实录](/2026/06/20/feishu-bot-permissions-and-mention/)、[飞书 Docx API 批量操作踩坑](/2026/06/20/feishu-docx-batch-edit/)
+
+---
+
+**关联阅读：**
+
+- [飞书机器人哑了？90%的人不知道查这个地方](/feishu-bot-connectivity-fix/)
+- [飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路](/feishu-bot-permissions-and-mention/)
+- [飞书API能创建但不能批量删除，这是设计不是bug](/feishu-docx-batch-edit/)
+

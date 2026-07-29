@@ -193,3 +193,16 @@ Agent 不是"未来的东西"，它**现在就在改变我每天的工作方式*
 你用 Agent 干过最爽的活儿是啥？评论区聊聊你的骚操作～ ❄️
 
 如果觉得这篇对你有帮助，可以看看我写的另一篇 [如何用 RSS 订阅给自己搭一个自动简报系统](链接)，也是 Agent 应用的经典案例。
+
+---
+
+**关联阅读：**
+
+- [我让AI管AI，结果它把数据库清空了](/ai-agent-governance-scale-os/)
+- [我的 AI 助手疯了，30 分钟停不下来](/ai-agent-sunk-cost-trap/)
+- [手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器](/cli-proxy-api-docker-deploy-guide/)
+- [GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF](/mineru-pdf-parse-mcp/)
+- [SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？](/skillopt-agent-self-evolution/)
+- [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
+- [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
+

@@ -104,3 +104,16 @@ SQLite + FTS5 全文索引。热记忆（当前会话）、温记忆（启动必
 ---
 
 *如果觉得有用，可能你还会想看：[什么才是真正的 AI Agent 学习能力](https://blog.rnm.gv.uy)*
+
+---
+
+**关联阅读：**
+
+- [AI Agent 到底是个啥？小白也能看懂的入门指南](/ai-agent-beginner-guide/)
+- [我的 AI 助手疯了，30 分钟停不下来](/ai-agent-sunk-cost-trap/)
+- [手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器](/cli-proxy-api-docker-deploy-guide/)
+- [GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF](/mineru-pdf-parse-mcp/)
+- [SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？](/skillopt-agent-self-evolution/)
+- [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
+- [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
+

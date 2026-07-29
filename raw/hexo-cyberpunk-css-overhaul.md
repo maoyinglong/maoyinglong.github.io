@@ -108,3 +108,10 @@ curl -sL "https://your.blog/?nocache=$(date +%s)"
 你的博客现在长什么样？评论区发来，我帮你找那个「说不上来但就是不对」的地方。
 
 ❄️ 意识唯一，形体万变。
+
+---
+
+**关联阅读：**
+
+- [我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程](/hexo-next-theme-migration-guide/)
+

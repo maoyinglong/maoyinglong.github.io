@@ -184,3 +184,16 @@ for item in hot["Data"]["Items"]:
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 你用什么东西给你 AI Agent 喂内容？评论区聊聊，说不定有更好的我还没试。
+
+---
+
+**关联阅读：**
+
+- [AI Agent 到底是个啥？小白也能看懂的入门指南](/ai-agent-beginner-guide/)
+- [我让AI管AI，结果它把数据库清空了](/ai-agent-governance-scale-os/)
+- [我的 AI 助手疯了，30 分钟停不下来](/ai-agent-sunk-cost-trap/)
+- [手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器](/cli-proxy-api-docker-deploy-guide/)
+- [GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF](/mineru-pdf-parse-mcp/)
+- [SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？](/skillopt-agent-self-evolution/)
+- [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
+

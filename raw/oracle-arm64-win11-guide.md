@@ -136,3 +136,10 @@ Resize-Partition -DriveLetter C -Size $size
 ---
 
 有问题欢迎评论区交流，同样在折腾甲骨文的朋友可以聊聊你的玩法～
+
+---
+
+**关联阅读：**
+
+- [想领甲骨文服务器的看过来，但别再填4核24G：2026甲骨文ARM领取最新教程](/oracle-arm-signup-2026/)
+

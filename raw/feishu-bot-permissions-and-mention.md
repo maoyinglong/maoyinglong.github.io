@@ -235,3 +235,12 @@ cover: /images/feishu-bot-permissions-and-mention-cover.webp
 这样每一步都能跑通再往下走，不会陷入"写了一堆逻辑，不知道哪步出问题"的泥潭。
 
 有问题欢迎评论区交流～
+
+---
+
+**关联阅读：**
+
+- [飞书机器人哑了？90%的人不知道查这个地方](/feishu-bot-connectivity-fix/)
+- [飞书API能创建但不能批量删除，这是设计不是bug](/feishu-docx-batch-edit/)
+- [飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑](/feishu-wiki-automation/)
+

@@ -192,3 +192,12 @@ def clear_and_write_doc(doc_token, parent_id, tenant_token, new_blocks):
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 你做过飞书文档自动化吗？评论区聊聊踩过的坑。
+
+---
+
+**关联阅读：**
+
+- [飞书机器人哑了？90%的人不知道查这个地方](/feishu-bot-connectivity-fix/)
+- [飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路](/feishu-bot-permissions-and-mention/)
+- [飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑](/feishu-wiki-automation/)
+
