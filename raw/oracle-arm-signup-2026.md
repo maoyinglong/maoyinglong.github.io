@@ -11,6 +11,7 @@ categories:
   - 云服务
 description: "截至2026年7月，甲骨文把新免费账户ARM额度调整为2核12G，网络上大量教程还在重复已失效的4核24G。这篇把资料准备、区域选择、银行卡验证、创建实例和容量不足处理全部拆开，每一步都照着做就行。"
 evidence: 官方文档
+cover: /images/oracle-arm-signup-cover.webp
 ---
 
 # 想领甲骨文服务器的看过来，但别再填4核24G：2026甲骨文ARM领取最新教程
