@@ -228,3 +228,8 @@ WeWe RSS曾经满足“可以暂留”的条件：部署在内网、能导出OPM
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 你的自托管清单里，有没有一个早已停更却仍在单点支撑业务的项目？
+
+## 关联阅读
+
+- [让原生支持 Agent 操作的云笔记跑在 Cloudflare 上](/edgeever-cloudflare-agent-notes/)
+- [微软还显示5TB，但官方只认10GB](/onedrive-developer-policy-10gb/)

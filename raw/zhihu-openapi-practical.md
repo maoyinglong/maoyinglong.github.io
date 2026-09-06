@@ -197,3 +197,7 @@ for item in hot["Data"]["Items"]:
 - [SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？](/skillopt-agent-self-evolution/)
 - [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
 
+## 关联阅读
+
+- [把 PDF 变成可读 Markdown：MinerU 文档解析 MCP 部署实战](/mineru-pdf-parse-mcp/)
+- [手把手教你部署 CLI Proxy API](/cli-proxy-api-docker-deploy-guide/)

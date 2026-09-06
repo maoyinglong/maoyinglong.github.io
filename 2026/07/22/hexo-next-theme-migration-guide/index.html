@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/hexo-next-theme-cover.webp">
 <meta property="article:published_time" content="2026-07-22T12:30:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.735Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.027Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="Hexo">
 <meta property="article:tag" content="NexT">
@@ -81,6 +81,35 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程",
+  "description": "从默认landscape到NexT主题，10分钟让Hexo博客颜值从30分飙到90分。侧边栏、暗色模式、代码复制、全文搜索、RSS——50行YAML全搞定，附3个必看踩坑实录。",
+  "url": "https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/",
+  "image": "/images/hexo-next-theme-cover.webp",
+  "inLanguage": "zh-CN",
+  "author": {"@type": "Person", "name": "雪 ❄️"},
+  "publisher": {
+    "@type": "Organization",
+    "name": "雪的数字花园 ❄️",
+    "url": "https://blog.rnm.gv.uy",
+    "logo": {"@type": "ImageObject", "url": "/images/xue-avatar.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"首页","item":"https://blog.rnm.gv.uy"},
+    {"@type":"ListItem","position":2,"name":"我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程","item":"https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/"}
+  ]
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -173,7 +202,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E3%80%87%E6%AD%A5%EF%BC%9A%E5%85%88%E6%90%9E%E6%B8%85%E6%A5%9A%E4%BD%A0%E7%8E%B0%E5%9C%A8%E7%9A%84%E7%8A%B6%E5%86%B5"><span class="nav-number">1.</span> <span class="nav-text">第〇步：先搞清楚你现在的状况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-NexT%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">第一步：为什么选 NexT？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%AE%89%E8%A3%85-NexT"><span class="nav-number">3.</span> <span class="nav-text">第二步：安装 NexT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%B8%BB%E9%A2%98%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">第三步：创建主题配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE%EF%BC%88%E7%85%A7%E6%8A%84%E5%B0%B1%E8%A1%8C%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">第四步：基础配置（照抄就行）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E5%93%81%E7%89%8C%E5%AE%9A%E5%88%B6%E2%80%94%E2%80%94%E6%8A%8A%E5%8D%9A%E5%AE%A2%E5%8F%98%E6%88%90%E2%80%9D%E4%BD%A0%E7%9A%84%E2%80%9D"><span class="nav-number">6.</span> <span class="nav-text">第五步：品牌定制——把博客变成”你的”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%87%86%E5%A4%87%E4%B8%80%E5%BC%A0%E5%A4%B4%E5%83%8F"><span class="nav-number">6.1.</span> <span class="nav-text">5.1 准备一张头像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E6%94%B9%E7%AB%99%E7%82%B9%E4%BF%A1%E6%81%AF"><span class="nav-number">6.2.</span> <span class="nav-text">5.2 改站点信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E6%B7%BB%E5%8A%A0%E2%80%9D%E5%85%B3%E4%BA%8E%E2%80%9D%E9%A1%B5%E9%9D%A2"><span class="nav-number">6.3.</span> <span class="nav-text">5.3 添加”关于”页面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-%E5%AE%9A%E5%88%B6%E9%A1%B5%E8%84%9A"><span class="nav-number">6.4.</span> <span class="nav-text">5.4 定制页脚</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E6%AD%A5%EF%BC%9A%E8%A3%85%E4%B8%A4%E4%B8%AA%E5%AE%9E%E7%94%A8%E6%8F%92%E4%BB%B6"><span class="nav-number">7.</span> <span class="nav-text">第六步：装两个实用插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E6%9C%AC%E5%9C%B0%E6%90%9C%E7%B4%A2"><span class="nav-number">7.1.</span> <span class="nav-text">6.1 本地搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-RSS-%E8%AE%A2%E9%98%85"><span class="nav-number">7.2.</span> <span class="nav-text">6.2 RSS 订阅</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%83%E6%AD%A5%EF%BC%9A%E6%9C%AC%E5%9C%B0%E9%A2%84%E8%A7%88-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF"><span class="nav-number">8.</span> <span class="nav-text">第七步：本地预览 + 部署上线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E6%9C%AC%E5%9C%B0%E9%A2%84%E8%A7%88"><span class="nav-number">8.1.</span> <span class="nav-text">7.1 本地预览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-%E9%83%A8%E7%BD%B2"><span class="nav-number">8.2.</span> <span class="nav-text">7.2 部署</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%85%AB%E6%AD%A5%EF%BC%88%E5%BF%85%E7%9C%8B%EF%BC%89%EF%BC%9A%E4%B8%89%E4%B8%AA%E5%9D%91%EF%BC%8C%E8%B8%A9%E8%BF%9B%E5%8E%BB%E5%86%8D%E7%88%AC%E5%87%BA%E6%9D%A5%E5%A4%AA%E7%96%BC%E4%BA%86"><span class="nav-number">9.</span> <span class="nav-text">第八步（必看）：三个坑，踩进去再爬出来太疼了</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%B8%80%EF%BC%9Apnpm-%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8F%E4%B8%8B-NexT-%E5%8A%9F%E8%83%BD%E5%A4%B1%E7%81%B5"><span class="nav-number">9.1.</span> <span class="nav-text">坑一：pnpm 严格模式下 NexT 功能失灵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%BA%8C%EF%BC%9AHexo-8-%E7%9A%84%E6%91%98%E8%A6%81%E6%A0%87%E7%AD%BE%E5%B7%B2%E7%BB%8F%E5%BA%9F%E4%BA%86"><span class="nav-number">9.2.</span> <span class="nav-text">坑二：Hexo 8 的摘要标签已经废了</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%B8%89%EF%BC%9A%E6%94%B9%E5%AE%8C%E9%83%A8%E7%BD%B2%E4%BA%86%EF%BC%8C%E6%89%93%E5%BC%80%E7%BD%91%E9%A1%B5%E8%BF%98%E6%98%AF%E6%97%A7%E7%9A%84%EF%BC%9F"><span class="nav-number">9.3.</span> <span class="nav-text">坑三：改完部署了，打开网页还是旧的？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E3%80%87%E6%AD%A5%EF%BC%9A%E5%85%88%E6%90%9E%E6%B8%85%E6%A5%9A%E4%BD%A0%E7%8E%B0%E5%9C%A8%E7%9A%84%E7%8A%B6%E5%86%B5"><span class="nav-number">1.</span> <span class="nav-text">第〇步：先搞清楚你现在的状况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-NexT%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">第一步：为什么选 NexT？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%AE%89%E8%A3%85-NexT"><span class="nav-number">3.</span> <span class="nav-text">第二步：安装 NexT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%B8%BB%E9%A2%98%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">第三步：创建主题配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE%EF%BC%88%E7%85%A7%E6%8A%84%E5%B0%B1%E8%A1%8C%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">第四步：基础配置（照抄就行）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E5%93%81%E7%89%8C%E5%AE%9A%E5%88%B6%E2%80%94%E2%80%94%E6%8A%8A%E5%8D%9A%E5%AE%A2%E5%8F%98%E6%88%90%E2%80%9D%E4%BD%A0%E7%9A%84%E2%80%9D"><span class="nav-number">6.</span> <span class="nav-text">第五步：品牌定制——把博客变成”你的”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E5%87%86%E5%A4%87%E4%B8%80%E5%BC%A0%E5%A4%B4%E5%83%8F"><span class="nav-number">6.1.</span> <span class="nav-text">5.1 准备一张头像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E6%94%B9%E7%AB%99%E7%82%B9%E4%BF%A1%E6%81%AF"><span class="nav-number">6.2.</span> <span class="nav-text">5.2 改站点信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E6%B7%BB%E5%8A%A0%E2%80%9D%E5%85%B3%E4%BA%8E%E2%80%9D%E9%A1%B5%E9%9D%A2"><span class="nav-number">6.3.</span> <span class="nav-text">5.3 添加”关于”页面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-%E5%AE%9A%E5%88%B6%E9%A1%B5%E8%84%9A"><span class="nav-number">6.4.</span> <span class="nav-text">5.4 定制页脚</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E6%AD%A5%EF%BC%9A%E8%A3%85%E4%B8%A4%E4%B8%AA%E5%AE%9E%E7%94%A8%E6%8F%92%E4%BB%B6"><span class="nav-number">7.</span> <span class="nav-text">第六步：装两个实用插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-%E6%9C%AC%E5%9C%B0%E6%90%9C%E7%B4%A2"><span class="nav-number">7.1.</span> <span class="nav-text">6.1 本地搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-RSS-%E8%AE%A2%E9%98%85"><span class="nav-number">7.2.</span> <span class="nav-text">6.2 RSS 订阅</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%83%E6%AD%A5%EF%BC%9A%E6%9C%AC%E5%9C%B0%E9%A2%84%E8%A7%88-%E9%83%A8%E7%BD%B2%E4%B8%8A%E7%BA%BF"><span class="nav-number">8.</span> <span class="nav-text">第七步：本地预览 + 部署上线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-%E6%9C%AC%E5%9C%B0%E9%A2%84%E8%A7%88"><span class="nav-number">8.1.</span> <span class="nav-text">7.1 本地预览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-%E9%83%A8%E7%BD%B2"><span class="nav-number">8.2.</span> <span class="nav-text">7.2 部署</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%85%AB%E6%AD%A5%EF%BC%88%E5%BF%85%E7%9C%8B%EF%BC%89%EF%BC%9A%E4%B8%89%E4%B8%AA%E5%9D%91%EF%BC%8C%E8%B8%A9%E8%BF%9B%E5%8E%BB%E5%86%8D%E7%88%AC%E5%87%BA%E6%9D%A5%E5%A4%AA%E7%96%BC%E4%BA%86"><span class="nav-number">9.</span> <span class="nav-text">第八步（必看）：三个坑，踩进去再爬出来太疼了</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%B8%80%EF%BC%9Apnpm-%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8F%E4%B8%8B-NexT-%E5%8A%9F%E8%83%BD%E5%A4%B1%E7%81%B5"><span class="nav-number">9.1.</span> <span class="nav-text">坑一：pnpm 严格模式下 NexT 功能失灵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%BA%8C%EF%BC%9AHexo-8-%E7%9A%84%E6%91%98%E8%A6%81%E6%A0%87%E7%AD%BE%E5%B7%B2%E7%BB%8F%E5%BA%9F%E4%BA%86"><span class="nav-number">9.2.</span> <span class="nav-text">坑二：Hexo 8 的摘要标签已经废了</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%91%E4%B8%89%EF%BC%9A%E6%94%B9%E5%AE%8C%E9%83%A8%E7%BD%B2%E4%BA%86%EF%BC%8C%E6%89%93%E5%BC%80%E7%BD%91%E9%A1%B5%E8%BF%98%E6%98%AF%E6%97%A7%E7%9A%84%EF%BC%9F"><span class="nav-number">9.3.</span> <span class="nav-text">坑三：改完部署了，打开网页还是旧的？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E9%98%85%E8%AF%BB"><span class="nav-number">11.</span> <span class="nav-text">关联阅读</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -300,7 +329,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>3.7k</span>
+      <span>3.8k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
@@ -458,6 +487,13 @@
 <ul>
 <li><a href="/hexo-cyberpunk-css-overhaul/">300 行 CSS 改造 Hexo：赛博朋克意识空间</a></li>
 </ul>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/hexo-cyberpunk-css-overhaul/">300 行 CSS 改造 Hexo：赛博朋克意识空间</a></li>
+<li><a href="/wechat-remote-windows-codex/">不用远程桌面，我用微信远程开关 Win 主机跑 Codex</a></li>
+</ul>
 
     </div>
 
@@ -516,13 +552,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -825,7 +861,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -833,25 +870,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -872,9 +896,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -899,9 +921,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

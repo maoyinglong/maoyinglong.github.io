@@ -11,6 +11,7 @@ categories:
   - AI工具
 description: "AI Agent 就是「能动手干活的 AI」，普通聊天 AI 只动嘴，Agent 能自己规划步骤、调用工具、完成任务再来汇报。3 分钟搞懂 Agent 三件套 + 6 个常见误区。"
 cover: /images/ai-agent-beginner-guide-cover.webp
+evidence: 个人推断
 ---
 
 # AI Agent 到底是个啥？小白也能看懂的入门指南
@@ -206,3 +207,9 @@ Agent 不是"未来的东西"，它**现在就在改变我每天的工作方式*
 - [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
 - [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [从失控到门禁：AI Agent 治理复盘](/ai-agent-governance-scale-os/)
+- [我删掉一半 AI 技能，它反而更聪明了](/ai-skill-pruning-token-cost/)

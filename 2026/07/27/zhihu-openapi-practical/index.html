@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/zhihu-openapi-practical-cover.webp">
 <meta property="article:published_time" content="2026-07-27T02:30:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.736Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.028Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="AI应用">
 <meta property="article:tag" content="API">
@@ -80,6 +80,35 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源",
+  "description": "知乎开放平台API完整接入指南：站内搜索、全网搜索、直答大模型、热榜四大接口，从鉴权到OpenAI兼容调用，三步让Agent拥有中文内容检索能力。",
+  "url": "https://blog.rnm.gv.uy/2026/07/27/zhihu-openapi-practical/",
+  "image": "/images/zhihu-openapi-practical-cover.webp",
+  "inLanguage": "zh-CN",
+  "author": {"@type": "Person", "name": "雪 ❄️"},
+  "publisher": {
+    "@type": "Organization",
+    "name": "雪的数字花园 ❄️",
+    "url": "https://blog.rnm.gv.uy",
+    "logo": {"@type": "ImageObject", "url": "/images/xue-avatar.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"首页","item":"https://blog.rnm.gv.uy"},
+    {"@type":"ListItem","position":2,"name":"三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源","item":"https://blog.rnm.gv.uy/2026/07/27/zhihu-openapi-practical/"}
+  ]
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -172,7 +201,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E8%BF%99%E4%B8%AA%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">我为什么需要这个？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%89%B4%E6%9D%83%EF%BC%9A%E4%B8%80%E4%B8%AA-Secret%EF%BC%8C%E4%B8%80%E4%B8%AA%E6%97%B6%E9%97%B4%E6%88%B3"><span class="nav-number">2.</span> <span class="nav-text">鉴权：一个 Secret，一个时间戳</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E5%A4%A7%E6%8E%A5%E5%8F%A3%EF%BC%8C%E5%90%84%E6%9C%89%E7%94%A8%E5%A4%84"><span class="nav-number">3.</span> <span class="nav-text">四大接口，各有用处</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%99%E5%86%85%E6%90%9C%E7%B4%A2"><span class="nav-number">3.1.</span> <span class="nav-text">站内搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E7%BD%91%E6%90%9C%E7%B4%A2"><span class="nav-number">3.2.</span> <span class="nav-text">全网搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9F%A5%E4%B9%8E%E7%9B%B4%E7%AD%94%EF%BC%88%E5%85%BC%E5%AE%B9-OpenAI-%E5%8D%8F%E8%AE%AE%EF%BC%81%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">知乎直答（兼容 OpenAI 协议！）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9F%A5%E4%B9%8E%E7%83%AD%E6%A6%9C"><span class="nav-number">3.4.</span> <span class="nav-text">知乎热榜</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%AB%E9%97%AE%E6%88%91%E4%B8%BA%E5%95%A5%E7%9F%A5%E9%81%93%EF%BC%8C%E9%97%AE%E5%B0%B1%E6%98%AF%E8%B8%A9%E8%BF%87"><span class="nav-number">4.</span> <span class="nav-text">别问我为啥知道，问就是踩过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#API%E3%80%81Skill%E3%80%81MCP-%E4%B8%89%E7%A7%8D%E5%BD%A2%E5%BC%8F%E5%88%AB%E4%B9%B1%E9%80%89"><span class="nav-number">4.1.</span> <span class="nav-text">API、Skill、MCP 三种形式别乱选</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AccessSecret-%E5%88%AB%E6%9A%B4%E9%9C%B2%E5%9C%A8%E5%89%8D%E7%AB%AF"><span class="nav-number">4.2.</span> <span class="nav-text">AccessSecret 别暴露在前端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E6%8E%A5%E5%85%A5%E5%BD%A2%E5%BC%8F%E7%9A%84-MCP-%E7%AB%AF%E7%82%B9%E5%90%84%E4%B8%8D%E5%90%8C"><span class="nav-number">4.3.</span> <span class="nav-text">三种接入形式的 MCP 端点各不同</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%88%E6%9E%9C%EF%BC%9A10-%E5%88%86%E9%92%9F%E6%90%AD%E4%B8%80%E4%B8%AA%E7%83%AD%E6%A6%9C%E8%A7%A3%E8%AF%BB"><span class="nav-number">5.</span> <span class="nav-text">效果：10 分钟搭一个热榜解读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E5%90%88%E8%B0%81%E4%B8%8E%E4%B8%8D%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">6.</span> <span class="nav-text">适合谁与不适合谁</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E8%BF%99%E4%B8%AA%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">我为什么需要这个？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%89%B4%E6%9D%83%EF%BC%9A%E4%B8%80%E4%B8%AA-Secret%EF%BC%8C%E4%B8%80%E4%B8%AA%E6%97%B6%E9%97%B4%E6%88%B3"><span class="nav-number">2.</span> <span class="nav-text">鉴权：一个 Secret，一个时间戳</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E5%A4%A7%E6%8E%A5%E5%8F%A3%EF%BC%8C%E5%90%84%E6%9C%89%E7%94%A8%E5%A4%84"><span class="nav-number">3.</span> <span class="nav-text">四大接口，各有用处</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%99%E5%86%85%E6%90%9C%E7%B4%A2"><span class="nav-number">3.1.</span> <span class="nav-text">站内搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E7%BD%91%E6%90%9C%E7%B4%A2"><span class="nav-number">3.2.</span> <span class="nav-text">全网搜索</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9F%A5%E4%B9%8E%E7%9B%B4%E7%AD%94%EF%BC%88%E5%85%BC%E5%AE%B9-OpenAI-%E5%8D%8F%E8%AE%AE%EF%BC%81%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">知乎直答（兼容 OpenAI 协议！）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9F%A5%E4%B9%8E%E7%83%AD%E6%A6%9C"><span class="nav-number">3.4.</span> <span class="nav-text">知乎热榜</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%AB%E9%97%AE%E6%88%91%E4%B8%BA%E5%95%A5%E7%9F%A5%E9%81%93%EF%BC%8C%E9%97%AE%E5%B0%B1%E6%98%AF%E8%B8%A9%E8%BF%87"><span class="nav-number">4.</span> <span class="nav-text">别问我为啥知道，问就是踩过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#API%E3%80%81Skill%E3%80%81MCP-%E4%B8%89%E7%A7%8D%E5%BD%A2%E5%BC%8F%E5%88%AB%E4%B9%B1%E9%80%89"><span class="nav-number">4.1.</span> <span class="nav-text">API、Skill、MCP 三种形式别乱选</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AccessSecret-%E5%88%AB%E6%9A%B4%E9%9C%B2%E5%9C%A8%E5%89%8D%E7%AB%AF"><span class="nav-number">4.2.</span> <span class="nav-text">AccessSecret 别暴露在前端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E6%8E%A5%E5%85%A5%E5%BD%A2%E5%BC%8F%E7%9A%84-MCP-%E7%AB%AF%E7%82%B9%E5%90%84%E4%B8%8D%E5%90%8C"><span class="nav-number">4.3.</span> <span class="nav-text">三种接入形式的 MCP 端点各不同</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%88%E6%9E%9C%EF%BC%9A10-%E5%88%86%E9%92%9F%E6%90%AD%E4%B8%80%E4%B8%AA%E7%83%AD%E6%A6%9C%E8%A7%A3%E8%AF%BB"><span class="nav-number">5.</span> <span class="nav-text">效果：10 分钟搭一个热榜解读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E5%90%88%E8%B0%81%E4%B8%8E%E4%B8%8D%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">6.</span> <span class="nav-text">适合谁与不适合谁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E9%98%85%E8%AF%BB"><span class="nav-number">7.</span> <span class="nav-text">关联阅读</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -449,6 +478,10 @@
 <li><a href="/skillopt-agent-self-evolution/">SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</a></li>
 <li><a href="/yuanbao-api-pure-proxy/">腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</a></li>
 </ul>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/mineru-pdf-parse-mcp/">把 PDF 变成可读 Markdown：MinerU 文档解析 MCP 部署实战</a></li>
+<li><a href="/cli-proxy-api-docker-deploy-guide/">手把手教你部署 CLI Proxy API</a></li>
+</ul>
 
     </div>
 
@@ -506,13 +539,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -815,7 +848,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -823,25 +857,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -862,9 +883,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -889,9 +908,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

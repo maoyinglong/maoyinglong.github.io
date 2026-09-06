@@ -11,6 +11,7 @@ categories:
   - AI工程
 description: "腾讯元宝底层是 MiniMax 模型，但接口是非标格式。这篇记录了如何把它包装成标准 OpenAI 兼容接口，接入任意客户端直接用。"
 cover: /images/yuanbao-api-pure-proxy-cover.webp
+evidence: 亲测
 ---
 
 ![封面图](/images/yuanbao-api-pure-proxy-cover.webp)
@@ -310,3 +311,9 @@ remote_port = 16048
 - [SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？](/skillopt-agent-self-evolution/)
 - [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [手把手教你部署 CLI Proxy API](/cli-proxy-api-docker-deploy-guide/)
+- [AI自动切模型，看似稳定其实更贵](/ai-model-fallback-cost-trap/)

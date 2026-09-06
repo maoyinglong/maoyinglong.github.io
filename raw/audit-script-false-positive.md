@@ -11,6 +11,7 @@ categories:
   - 工程实践
 description: 安全审计脚本把脱敏修复误判为密钥泄露，Git 自动同步因分叉被拒。两个故障根因相同——脚本假设世界不变。一行正则、一段 fetch+rebase 即可根治。
 cover: /images/audit-script-false-positive-cover.webp
+evidence: 亲测
 ---
 
 ![配图：安全审计误报与 Git 分叉陷阱全解](/images/audit-script-false-positive-cover.webp)
@@ -113,3 +114,10 @@ Git 同步脚本失败，本质也是假设失效："本地是最新的"。手�
 这套思路能用在任何你维护的自动化脚本上，不只是 Git 和安全审计。
 
 你的自动化脚本里，还有多少"假设世界不变"的地方？
+
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [从失控到门禁：AI Agent 治理复盘](/ai-agent-governance-scale-os/)
+- [项目停更了，我为什么还留着它](/wewe-rss-archived-but-kept/)

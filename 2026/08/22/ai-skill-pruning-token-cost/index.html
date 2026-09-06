@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/ai-skill-pruning-token-cost-cover.webp">
 <meta property="article:published_time" content="2026-08-22T02:00:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.735Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.027Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="Skills">
@@ -80,6 +80,35 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "我删掉一半AI技能，它反而更聪明了",
+  "description": "给AI装技能很爽：搜索、写作、运维、画图，恨不得一次塞满。真正长期运行后，我却发现它越来越重——新会话更贵，注意力被无关能力分走，备份目录甚至会伪装成可用技能。我没有换模型，只做了一次可回滚的减法：启用技能从192个降到94个，常驻技能索引缩小48%，每次缓存失效少背约4000～5500个",
+  "url": "https://blog.rnm.gv.uy/2026/08/22/ai-skill-pruning-token-cost/",
+  "image": "/images/ai-skill-pruning-token-cost-cover.webp",
+  "inLanguage": "zh-CN",
+  "author": {"@type": "Person", "name": "雪 ❄️"},
+  "publisher": {
+    "@type": "Organization",
+    "name": "雪的数字花园 ❄️",
+    "url": "https://blog.rnm.gv.uy",
+    "logo": {"@type": "ImageObject", "url": "/images/xue-avatar.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"首页","item":"https://blog.rnm.gv.uy"},
+    {"@type":"ListItem","position":2,"name":"我删掉一半AI技能，它反而更聪明了","item":"https://blog.rnm.gv.uy/2026/08/22/ai-skill-pruning-token-cost/"}
+  ]
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -172,7 +201,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%80%E8%83%BD%E6%AD%A3%E6%96%87%E6%B2%A1%E6%9C%89%E5%85%A8%E5%A1%9E%E8%BF%9B%E5%8E%BB%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BB%8D%E7%84%B6%E4%BC%9A%E5%8F%98%E9%87%8D"><span class="nav-number">1.</span> <span class="nav-text">技能正文没有全塞进去，为什么仍然会变重</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E6%B5%8B%E5%88%B0%E7%9A%84%E7%9C%9F%E5%AE%9E%E6%95%B0%E5%AD%97"><span class="nav-number">2.</span> <span class="nav-text">我测到的真实数字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9C%9F%E6%AD%A3%E7%9A%84%E6%B1%A1%E6%9F%93%E6%BA%90%EF%BC%8C%E5%B1%85%E7%84%B6%E6%98%AF%E5%A4%87%E4%BB%BD%E7%9B%AE%E5%BD%95"><span class="nav-number">3.</span> <span class="nav-text">真正的污染源，居然是备份目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E6%B2%A1%E6%9C%89%E5%88%A0%E6%96%87%E4%BB%B6%EF%BC%8C%E5%8F%AA%E5%81%9A%E5%8F%AF%E9%80%86%E7%A6%81%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">我没有删文件，只做可逆禁用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%AB%E7%94%A8%E4%B8%80%E6%9D%A1%E9%85%8D%E7%BD%AE%E5%91%BD%E4%BB%A4%E7%A1%AC%E5%A1%9E%E5%A4%8D%E6%9D%82%E5%88%97%E8%A1%A8"><span class="nav-number">5.</span> <span class="nav-text">别用一条配置命令硬塞复杂列表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#description%E4%B9%9F%E8%AF%A5%E5%87%8F%E8%82%A5"><span class="nav-number">6.</span> <span class="nav-text">description也该减肥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%99%E5%A5%97%E6%96%B9%E6%B3%95%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">7.</span> <span class="nav-text">这套方法适合谁</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%80%E8%83%BD%E6%AD%A3%E6%96%87%E6%B2%A1%E6%9C%89%E5%85%A8%E5%A1%9E%E8%BF%9B%E5%8E%BB%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BB%8D%E7%84%B6%E4%BC%9A%E5%8F%98%E9%87%8D"><span class="nav-number">1.</span> <span class="nav-text">技能正文没有全塞进去，为什么仍然会变重</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E6%B5%8B%E5%88%B0%E7%9A%84%E7%9C%9F%E5%AE%9E%E6%95%B0%E5%AD%97"><span class="nav-number">2.</span> <span class="nav-text">我测到的真实数字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9C%9F%E6%AD%A3%E7%9A%84%E6%B1%A1%E6%9F%93%E6%BA%90%EF%BC%8C%E5%B1%85%E7%84%B6%E6%98%AF%E5%A4%87%E4%BB%BD%E7%9B%AE%E5%BD%95"><span class="nav-number">3.</span> <span class="nav-text">真正的污染源，居然是备份目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E6%B2%A1%E6%9C%89%E5%88%A0%E6%96%87%E4%BB%B6%EF%BC%8C%E5%8F%AA%E5%81%9A%E5%8F%AF%E9%80%86%E7%A6%81%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">我没有删文件，只做可逆禁用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%AB%E7%94%A8%E4%B8%80%E6%9D%A1%E9%85%8D%E7%BD%AE%E5%91%BD%E4%BB%A4%E7%A1%AC%E5%A1%9E%E5%A4%8D%E6%9D%82%E5%88%97%E8%A1%A8"><span class="nav-number">5.</span> <span class="nav-text">别用一条配置命令硬塞复杂列表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#description%E4%B9%9F%E8%AF%A5%E5%87%8F%E8%82%A5"><span class="nav-number">6.</span> <span class="nav-text">description也该减肥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%99%E5%A5%97%E6%96%B9%E6%B3%95%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">7.</span> <span class="nav-text">这套方法适合谁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E9%98%85%E8%AF%BB"><span class="nav-number">8.</span> <span class="nav-text">关联阅读</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -303,7 +332,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>3.3k</span>
+      <span>3.4k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
@@ -442,6 +471,10 @@
 <p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
 </blockquote>
 <p>你现在的AI，背了多少它根本用不到的技能？</p>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/ai-model-fallback-cost-trap/">AI自动切模型，看似稳定其实更贵</a></li>
+<li><a href="/ai-agent-beginner-guide/">AI Agent 到底是个啥？小白也能看懂的入门指南</a></li>
+</ul>
 
     </div>
 
@@ -499,13 +532,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -808,7 +841,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -816,25 +850,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -855,9 +876,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -882,9 +901,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

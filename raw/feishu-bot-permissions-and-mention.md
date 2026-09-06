@@ -11,6 +11,7 @@ categories:
   - 开发工具
 description: "飞书机器人开发里最头疼的不是代码，是权限配置和群聊互 @ 那些玄学。整理了开发全程踩过的弯路，让你少折腾半天。"
 cover: /images/feishu-bot-permissions-and-mention-cover.webp
+evidence: 亲测
 ---
 
 ![封面图](/images/feishu-bot-permissions-and-mention-cover.webp)
@@ -244,3 +245,9 @@ cover: /images/feishu-bot-permissions-and-mention-cover.webp
 - [飞书API能创建但不能批量删除，这是设计不是bug](/feishu-docx-batch-edit/)
 - [飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑](/feishu-wiki-automation/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [飞书机器人哑了？90%的人不知道查这个地方](/feishu-bot-connectivity-fix/)
+- [飞书 API 能创建但不能批量删除，这是设计不是 bug](/feishu-docx-batch-edit/)

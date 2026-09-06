@@ -11,6 +11,7 @@ categories:
   - 开发工具
 description: "飞书 Wiki 自动化写入从权限申请到批量操作，中间有 7 个经典坑位几乎每个开发者都会踩。这篇全部写清楚，建议收藏备查。"
 cover: /images/feishu-wiki-automation-cover.webp
+evidence: 亲测
 ---
 
 ![封面图](/images/feishu-wiki-automation-cover.webp)
@@ -367,3 +368,9 @@ print(f"文档创建成功: {result['url']}")
 - [飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路](/feishu-bot-permissions-and-mention/)
 - [飞书API能创建但不能批量删除，这是设计不是bug](/feishu-docx-batch-edit/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路](/feishu-bot-permissions-and-mention/)
+- [飞书 API 能创建但不能批量删除，这是设计不是 bug](/feishu-docx-batch-edit/)

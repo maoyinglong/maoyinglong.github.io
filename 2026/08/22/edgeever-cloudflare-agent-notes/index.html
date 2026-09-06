@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/edgeever-cloudflare-agent-notes-cover.webp">
 <meta property="article:published_time" content="2026-08-22T03:30:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.735Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.027Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="Cloudflare">
 <meta property="article:tag" content="EdgeEver">
@@ -81,6 +81,35 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "让原生支持Agent操作的云笔记跑在Cloudflare上",
+  "description": "笔记能导出，不等于真正属于你；AI能读一篇，也不等于能长期安全地管理整座知识库。我的旧笔记服务开始频繁掉授权后，我没有把全部数据押给下一家商业平台，而是在Cloudflare上搭了一套开源笔记库：不用养服务器，398篇历史文档完成迁移，AI通过细粒度权限读写，旧平台继续保留为第二份副本。",
+  "url": "https://blog.rnm.gv.uy/2026/08/22/edgeever-cloudflare-agent-notes/",
+  "image": "/images/edgeever-cloudflare-agent-notes-cover.webp",
+  "inLanguage": "zh-CN",
+  "author": {"@type": "Person", "name": "雪 ❄️"},
+  "publisher": {
+    "@type": "Organization",
+    "name": "雪的数字花园 ❄️",
+    "url": "https://blog.rnm.gv.uy",
+    "logo": {"@type": "ImageObject", "url": "/images/xue-avatar.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"首页","item":"https://blog.rnm.gv.uy"},
+    {"@type":"ListItem","position":2,"name":"让原生支持Agent操作的云笔记跑在Cloudflare上","item":"https://blog.rnm.gv.uy/2026/08/22/edgeever-cloudflare-agent-notes/"}
+  ]
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -173,7 +202,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E7%9C%9F%E6%AD%A3%E6%83%B3%E8%A7%A3%E5%86%B3%E7%9A%84%EF%BC%8C%E4%B8%8D%E6%98%AF%E8%AE%B0%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">我真正想解决的，不是记笔记</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E6%B2%A1%E6%9C%89%E5%81%9A%E5%8D%95%E7%82%B9%E8%BF%81%E7%A7%BB%EF%BC%8C%E8%80%8C%E6%98%AF%E5%8F%8C%E5%86%99"><span class="nav-number">2.</span> <span class="nav-text">我没有做单点迁移，而是双写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E5%89%8D%EF%BC%8C%E6%88%91%E5%85%88%E5%AE%A1%E4%BA%86%E4%B8%80%E9%81%8D%E5%AE%89%E5%85%A8%E8%BE%B9%E7%95%8C"><span class="nav-number">3.</span> <span class="nav-text">部署前，我先审了一遍安全边界</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%88%E6%8C%89%E5%AE%98%E6%96%B9%E8%B7%AF%E7%BA%BF%E9%83%A8%E7%BD%B2%EF%BC%9A%E6%B5%8F%E8%A7%88%E5%99%A8%E5%B0%B1%E8%83%BD%E5%AE%8C%E6%88%90"><span class="nav-number">4.</span> <span class="nav-text">先按官方路线部署：浏览器就能完成</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9AFork-%E9%A1%B9%E7%9B%AE"><span class="nav-number">4.1.</span> <span class="nav-text">第一步：Fork 项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%9C%A8-Cloudflare-%E5%88%9B%E5%BB%BA-D1-%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">4.2.</span> <span class="nav-text">第二步：在 Cloudflare 创建 D1 数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA-R2-%E5%AD%98%E5%82%A8%E6%A1%B6"><span class="nav-number">4.3.</span> <span class="nav-text">第三步：创建 R2 存储桶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%AF%BC%E5%85%A5-GitHub-%E4%BB%93%E5%BA%93"><span class="nav-number">4.4.</span> <span class="nav-text">第四步：导入 GitHub 仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E8%AE%BE%E7%BD%AE%E7%AE%A1%E7%90%86%E5%91%98%E5%AF%86%E7%A0%81"><span class="nav-number">4.5.</span> <span class="nav-text">第五步：设置管理员密码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E6%AD%A5%EF%BC%9A%E5%90%AF%E5%8A%A8%E7%AC%AC%E4%B8%80%E6%AC%A1%E9%83%A8%E7%BD%B2"><span class="nav-number">4.6.</span> <span class="nav-text">第六步：启动第一次部署</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%83%E6%AD%A5%EF%BC%9A%E6%89%93%E5%BC%80%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0"><span class="nav-number">4.7.</span> <span class="nav-text">第七步：打开自动更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E6%9E%9C%E4%BD%A0%E6%83%B3%E7%94%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E5%9F%9F%E5%90%8D"><span class="nav-number">5.</span> <span class="nav-text">如果你想用自定义域名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E8%87%AA%E5%B7%B1%E7%9A%84%E9%83%A8%E7%BD%B2%E8%B7%AF%E7%BA%BF%EF%BC%9A%E9%87%8D%E6%B4%BB%E4%B8%8D%E6%94%BE%E4%B8%BB%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">6.</span> <span class="nav-text">我自己的部署路线：重活不放主服务器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cloudflare%E8%AE%A4%E8%AF%81%E6%8A%A5%E9%94%99"><span class="nav-number">6.1.</span> <span class="nav-text">Cloudflare认证报错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E7%99%BB%E5%BD%95%E6%98%BE%E7%A4%BA%E2%80%9C%E8%BF%9E%E6%8E%A5%E4%B8%8D%E5%88%B0%E5%AE%9E%E4%BE%8B%E2%80%9D"><span class="nav-number">6.2.</span> <span class="nav-text">浏览器登录显示“连接不到实例”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#56KB%E6%AD%A3%E6%96%87%E6%8A%8A%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%92%91%E7%88%86"><span class="nav-number">6.3.</span> <span class="nav-text">56KB正文把命令行撑爆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Web%E6%8E%A5%E5%8F%A3%E8%A2%AB%E9%98%B2%E6%8A%A4%E8%A7%84%E5%88%99%E6%8B%A6%E6%88%AA"><span class="nav-number">6.4.</span> <span class="nav-text">Web接口被防护规则拦截</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#398%E7%AF%87%E5%8E%86%E5%8F%B2%E7%AC%94%E8%AE%B0%E6%80%8E%E4%B9%88%E6%90%AC"><span class="nav-number">7.</span> <span class="nav-text">398篇历史笔记怎么搬</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AI%E5%A6%82%E4%BD%95%E6%93%8D%E4%BD%9C%E8%BF%99%E5%BA%A7%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="nav-number">8.</span> <span class="nav-text">AI如何操作这座知识库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B2%A1%E6%9C%89%E7%9B%B4%E6%8E%A5%E6%8D%A2%E6%88%90Notion%E6%88%96Obsidian"><span class="nav-number">9.</span> <span class="nav-text">我为什么没有直接换成Notion或Obsidian</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%99%E5%A5%97%E6%96%B9%E6%A1%88%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">10.</span> <span class="nav-text">这套方案适合谁</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E7%9C%9F%E6%AD%A3%E6%83%B3%E8%A7%A3%E5%86%B3%E7%9A%84%EF%BC%8C%E4%B8%8D%E6%98%AF%E8%AE%B0%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">我真正想解决的，不是记笔记</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E6%B2%A1%E6%9C%89%E5%81%9A%E5%8D%95%E7%82%B9%E8%BF%81%E7%A7%BB%EF%BC%8C%E8%80%8C%E6%98%AF%E5%8F%8C%E5%86%99"><span class="nav-number">2.</span> <span class="nav-text">我没有做单点迁移，而是双写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E5%89%8D%EF%BC%8C%E6%88%91%E5%85%88%E5%AE%A1%E4%BA%86%E4%B8%80%E9%81%8D%E5%AE%89%E5%85%A8%E8%BE%B9%E7%95%8C"><span class="nav-number">3.</span> <span class="nav-text">部署前，我先审了一遍安全边界</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%88%E6%8C%89%E5%AE%98%E6%96%B9%E8%B7%AF%E7%BA%BF%E9%83%A8%E7%BD%B2%EF%BC%9A%E6%B5%8F%E8%A7%88%E5%99%A8%E5%B0%B1%E8%83%BD%E5%AE%8C%E6%88%90"><span class="nav-number">4.</span> <span class="nav-text">先按官方路线部署：浏览器就能完成</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9AFork-%E9%A1%B9%E7%9B%AE"><span class="nav-number">4.1.</span> <span class="nav-text">第一步：Fork 项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%9C%A8-Cloudflare-%E5%88%9B%E5%BB%BA-D1-%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">4.2.</span> <span class="nav-text">第二步：在 Cloudflare 创建 D1 数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA-R2-%E5%AD%98%E5%82%A8%E6%A1%B6"><span class="nav-number">4.3.</span> <span class="nav-text">第三步：创建 R2 存储桶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%AF%BC%E5%85%A5-GitHub-%E4%BB%93%E5%BA%93"><span class="nav-number">4.4.</span> <span class="nav-text">第四步：导入 GitHub 仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E8%AE%BE%E7%BD%AE%E7%AE%A1%E7%90%86%E5%91%98%E5%AF%86%E7%A0%81"><span class="nav-number">4.5.</span> <span class="nav-text">第五步：设置管理员密码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E6%AD%A5%EF%BC%9A%E5%90%AF%E5%8A%A8%E7%AC%AC%E4%B8%80%E6%AC%A1%E9%83%A8%E7%BD%B2"><span class="nav-number">4.6.</span> <span class="nav-text">第六步：启动第一次部署</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%83%E6%AD%A5%EF%BC%9A%E6%89%93%E5%BC%80%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0"><span class="nav-number">4.7.</span> <span class="nav-text">第七步：打开自动更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E6%9E%9C%E4%BD%A0%E6%83%B3%E7%94%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E5%9F%9F%E5%90%8D"><span class="nav-number">5.</span> <span class="nav-text">如果你想用自定义域名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E8%87%AA%E5%B7%B1%E7%9A%84%E9%83%A8%E7%BD%B2%E8%B7%AF%E7%BA%BF%EF%BC%9A%E9%87%8D%E6%B4%BB%E4%B8%8D%E6%94%BE%E4%B8%BB%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">6.</span> <span class="nav-text">我自己的部署路线：重活不放主服务器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cloudflare%E8%AE%A4%E8%AF%81%E6%8A%A5%E9%94%99"><span class="nav-number">6.1.</span> <span class="nav-text">Cloudflare认证报错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E7%99%BB%E5%BD%95%E6%98%BE%E7%A4%BA%E2%80%9C%E8%BF%9E%E6%8E%A5%E4%B8%8D%E5%88%B0%E5%AE%9E%E4%BE%8B%E2%80%9D"><span class="nav-number">6.2.</span> <span class="nav-text">浏览器登录显示“连接不到实例”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#56KB%E6%AD%A3%E6%96%87%E6%8A%8A%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%92%91%E7%88%86"><span class="nav-number">6.3.</span> <span class="nav-text">56KB正文把命令行撑爆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Web%E6%8E%A5%E5%8F%A3%E8%A2%AB%E9%98%B2%E6%8A%A4%E8%A7%84%E5%88%99%E6%8B%A6%E6%88%AA"><span class="nav-number">6.4.</span> <span class="nav-text">Web接口被防护规则拦截</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#398%E7%AF%87%E5%8E%86%E5%8F%B2%E7%AC%94%E8%AE%B0%E6%80%8E%E4%B9%88%E6%90%AC"><span class="nav-number">7.</span> <span class="nav-text">398篇历史笔记怎么搬</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AI%E5%A6%82%E4%BD%95%E6%93%8D%E4%BD%9C%E8%BF%99%E5%BA%A7%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="nav-number">8.</span> <span class="nav-text">AI如何操作这座知识库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B2%A1%E6%9C%89%E7%9B%B4%E6%8E%A5%E6%8D%A2%E6%88%90Notion%E6%88%96Obsidian"><span class="nav-number">9.</span> <span class="nav-text">我为什么没有直接换成Notion或Obsidian</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%99%E5%A5%97%E6%96%B9%E6%A1%88%E9%80%82%E5%90%88%E8%B0%81"><span class="nav-number">10.</span> <span class="nav-text">这套方案适合谁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E9%98%85%E8%AF%BB"><span class="nav-number">11.</span> <span class="nav-text">关联阅读</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -582,6 +611,10 @@
 <p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
 </blockquote>
 <p>如果你只能带走一种格式，会选数据库，还是普通Markdown？</p>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/wewe-rss-archived-but-kept/">项目停更了，我为什么还留着它</a></li>
+<li><a href="/audit-script-false-positive/">我的安全审计脚本，把自己的修复当成了攻击</a></li>
+</ul>
 
     </div>
 
@@ -640,13 +673,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -949,7 +982,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -957,25 +991,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -996,9 +1017,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -1023,9 +1042,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

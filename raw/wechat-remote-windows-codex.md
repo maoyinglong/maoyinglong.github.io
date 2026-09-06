@@ -163,5 +163,5 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 ## 关联阅读
 
-- [甲骨文免费 ARM64 主机装 Windows 11 的完整教程](/oracle-arm64-win11-guide/)
-- [免费云主机也能搭 AI 实验室？我实测后的取舍](/oracle-ai-lab-free-cloud-host/)
+- [旧配置实测：甲骨文 ARM64 装 Windows 11](/oracle-arm64-win11-guide/)
+- [我把免费云主机养成了 AI 实验室](/oracle-ai-lab-free-cloud-host/)

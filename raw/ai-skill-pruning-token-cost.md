@@ -201,3 +201,8 @@ hermes skills list --enabled-only
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 你现在的AI，背了多少它根本用不到的技能？
+
+## 关联阅读
+
+- [AI自动切模型，看似稳定其实更贵](/ai-model-fallback-cost-trap/)
+- [AI Agent 到底是个啥？小白也能看懂的入门指南](/ai-agent-beginner-guide/)

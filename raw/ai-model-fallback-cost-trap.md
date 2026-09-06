@@ -206,3 +206,8 @@ raise RuntimeError("主模型持续不可用，保留真实故障")
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 你更能接受哪种故障：明确失败，还是悄悄换一个模型？
+
+## 关联阅读
+
+- [我删掉一半 AI 技能，它反而更聪明了](/ai-skill-pruning-token-cost/)
+- [从失控到门禁：AI Agent 治理复盘](/ai-agent-governance-scale-os/)

@@ -209,3 +209,8 @@ def scrape_level4(url):
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 你做过爬虫吗？踩过什么反爬坑？评论区聊聊。
+
+## 关联阅读
+
+- [RSS 里的隐藏指令，怎么在数据层挡住](/rss-prompt-injection-appinn/)
+- [让原生支持 Agent 操作的云笔记跑在 Cloudflare 上](/edgeever-cloudflare-agent-notes/)

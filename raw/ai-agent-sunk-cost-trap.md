@@ -11,6 +11,7 @@ categories:
   - AI工程
 description: 我的 AI 助手花 30 分钟钻一个协议黑盒，怎么写都停不下来。复盘后发现五个心理陷阱，每个用 AI 写代码的人都可能遇到。治本方案：物理门禁，不是提示词劝诫。
 cover: /images/ai-agent-sunk-cost-trap-cover.webp
+evidence: 亲测
 ---
 
 ![封面图](/images/ai-agent-sunk-cost-trap-cover.webp)
@@ -105,3 +106,9 @@ cover: /images/ai-agent-sunk-cost-trap-cover.webp
 - [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
 - [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [从失控到门禁：AI Agent 治理复盘](/ai-agent-governance-scale-os/)
+- [AI自动切模型，看似稳定其实更贵](/ai-model-fallback-cost-trap/)

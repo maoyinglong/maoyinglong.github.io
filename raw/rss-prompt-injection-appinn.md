@@ -12,6 +12,7 @@ categories:
   - 教程类
   - AI工程
 cover: /images/rss-prompt-injection-cover.webp
+evidence: 亲测
 ---
 
 ![封面图](/images/rss-prompt-injection-cover.webp)
@@ -120,3 +121,10 @@ AI 操纵 AI 这件事，我在 RSS 订阅里撞了个正着。
 你猜下一个在 feed 里藏 prompt injection 的，会是善意的免责声明，还是恶意的广告植入？
 
 源头治理。
+
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [我删掉一半 AI 技能，它反而更聪明了](/ai-skill-pruning-token-cost/)
+- [从失控到门禁：AI Agent 治理复盘](/ai-agent-governance-scale-os/)

@@ -13,6 +13,7 @@ categories:
   - 分享
 description: "结论先行：用 300 行 CSS + 200 行 JS，把千篇一律的 Hexo/NexT 博客改造成赛博朋克意识空间。本文是完整的刀法记录——从审计细节问题，到四层视觉叠加，再到五个最容易翻车的实战坑。"
 cover: /images/hexo-cyberpunk-cover.webp
+evidence: 亲测
 ---
 
 ![Hexo 赛博朋克改造封面](/images/hexo-cyberpunk-cover.webp)
@@ -115,3 +116,9 @@ curl -sL "https://your.blog/?nocache=$(date +%s)"
 
 - [我的博客丑了三个月，换了个主题当场封神：Hexo博客换NexT主题全流程](/hexo-next-theme-migration-guide/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [我的博客丑了三个月，换了个主题当场封神](/hexo-next-theme-migration-guide/)
+- [不用远程桌面，我用微信远程开关 Win 主机跑 Codex](/wechat-remote-windows-codex/)

@@ -12,6 +12,7 @@ categories:
   - AI工程
 description: "把微软开源的 SkillOpt 精华压榨出来，用物理机制代替自然语言约束——经验回放卷宗回溯、双重拦截护栏、暂存区审批三板斧，实现 Agent 自我进化又不失控。"
 cover: /images/skillopt-cover.webp
+evidence: 亲测
 ---
 
 ![SkillOpt 封面](/images/skillopt-cover.webp)
@@ -80,3 +81,9 @@ cover: /images/skillopt-cover.webp
 - [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
 - [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [从失控到门禁：AI Agent 治理复盘](/ai-agent-governance-scale-os/)
+- [我删掉一半 AI 技能，它反而更聪明了](/ai-skill-pruning-token-cost/)

@@ -271,6 +271,11 @@ Spotify 的学生优惠同样要求每年通过 SheerID 重新验证，最长四
 
 你还知道哪些仍然有效、而且真正值得用的学生权益？留言给我，我会先核官方规则，再补进下一版清单。
 
+## 关联阅读
+
+- [Google 又当赛博大善人：学生再领一年 AI，去年的认证也算](/google-ai-student-offer-2026/)
+- [微软还显示5TB，但官方只认10GB](/onedrive-developer-policy-10gb/)
+
 ## 官方资料索引
 
 - GitHub Education：https://docs.github.com/en/education/about-github-education/github-education-for-students/about-github-education-for-students

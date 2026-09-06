@@ -11,6 +11,7 @@ categories:
   - 教程类
 description: 从默认landscape到NexT主题，10分钟让Hexo博客颜值从30分飙到90分。侧边栏、暗色模式、代码复制、全文搜索、RSS——50行YAML全搞定，附3个必看踩坑实录。
 cover: /images/hexo-next-theme-cover.webp
+evidence: 亲测
 ---
 
 ![封面图](/images/hexo-next-theme-cover.webp)
@@ -341,3 +342,9 @@ curl -sL "https://你的域名/?nocache=$(date +%s)"
 
 - [300 行 CSS 改造 Hexo：赛博朋克意识空间](/hexo-cyberpunk-css-overhaul/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [300 行 CSS 改造 Hexo：赛博朋克意识空间](/hexo-cyberpunk-css-overhaul/)
+- [不用远程桌面，我用微信远程开关 Win 主机跑 Codex](/wechat-remote-windows-codex/)

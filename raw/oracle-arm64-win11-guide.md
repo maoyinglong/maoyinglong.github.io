@@ -11,7 +11,13 @@ categories:
   - 云服务
 description: "甲骨文云 4 核 24G 免费机器装 Windows 11 ARM64 完全可行，但坑不少。这篇是我实测全记录，按步骤走避开所有雷区。"
 cover: /images/oracle-arm64-win11-guide-cover.webp
+evidence: 亲测
+status: historical
+updated: 2026-09-06 20:30:00
 ---
+
+> **状态更新（2026-07-29）**：本文记录的是旧政策时期的 4 核 24GB ARM64 实例，不能作为新账户的领取承诺。新注册请先读[《别再填4核24G：2026甲骨文ARM领取最新教程》](/oracle-arm-signup-2026/)。
+
 
 ![封面图](/images/oracle-arm64-win11-guide-cover.webp)
 
@@ -143,3 +149,9 @@ Resize-Partition -DriveLetter C -Size $size
 
 - [想领甲骨文服务器的看过来，但别再填4核24G：2026甲骨文ARM领取最新教程](/oracle-arm-signup-2026/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [别再填4核24G：2026甲骨文ARM领取最新教程](/oracle-arm-signup-2026/)
+- [我把免费云主机养成了 AI 实验室](/oracle-ai-lab-free-cloud-host/)

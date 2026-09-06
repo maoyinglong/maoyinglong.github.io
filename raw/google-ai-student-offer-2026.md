@@ -180,3 +180,8 @@ Google 对 Pro 的定位很明确：它更擅长代码、逻辑推理、复杂�
 [5] https://support.google.com/googleone/answer/9056360
 [6] https://support.google.com/googleone/answer/9003633
 [7] https://support.google.com/googleone/answer/9004013
+
+## 关联阅读
+
+- [教育邮箱别只拿来收通知](/edu-mail-benefits-guide/)
+- [微软还显示5TB，但官方只认10GB](/onedrive-developer-policy-10gb/)

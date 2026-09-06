@@ -253,3 +253,8 @@ BRIDGE_EXIT=0
 ---
 
 **关联阅读：**《白嫖甲骨文4核24G，装Win11避坑全记录》
+
+## 关联阅读
+
+- [别再填4核24G：2026甲骨文ARM领取最新教程](/oracle-arm-signup-2026/)
+- [旧配置实测：甲骨文 ARM64 装 Windows 11](/oracle-arm64-win11-guide/)

@@ -506,3 +506,8 @@ EdgeEver的价值刚好在中间：保留传统三栏笔记体验、数据可以
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 如果你只能带走一种格式，会选数据库，还是普通Markdown？
+
+## 关联阅读
+
+- [项目停更了，我为什么还留着它](/wewe-rss-archived-but-kept/)
+- [我的安全审计脚本，把自己的修复当成了攻击](/audit-script-false-positive/)

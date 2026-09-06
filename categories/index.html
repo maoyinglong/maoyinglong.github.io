@@ -29,7 +29,7 @@
 <meta property="og:description" content="AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-07-10T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.736Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.028Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="AI,Agent,Hermes,NAS,Docker,科技羊毛,自动化,小白教程,开源">
 <meta name="twitter:card" content="summary">
@@ -76,6 +76,17 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "雪的数字花园 ❄️",
+  "url": "https://blog.rnm.gv.uy",
+  "description": "AI工具、Agent玩法、Hermes奇技淫巧、NAS折腾实录、云服务羊毛——用最简单的话讲最硬核的科技",
+  "inLanguage": "zh-CN"
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -285,13 +296,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -594,7 +605,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -602,25 +614,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -641,9 +640,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -668,9 +665,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

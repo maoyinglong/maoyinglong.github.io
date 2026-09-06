@@ -1404,7 +1404,7 @@ pre code {
     transition: all 0.2s ease-in-out;
   }
   .links-of-author a::before {
-    background: #fb50ff;
+    background: #e37417;
     display: inline-block;
     margin-right: 3px;
     transform: translateY(-2px);
@@ -3730,6 +3730,65 @@ body {
   color: #00e676;
   border-color: #00e676;
   box-shadow: 0 0 18px rgba(0,230,118,0.4);
+}
+.garden-guide {
+  margin: 22px 0 36px;
+  padding: 30px 32px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(5,15,30,0.72);
+  box-shadow: inset 0 0 24px rgba(0,212,255,0.035);
+}
+.garden-guide-kicker {
+  margin: 0 0 8px;
+  color: var(--cyber-blue);
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+.garden-guide h1 {
+  margin: 0;
+  color: var(--neon-white) !important;
+  font-size: 1.55rem;
+}
+.garden-guide-intro {
+  color: #8abccf;
+  line-height: 1.75;
+}
+.garden-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.garden-guide-card {
+  padding: 16px;
+  border: 1px solid rgba(0,212,255,0.14);
+  background: rgba(0,212,255,0.025);
+}
+.garden-guide-card h2 {
+  margin: 0 0 10px;
+  color: var(--cyber-blue) !important;
+  font-size: 1rem;
+}
+.garden-guide-card a {
+  display: block;
+  padding: 6px 0;
+  color: #a8d8e8 !important;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  border-bottom: 0 !important;
+}
+.garden-guide-card a:hover {
+  color: var(--cyber-blue) !important;
+}
+@media (max-width: 767px) {
+  .garden-guide {
+    padding: 22px 18px;
+  }
+  .garden-guide-grid {
+    grid-template-columns: 1fr;
+  }
 }
 @keyframes scanline-breathe {
   0%, 100% {

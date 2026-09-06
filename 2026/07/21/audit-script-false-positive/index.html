@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/audit-script-false-positive-cover.webp">
 <meta property="article:published_time" content="2026-07-21T07:30:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.735Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.027Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="Git">
 <meta property="article:tag" content="安全审计">
@@ -80,6 +80,35 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "我的安全审计脚本，把自己的修复当成了攻击",
+  "description": "安全审计脚本把脱敏修复误判为密钥泄露，Git 自动同步因分叉被拒。两个故障根因相同——脚本假设世界不变。一行正则、一段 fetch+rebase 即可根治。",
+  "url": "https://blog.rnm.gv.uy/2026/07/21/audit-script-false-positive/",
+  "image": "/images/audit-script-false-positive-cover.webp",
+  "inLanguage": "zh-CN",
+  "author": {"@type": "Person", "name": "雪 ❄️"},
+  "publisher": {
+    "@type": "Organization",
+    "name": "雪的数字花园 ❄️",
+    "url": "https://blog.rnm.gv.uy",
+    "logo": {"@type": "ImageObject", "url": "/images/xue-avatar.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"首页","item":"https://blog.rnm.gv.uy"},
+    {"@type":"ListItem","position":2,"name":"我的安全审计脚本，把自己的修复当成了攻击","item":"https://blog.rnm.gv.uy/2026/07/21/audit-script-false-positive/"}
+  ]
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -172,7 +201,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E2%80%9D%E5%88%A0%E9%99%A4%E8%A1%8C%E2%80%9D%E9%87%8C%E6%89%BE%E5%88%B0%E7%9A%84%E5%B9%BD%E7%81%B5"><span class="nav-number">1.</span> <span class="nav-text">从”删除行”里找到的幽灵</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E8%A1%8C%E6%AD%A3%E5%88%99%EF%BC%8C%E5%88%87%E6%96%AD%E8%AF%AF%E6%8A%A5%E5%BE%AA%E7%8E%AF"><span class="nav-number">2.</span> <span class="nav-text">一行正则，切断误报循环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%A6%E4%B8%80%E4%B8%AA%E5%90%8C%E5%A4%A9%E5%8F%91%E7%8E%B0%E7%9A%84%E9%99%B7%E9%98%B1%EF%BC%9AGit-%E5%88%86%E5%8F%89"><span class="nav-number">3.</span> <span class="nav-text">另一个同天发现的陷阱：Git 分叉</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E6%98%AF%E5%86%99%E7%BB%99%E7%89%B9%E5%AE%9A%E5%81%87%E8%AE%BE%E7%9A%84%EF%BC%8C%E5%81%87%E8%AE%BE%E4%B8%80%E6%97%A6%E4%B8%8D%E6%88%90%E7%AB%8B%E5%B0%B1%E4%BC%9A%E5%87%BA%E9%94%99"><span class="nav-number">4.</span> <span class="nav-text">工具是写给特定假设的，假设一旦不成立就会出错</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E2%80%9D%E5%88%A0%E9%99%A4%E8%A1%8C%E2%80%9D%E9%87%8C%E6%89%BE%E5%88%B0%E7%9A%84%E5%B9%BD%E7%81%B5"><span class="nav-number">1.</span> <span class="nav-text">从”删除行”里找到的幽灵</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E8%A1%8C%E6%AD%A3%E5%88%99%EF%BC%8C%E5%88%87%E6%96%AD%E8%AF%AF%E6%8A%A5%E5%BE%AA%E7%8E%AF"><span class="nav-number">2.</span> <span class="nav-text">一行正则，切断误报循环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%A6%E4%B8%80%E4%B8%AA%E5%90%8C%E5%A4%A9%E5%8F%91%E7%8E%B0%E7%9A%84%E9%99%B7%E9%98%B1%EF%BC%9AGit-%E5%88%86%E5%8F%89"><span class="nav-number">3.</span> <span class="nav-text">另一个同天发现的陷阱：Git 分叉</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E6%98%AF%E5%86%99%E7%BB%99%E7%89%B9%E5%AE%9A%E5%81%87%E8%AE%BE%E7%9A%84%EF%BC%8C%E5%81%87%E8%AE%BE%E4%B8%80%E6%97%A6%E4%B8%8D%E6%88%90%E7%AB%8B%E5%B0%B1%E4%BC%9A%E5%87%BA%E9%94%99"><span class="nav-number">4.</span> <span class="nav-text">工具是写给特定假设的，假设一旦不成立就会出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E9%98%85%E8%AF%BB"><span class="nav-number">5.</span> <span class="nav-text">关联阅读</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -303,7 +332,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>2.1k</span>
+      <span>2.2k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
@@ -367,6 +396,13 @@
 <p>工具越聪明，隐含假设越多，越容易在边缘场景翻车。把假设写清楚，才是让工具真正可靠的方式。</p>
 <p>这套思路能用在任何你维护的自动化脚本上，不只是 Git 和安全审计。</p>
 <p>你的自动化脚本里，还有多少”假设世界不变”的地方？</p>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/ai-agent-governance-scale-os/">从失控到门禁：AI Agent 治理复盘</a></li>
+<li><a href="/wewe-rss-archived-but-kept/">项目停更了，我为什么还留着它</a></li>
+</ul>
 
     </div>
 
@@ -424,13 +460,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -733,7 +769,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -741,25 +778,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -780,9 +804,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -807,9 +829,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

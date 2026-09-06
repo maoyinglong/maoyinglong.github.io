@@ -166,3 +166,7 @@ MinerU 输出的 Markdown 结构干净，喂给 LLM 的 token 数比直接丢原
 - [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
 - [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
 
+## 关联阅读
+
+- [AI Agent 到底是个啥？小白也能看懂的入门指南](/ai-agent-beginner-guide/)
+- [三步接入知乎 API，让 Agent 拥有中文内容源](/zhihu-openapi-practical/)

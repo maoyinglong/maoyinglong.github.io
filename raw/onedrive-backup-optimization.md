@@ -13,7 +13,12 @@ categories:
   - 运维
 description: "微软E3开发者订阅白给25TB OneDrive，用Client Credentials Flow（免交互）两步让Agent自动备份接管。从注册应用到分片上传，每一步都能直接抄。"
 cover: /images/onedrive-backup-optimization-cover.webp
+status: superseded
+updated: 2026-09-06 20:30:00
 ---
+
+> **状态更新（2026-08-21）**：本文关于开发者订阅容量的“25TB”前提已经失效；可复用的是分片上传和自动备份方法。请先读[《微软还显示5TB，但官方只认10GB》](/onedrive-developer-policy-10gb/)，再决定是否采用。
+
 
 ![封面图](/images/onedrive-backup-optimization-cover.webp)
 
@@ -207,3 +212,8 @@ def agent_backup_to_onedrive():
 > 「每天帮你踩一个 AI 的坑，省下一小时。」
 
 你有 E3 开发者订阅吗？25TB 在用还是吃灰？评论区聊聊。
+
+## 关联阅读
+
+- [微软还显示5TB，但官方只认10GB](/onedrive-developer-policy-10gb/)
+- [项目停更了，我为什么还留着它](/wewe-rss-archived-but-kept/)

@@ -11,6 +11,7 @@ categories:
   - 开发工具
 description: "EvoMap 能把 GitHub PR 贡献换成真实积分，攻略很简单但有几个经典坑。这篇保姆级步骤 + 一次失败修复全记录，看完能直接抄作业。"
 cover: /images/evomap-bounty-guide-cover.webp
+evidence: 亲测
 ---
 
 > 最近发现一个叫 **EvoMap** 的活动，上传 GitHub 仓库就能换 API 积分，最高 1W。我跑通了一遍流程，踩了一个大坑，本文把我验证过的正确路径完整分享出来。
@@ -185,3 +186,10 @@ EvoMap 没有明确的"重提交次数限制"，但也不建议刷——同一�
 ---
 
 *你也在玩 EvoMap 吗？欢迎评论区交流你的姿势～*
+
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [教育邮箱别只拿来收通知](/edu-mail-benefits-guide/)
+- [我的安全审计脚本，把自己的修复当成了攻击](/audit-script-false-positive/)

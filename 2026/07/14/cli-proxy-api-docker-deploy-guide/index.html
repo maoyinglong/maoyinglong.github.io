@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/cli-proxy-api-cover.webp">
 <meta property="article:published_time" content="2026-07-14T04:00:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.735Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.027Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="AI 工具">
 <meta property="article:tag" content="CLI Proxy API">
@@ -83,6 +83,35 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器",
+  "description": "手把手教你用 Docker Compose 部署 CLI Proxy API，把所有大模型的 Key 统一管理起来。面向零基础小白，每一步都解释清楚为什么这么做，配置字段逐一说明，附带踩坑提醒。",
+  "url": "https://blog.rnm.gv.uy/2026/07/14/cli-proxy-api-docker-deploy-guide/",
+  "image": "/images/cli-proxy-api-cover.webp",
+  "inLanguage": "zh-CN",
+  "author": {"@type": "Person", "name": "雪 ❄️"},
+  "publisher": {
+    "@type": "Organization",
+    "name": "雪的数字花园 ❄️",
+    "url": "https://blog.rnm.gv.uy",
+    "logo": {"@type": "ImageObject", "url": "/images/xue-avatar.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"首页","item":"https://blog.rnm.gv.uy"},
+    {"@type":"ListItem","position":2,"name":"手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器","item":"https://blog.rnm.gv.uy/2026/07/14/cli-proxy-api-docker-deploy-guide/"}
+  ]
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -175,7 +204,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%89%8B%E4%B9%8B%E5%89%8D%EF%BC%8C%E4%BD%A0%E9%9C%80%E8%A6%81%E5%87%86%E5%A4%87%E4%BB%80%E4%B9%88"><span class="nav-number">1.</span> <span class="nav-text">动手之前，你需要准备什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E5%BC%80%E5%A7%8B"><span class="nav-number">2.</span> <span class="nav-text">部署开始</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E8%BF%9E%E4%B8%8A%E4%BD%A0%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">2.1.</span> <span class="nav-text">第一步：连上你的服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E4%B8%93%E9%97%A8%E7%9A%84%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="nav-number">2.2.</span> <span class="nav-text">第二步：创建一个专门的文件夹</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA-docker-compose-yml"><span class="nav-number">2.3.</span> <span class="nav-text">第三步：创建 docker-compose.yml</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA-config-yaml"><span class="nav-number">2.4.</span> <span class="nav-text">第四步：创建 config.yaml</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E4%B8%80%E9%94%AE%E5%90%AF%E5%8A%A8"><span class="nav-number">2.5.</span> <span class="nav-text">第五步：一键启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E6%AD%A5%EF%BC%9A%E6%89%93%E5%BC%80%E7%AE%A1%E7%90%86%E9%9D%A2%E6%9D%BF"><span class="nav-number">2.6.</span> <span class="nav-text">第六步：打开管理面板</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E9%87%8D%E8%A6%81%E8%B8%A9%E5%9D%91%E6%8F%90%E9%86%92"><span class="nav-number">3.</span> <span class="nav-text">一个重要踩坑提醒</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%89%8B%E4%B9%8B%E5%89%8D%EF%BC%8C%E4%BD%A0%E9%9C%80%E8%A6%81%E5%87%86%E5%A4%87%E4%BB%80%E4%B9%88"><span class="nav-number">1.</span> <span class="nav-text">动手之前，你需要准备什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E5%BC%80%E5%A7%8B"><span class="nav-number">2.</span> <span class="nav-text">部署开始</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E8%BF%9E%E4%B8%8A%E4%BD%A0%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">2.1.</span> <span class="nav-text">第一步：连上你的服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E4%B8%93%E9%97%A8%E7%9A%84%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="nav-number">2.2.</span> <span class="nav-text">第二步：创建一个专门的文件夹</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA-docker-compose-yml"><span class="nav-number">2.3.</span> <span class="nav-text">第三步：创建 docker-compose.yml</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA-config-yaml"><span class="nav-number">2.4.</span> <span class="nav-text">第四步：创建 config.yaml</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E4%B8%80%E9%94%AE%E5%90%AF%E5%8A%A8"><span class="nav-number">2.5.</span> <span class="nav-text">第五步：一键启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%85%AD%E6%AD%A5%EF%BC%9A%E6%89%93%E5%BC%80%E7%AE%A1%E7%90%86%E9%9D%A2%E6%9D%BF"><span class="nav-number">2.6.</span> <span class="nav-text">第六步：打开管理面板</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E9%87%8D%E8%A6%81%E8%B8%A9%E5%9D%91%E6%8F%90%E9%86%92"><span class="nav-number">3.</span> <span class="nav-text">一个重要踩坑提醒</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E9%98%85%E8%AF%BB"><span class="nav-number">5.</span> <span class="nav-text">关联阅读</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -310,14 +339,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>3.8k</span>
+      <span>3.9k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>3 分钟</span>
+      <span>4 分钟</span>
     </span>
 </div>
 
@@ -433,6 +462,13 @@
 <li><a href="/yuanbao-api-pure-proxy/">腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</a></li>
 <li><a href="/zhihu-openapi-practical/">三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源</a></li>
 </ul>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/ai-model-fallback-cost-trap/">AI自动切模型，看似稳定其实更贵</a></li>
+<li><a href="/zhihu-openapi-practical/">三步接入知乎 API，让 Agent 拥有中文内容源</a></li>
+</ul>
 
     </div>
 
@@ -493,13 +529,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -802,7 +838,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -810,25 +847,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -849,9 +873,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -876,9 +898,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.rnm.gv.uy/images/feishu-wiki-automation-cover.webp">
 <meta property="article:published_time" content="2026-06-20T14:30:00.000Z">
-<meta property="article:modified_time" content="2026-09-06T06:03:38.735Z">
+<meta property="article:modified_time" content="2026-09-06T06:28:29.027Z">
 <meta property="article:author" content="雪 ❄️">
 <meta property="article:tag" content="API">
 <meta property="article:tag" content="Wiki">
@@ -80,6 +80,35 @@
 
 
 
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑",
+  "description": "飞书 Wiki 自动化写入从权限申请到批量操作，中间有 7 个经典坑位几乎每个开发者都会踩。这篇全部写清楚，建议收藏备查。",
+  "url": "https://blog.rnm.gv.uy/2026/06/20/feishu-wiki-automation/",
+  "image": "/images/feishu-wiki-automation-cover.webp",
+  "inLanguage": "zh-CN",
+  "author": {"@type": "Person", "name": "雪 ❄️"},
+  "publisher": {
+    "@type": "Organization",
+    "name": "雪的数字花园 ❄️",
+    "url": "https://blog.rnm.gv.uy",
+    "logo": {"@type": "ImageObject", "url": "/images/xue-avatar.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"首页","item":"https://blog.rnm.gv.uy"},
+    {"@type":"ListItem","position":2,"name":"飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑","item":"https://blog.rnm.gv.uy/2026/06/20/feishu-wiki-automation/"}
+  ]
+}
+</script>
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -172,7 +201,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%87%AA%E5%8A%A8%E5%8C%96-Wiki-%E7%A9%BA%E9%97%B4"><span class="nav-number">1.</span> <span class="nav-text">为什么要自动化 Wiki 空间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E6%9D%83%E9%99%90%E8%8E%B7%E5%8F%96%EF%BC%8890-%E7%9A%84%E4%BA%BA%E5%8D%A1%E5%9C%A8%E8%BF%99%E9%87%8C%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">第一步：权限获取（90% 的人卡在这里）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AF%E5%8C%BA%EF%BC%9A%E4%BB%A5%E4%B8%BA-API-%E6%9D%83%E9%99%90-%E7%A9%BA%E9%97%B4%E6%9D%83%E9%99%90"><span class="nav-number">2.1.</span> <span class="nav-text">误区：以为 API 权限 &#x3D; 空间权限</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A3%E7%A1%AE%E6%B5%81%E7%A8%8B"><span class="nav-number">2.2.</span> <span class="nav-text">正确流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OAuth-scope-%E7%9A%84%E5%9D%91"><span class="nav-number">2.3.</span> <span class="nav-text">OAuth scope 的坑</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E8%8A%82%E7%82%B9%E5%88%9B%E5%BB%BA%EF%BC%88%E5%88%9B%E5%BB%BA%E7%9B%AE%E5%BD%95%E3%80%81%E6%96%87%E6%A1%A3%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">第二步：节点创建（创建目录、文档）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%9B%AE%E5%BD%95%EF%BC%88%E6%A0%B9%E8%8A%82%E7%82%B9%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">创建目录（根节点）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%96%87%E6%A1%A3%EF%BC%88%E8%B8%A9%E5%9D%91%E7%82%B9%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">创建文档（踩坑点）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%98%E9%80%9A%E6%96%B9%E6%A1%88"><span class="nav-number">3.3.</span> <span class="nav-text">变通方案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E8%8A%82%E7%82%B9%E7%A7%BB%E5%8A%A8%EF%BC%88%E5%8F%88%E4%B8%80%E4%B8%AA%E8%B8%A9%E5%9D%91%E7%82%B9%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">第三步：节点移动（又一个踩坑点）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E4%B8%AA%E5%9D%91%EF%BC%9A%E5%8F%82%E6%95%B0%E4%BD%8D%E7%BD%AE"><span class="nav-number">4.1.</span> <span class="nav-text">第一个坑：参数位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E4%B8%AA%E5%9D%91%EF%BC%9Anode-token-vs-obj-token"><span class="nav-number">4.2.</span> <span class="nav-text">第二个坑：node_token vs obj_token</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E6%89%B9%E9%87%8F%E5%86%99%E5%85%A5%EF%BC%88%E9%99%90%E6%B5%81%E5%A4%84%E7%90%86%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">第四步：批量写入（限流处理）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%99%90%E6%B5%81%E9%94%99%E8%AF%AF"><span class="nav-number">5.1.</span> <span class="nav-text">限流错误</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9A%E5%88%86%E6%89%B9-%E9%97%B4%E9%9A%94"><span class="nav-number">5.2.</span> <span class="nav-text">解决方案：分批 + 间隔</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E7%89%B9%E6%AE%8A-Block-%E7%B1%BB%E5%9E%8B"><span class="nav-number">6.</span> <span class="nav-text">第五步：特殊 Block 类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%89%B2%E7%BA%BF"><span class="nav-number">6.1.</span> <span class="nav-text">分割线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E6%A0%87%E9%A2%98"><span class="nav-number">6.2.</span> <span class="nav-text">二级标题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E5%BA%8F%E5%88%97%E8%A1%A8"><span class="nav-number">6.3.</span> <span class="nav-text">无序列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E6%AE%B5%E8%90%BD"><span class="nav-number">6.4.</span> <span class="nav-text">普通段落</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E5%B0%81%E8%A3%85"><span class="nav-number">7.</span> <span class="nav-text">实战封装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="nav-number">8.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%87%AA%E5%8A%A8%E5%8C%96-Wiki-%E7%A9%BA%E9%97%B4"><span class="nav-number">1.</span> <span class="nav-text">为什么要自动化 Wiki 空间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E6%9D%83%E9%99%90%E8%8E%B7%E5%8F%96%EF%BC%8890-%E7%9A%84%E4%BA%BA%E5%8D%A1%E5%9C%A8%E8%BF%99%E9%87%8C%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">第一步：权限获取（90% 的人卡在这里）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AF%E5%8C%BA%EF%BC%9A%E4%BB%A5%E4%B8%BA-API-%E6%9D%83%E9%99%90-%E7%A9%BA%E9%97%B4%E6%9D%83%E9%99%90"><span class="nav-number">2.1.</span> <span class="nav-text">误区：以为 API 权限 &#x3D; 空间权限</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A3%E7%A1%AE%E6%B5%81%E7%A8%8B"><span class="nav-number">2.2.</span> <span class="nav-text">正确流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OAuth-scope-%E7%9A%84%E5%9D%91"><span class="nav-number">2.3.</span> <span class="nav-text">OAuth scope 的坑</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E8%8A%82%E7%82%B9%E5%88%9B%E5%BB%BA%EF%BC%88%E5%88%9B%E5%BB%BA%E7%9B%AE%E5%BD%95%E3%80%81%E6%96%87%E6%A1%A3%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">第二步：节点创建（创建目录、文档）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%9B%AE%E5%BD%95%EF%BC%88%E6%A0%B9%E8%8A%82%E7%82%B9%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">创建目录（根节点）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%96%87%E6%A1%A3%EF%BC%88%E8%B8%A9%E5%9D%91%E7%82%B9%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">创建文档（踩坑点）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%98%E9%80%9A%E6%96%B9%E6%A1%88"><span class="nav-number">3.3.</span> <span class="nav-text">变通方案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E8%8A%82%E7%82%B9%E7%A7%BB%E5%8A%A8%EF%BC%88%E5%8F%88%E4%B8%80%E4%B8%AA%E8%B8%A9%E5%9D%91%E7%82%B9%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">第三步：节点移动（又一个踩坑点）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E4%B8%AA%E5%9D%91%EF%BC%9A%E5%8F%82%E6%95%B0%E4%BD%8D%E7%BD%AE"><span class="nav-number">4.1.</span> <span class="nav-text">第一个坑：参数位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E4%B8%AA%E5%9D%91%EF%BC%9Anode-token-vs-obj-token"><span class="nav-number">4.2.</span> <span class="nav-text">第二个坑：node_token vs obj_token</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E6%89%B9%E9%87%8F%E5%86%99%E5%85%A5%EF%BC%88%E9%99%90%E6%B5%81%E5%A4%84%E7%90%86%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">第四步：批量写入（限流处理）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%99%90%E6%B5%81%E9%94%99%E8%AF%AF"><span class="nav-number">5.1.</span> <span class="nav-text">限流错误</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9A%E5%88%86%E6%89%B9-%E9%97%B4%E9%9A%94"><span class="nav-number">5.2.</span> <span class="nav-text">解决方案：分批 + 间隔</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E7%89%B9%E6%AE%8A-Block-%E7%B1%BB%E5%9E%8B"><span class="nav-number">6.</span> <span class="nav-text">第五步：特殊 Block 类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%89%B2%E7%BA%BF"><span class="nav-number">6.1.</span> <span class="nav-text">分割线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E7%BA%A7%E6%A0%87%E9%A2%98"><span class="nav-number">6.2.</span> <span class="nav-text">二级标题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E5%BA%8F%E5%88%97%E8%A1%A8"><span class="nav-number">6.3.</span> <span class="nav-text">无序列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E6%AE%B5%E8%90%BD"><span class="nav-number">6.4.</span> <span class="nav-text">普通段落</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E5%B0%81%E8%A3%85"><span class="nav-number">7.</span> <span class="nav-text">实战封装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="nav-number">8.</span> <span class="nav-text">写在最后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E9%98%85%E8%AF%BB"><span class="nav-number">9.</span> <span class="nav-text">关联阅读</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -303,7 +332,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>7.5k</span>
+      <span>7.6k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
@@ -442,6 +471,13 @@
 <li><a href="/feishu-bot-permissions-and-mention/">飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路</a></li>
 <li><a href="/feishu-docx-batch-edit/">飞书API能创建但不能批量删除，这是设计不是bug</a></li>
 </ul>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/feishu-bot-permissions-and-mention/">飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路</a></li>
+<li><a href="/feishu-docx-batch-edit/">飞书 API 能创建但不能批量删除，这是设计不是 bug</a></li>
+</ul>
 
     </div>
 
@@ -499,13 +535,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">111k</span>
+    <span title="站点总字数">113k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:41</span>
+    <span title="站点阅读时长">1:43</span>
   </span>
 </div>
 <div class="busuanzi-count">
@@ -808,7 +844,8 @@
     loadGiscus();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  // 所有 PJAX 生命周期统一从这里刷新，避免同一模块在三套事件里重复初始化。
+  function refreshPageModules() {
     pageCfg = getPageConfig();
     isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
     isPost = pageCfg.isPost === true;
@@ -816,25 +853,12 @@
     startTitleGlitch();
     injectStatusBar();
     injectHeroBanner();
-  });
-  document.addEventListener('page:loaded', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
-  document.addEventListener('pjax:complete', function() {
-    pageCfg = getPageConfig();
-    isHome = pageCfg.isHome === true && (window.location.pathname === '/' || window.location.pathname === '/index.html');
-    isPost = pageCfg.isPost === true;
-    if (isPost) initGiscus();
-    startTitleGlitch();
-    injectStatusBar();
-    injectHeroBanner();
-  });
+    fixSidebarLinks();
+    injectPageTitle();
+  }
+  document.addEventListener('DOMContentLoaded', refreshPageModules);
+  document.addEventListener('page:loaded', refreshPageModules);
+  document.addEventListener('pjax:complete', refreshPageModules);
 
   // =============================================================
   // 6. 侧边栏 — 分类/标签数字补链接
@@ -855,9 +879,7 @@
       a.appendChild(tags);
     }
   }
-  fixSidebarLinks();
-  document.addEventListener('page:loaded', fixSidebarLinks);
-  document.addEventListener('pjax:complete', fixSidebarLinks);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 7. 分类页/标签页 — 注入页面标题（和首页区分）
@@ -882,9 +904,7 @@
     h1.style.cssText = 'text-align:center;font-size:1.6rem;color:#e8f4ff;padding:20px 0 8px;letter-spacing:0.15em;text-shadow:0 0 15px rgba(0,212,255,0.4);font-family:"Courier New",Consolas,monospace;';
     mainInner.insertBefore(h1, mainInner.firstChild);
   }
-  injectPageTitle();
-  document.addEventListener('page:loaded', injectPageTitle);
-  document.addEventListener('pjax:complete', injectPageTitle);
+  // 由 refreshPageModules() 统一调用。
 
   // =============================================================
   // 8. 侧边栏 — 最新留言滚动模块（Giscus API）

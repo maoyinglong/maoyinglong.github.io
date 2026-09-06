@@ -161,3 +161,7 @@ systemctl daemon-reload && systemctl enable --now hermes-gateway
 - [飞书API能创建但不能批量删除，这是设计不是bug](/feishu-docx-batch-edit/)
 - [飞书 Wiki 空间自动化：从权限获取到批量写入的 7 个实战坑](/feishu-wiki-automation/)
 
+## 关联阅读
+
+- [飞书机器人开发踩坑实录：权限配置、群聊互@和那些我绕过的弯路](/feishu-bot-permissions-and-mention/)
+- [飞书 API 能创建但不能批量删除，这是设计不是 bug](/feishu-docx-batch-edit/)

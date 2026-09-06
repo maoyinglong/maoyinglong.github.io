@@ -265,3 +265,8 @@ Microsoft 365 Developer Program 的使用条款写明：服务用于设计、开
 你现在的开发者OneDrive显示多少？如果已经出现300GB或只读提示，把实际情况留在评论区。
 
 **关联阅读：**《你花天价加硬盘，我零成本25TB OneDrive白养虾》——旧文保留，作为本次纠错对象。
+
+## 关联阅读
+
+- [旧文：你花天价加硬盘，我零成本25TB OneDrive白养虾](/onedrive-backup-optimization/)
+- [项目停更了，我为什么还留着它](/wewe-rss-archived-but-kept/)

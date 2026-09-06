@@ -15,6 +15,7 @@ categories:
   - 开源
 description: 手把手教你用 Docker Compose 部署 CLI Proxy API，把所有大模型的 Key 统一管理起来。面向零基础小白，每一步都解释清楚为什么这么做，配置字段逐一说明，附带踩坑提醒。
 cover: /images/cli-proxy-api-cover.webp
+evidence: 亲测
 ---
 
 ![CLI Proxy API 封面](/images/cli-proxy-api-cover.webp)
@@ -222,3 +223,9 @@ curl -s -o /dev/null -w '%{http_code}' http://你的服务器IP:8317/management.
 - [腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容](/yuanbao-api-pure-proxy/)
 - [三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源](/zhihu-openapi-practical/)
 
+> 「每天帮你踩一个 AI 的坑，省下一小时。」
+
+## 关联阅读
+
+- [AI自动切模型，看似稳定其实更贵](/ai-model-fallback-cost-trap/)
+- [三步接入知乎 API，让 Agent 拥有中文内容源](/zhihu-openapi-practical/)
