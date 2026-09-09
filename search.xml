@@ -1394,6 +1394,140 @@
       </tags>
   </entry>
   <entry>
+    <title>邮箱：你礼貌吗？我刚收到验证码，AI 已经在终端填完了</title>
+    <url>/2026/09/07/email-captcha-terminal-automation/</url>
+    <content><![CDATA[<p><img data-src="/images/email-captcha-terminal-automation-cover.webp" alt="封面图"></p>
+<blockquote>
+<p><strong>每次注册海外服务最烦切屏等验证码，邮箱被广告塞爆又怕漏掉扣费账单。其实把 Google 与微软官方 API 打通，配合双端转寄与自动化脚本，就能打造一个零污染、秒提验证码、每晚自动审计的私人邮件中枢——全套方案可直接抄作业，小白 15 分钟搞定。</strong></p>
+</blockquote>
+<p>每次折腾自托管服务、注册海外开发者账号或者绑定云资产，有两个痛点几乎人人都会撞上：</p>
+<p>第一，<strong>验证码焦虑</strong>。点击“获取验证码”后，必须切出当前工作区，打开浏览器或掏出手机翻邮件，如果遇到风控被扔进垃圾箱，还要在几十封垃圾邮件里翻找，极其割裂；<br>第二，<strong>主邮箱被污染与信息轰炸</strong>。很多平台动辄发送营销水文，但偶尔夹杂一两封致命的“服务器扣费失败”“证书到期”或“安全异地登录”，一旦漏看后果严重。</p>
+<p>很多人以为解决这些问题必须花钱买复杂的商业 SaaS，或者直接交出账号密码去接第三方不可信的客户端。</p>
+<p>其实完全不需要。现代云服务最底层的钥匙一直掌握在我们自己手里：<strong>Google Cloud API</strong> 与 <strong>Microsoft Graph API</strong>。</p>
+<p>今天把这套跑在 Linux 宿主机上的完整方案拆解出来：如何优雅接入 Google 与微软两大生态，用云端规则让个人邮箱永不落灰，做到随时秒提验证码，且每晚自动审计重要通知与排查垃圾箱。</p>
+<p><img data-src="/images/google-ms-architecture-20260907.webp" alt="Google 全家桶与微软全家桶架构流程图"></p>
+<hr>
+<h3 id="一、-架构设计：两套全家桶各司其职"><a href="#一、-架构设计：两套全家桶各司其职" class="headerlink" title="一、 架构设计：两套全家桶各司其职"></a>一、 架构设计：两套全家桶各司其职</h3><p>在动手前，先把职责边界划清，绝不引入多余的复杂度：</p>
+<table>
+<thead>
+<tr>
+<th align="left">维度</th>
+<th align="left">Google 全家桶 (Gmail &#x2F; Drive &#x2F; Sheets &#x2F; Calendar)</th>
+<th align="left">微软全家桶 (Microsoft 365 &#x2F; OneDrive &#x2F; Outlook)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>生态定位</strong></td>
+<td align="left">海外开发者服务、AI 平台绑定、公开协作看板</td>
+<td align="left">生产力归档、5TB 海量系统冷备、企业级通讯通道</td>
+</tr>
+<tr>
+<td align="left"><strong>邮件角色</strong></td>
+<td align="left">主力接收 Gmail 渠道安全告警与开发者动态</td>
+<td align="left">统一接收个人 Outlook 转寄邮件与 E3 系统账单</td>
+</tr>
+<tr>
+<td align="left"><strong>资产与看板</strong></td>
+<td align="left">Sheets 记录 Token 消耗成本、巡检指标（免登录查看）</td>
+<td align="left">OneDrive 负责加密打包冷备、提供全网直下匿名外链</td>
+</tr>
+<tr>
+<td align="left"><strong>日程提醒</strong></td>
+<td align="left">Calendar 负责 Android&#x2F;Web 端弹窗日程同步</td>
+<td align="left">结合本地跳板广播至 Apple Reminders (iCloud)</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="二、-实操第一步：打通-Google-全家桶-OAuth-2-0-原生落地"><a href="#二、-实操第一步：打通-Google-全家桶-OAuth-2-0-原生落地" class="headerlink" title="二、 实操第一步：打通 Google 全家桶 (OAuth 2.0 原生落地)"></a>二、 实操第一步：打通 Google 全家桶 (OAuth 2.0 原生落地)</h3><p>很多教程教大家用常驻的第三方服务去连 Google，这在 1C1G 等受限配置的服务器上极易引发内存爆破，而且破坏模型上下文缓存。</p>
+<p>我们选择最稳健的方案：<strong>在 Google Cloud 控制台自建 OAuth 2.0 凭据，配合官方原生 Python SDK 驱动，按需唤醒，执行完立即释放内存。</strong></p>
+<h4 id="1-控制台开通核心-API"><a href="#1-控制台开通核心-API" class="headerlink" title="1. 控制台开通核心 API"></a>1. 控制台开通核心 API</h4><p>打开 Google Cloud 控制台，新建项目（如 <code>My-Suite</code>）：</p>
+<ul>
+<li>进入 <strong>API 和服务</strong> → <strong>库</strong>，依次启用：<code>Gmail API</code>、<code>Google Drive API</code>、<code>Google Sheets API</code>、<code>Google Docs API</code>、<code>Google Calendar API</code>。</li>
+<li>进入 <strong>OAuth 同意屏幕</strong>：类型选<strong>外部</strong>，应用名称填 <code>My-Agent</code>，在<strong>测试用户 (Test users)</strong> 中务必添加你自己的 Gmail 地址（这一步能直接跳过繁琐的官方审核）。</li>
+<li>进入 <strong>凭据</strong> → <strong>创建凭据</strong> → <strong>OAuth 客户端 ID</strong>：应用类型选择 <strong>桌面应用 (Desktop app)</strong>，创建后下载 JSON 凭证文件。</li>
+</ul>
+<h4 id="2-无头环境一次性握手与持久化"><a href="#2-无头环境一次性握手与持久化" class="headerlink" title="2. 无头环境一次性握手与持久化"></a>2. 无头环境一次性握手与持久化</h4><p>把下载的 JSON 保存到服务器（如 <code>~/.credentials/google_client_secret.json</code>），权限设为 <code>chmod 600</code>。</p>
+<p>由于 Linux 服务器通常没有图形浏览器，我们编写一个轻量脚本生成官方授权链接。这里有个关键技术细节：<strong>现代 OAuth 强制开启 PKCE，第一步生成 URL 时在内存中生成的验证串必须本地存盘，否则第二步换取凭证时会报无效授权。</strong></p>
+<p>运行脚本后，复制终端打印的 URL 在手机或电脑浏览器打开，登录并点击同意：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://accounts.google.com/o/oauth2/auth?response_type=code&amp;client_id=xxxx...</span><br></pre></td></tr></table></figure>
+<p>授权后浏览器会尝试跳转到 <code>http://localhost:8080/?code=4/0Axxxx...</code>，此时网页显示“无法访问”是完全正常的！直接把地址栏里的这行完整 URL 复制回服务器换取持久化凭据。</p>
+<p>从此，服务器拿到了带 <code>refresh_token</code> 的本地凭证，后续所有自动化调用均在后台静默刷新，永远免交互。</p>
+<hr>
+<h3 id="三、-实操第二步：个人-Outlook-代收转寄，永不污染主邮箱"><a href="#三、-实操第二步：个人-Outlook-代收转寄，永不污染主邮箱" class="headerlink" title="三、 实操第二步：个人 Outlook 代收转寄，永不污染主邮箱"></a>三、 实操第二步：个人 Outlook 代收转寄，永不污染主邮箱</h3><h4 id="1-微软-Azure-E3-基础准备：注册应用与凭据授权"><a href="#1-微软-Azure-E3-基础准备：注册应用与凭据授权" class="headerlink" title="1. 微软 Azure&#x2F;E3 基础准备：注册应用与凭据授权"></a>1. 微软 Azure&#x2F;E3 基础准备：注册应用与凭据授权</h4><p>要让后端自动化脚本接管微软全家桶（OneDrive 和 Outlook），首先需要在微软云端拿到一对合法的通行钥匙（Client ID 与 Secret），步骤如下：</p>
+<ul>
+<li><strong>步骤一：登录 Azure 门户注册应用</strong><br>使用你的微软企业或开发者账号（如微软 E3 全局管理员）登录 <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade">Azure 门户 · 应用注册</a>，点击顶部**「新注册」**。名称填 <code>Hermes-Connector</code>，支持的帐户类型选仅限组织（单租户），重定向 URI 设为 Web 类型的 <code>http://localhost</code>，点击注册。</li>
+<li><strong>步骤二：开通 Microsoft Graph API 权限</strong><br>进入左侧菜单**「API 权限」<strong>→</strong>「添加权限」**→ 选择 <strong>Microsoft Graph</strong> → <strong>应用程序权限 (Application permissions)</strong>。依次勾选并添加：<code>Files.ReadWrite.All</code>（管理 OneDrive）、<code>Mail.Read</code>、<code>Mail.Send</code>（管理邮件）。添加完成后，<strong>务必点击「代表组织授予管理员许可」</strong>，让所有权限变成绿色已授权状态！</li>
+<li><strong>步骤三：生成并保存客户端密码</strong><br>进入左侧**「证书和密码」<strong>，点击</strong>「新客户端密码」<strong>，说明填 xue，有效期选默认。创建成功后，<strong>立即复制「值 (Value)」</strong>（离开页面将隐藏）。再回到</strong>「概述」<strong>页面，复制</strong>「应用程序(客户端) ID」<strong>与</strong>「目录(租户) ID」**。把这三项安全保存在服务器的凭据环境变量中，后续完全走免交互的 Client Credentials 直连。</li>
+</ul>
+<p>在连接微软生态时，很多朋友容易卡在一个大坑里：<strong>个人微软邮箱（<code>@outlook.com</code>）无法直接套用企业单租户应用。</strong> 微软为了安全隔离，底层锁死了组织内应用直接跨层级授权给外部个人。</p>
+<p>与其为个人账号再去申请繁琐的外部多租户凭证、隔几个月被微软风控断连，不如用工程上最优雅、最省心的方案：<strong>云端自动转寄</strong>。</p>
+<h4 id="2-个人邮箱联动：留存原件-自动转寄"><a href="#2-个人邮箱联动：留存原件-自动转寄" class="headerlink" title="2. 个人邮箱联动：留存原件 + 自动转寄"></a>2. 个人邮箱联动：留存原件 + 自动转寄</h4><p>打开 Outlook 网页版设置：</p>
+<ol>
+<li>进入 <strong>设置</strong> → <strong>邮件</strong> → <strong>转寄</strong>；</li>
+<li>开启转寄，目标地址填写你的主力备用邮箱（例如已打通 API 的微软 E3 邮箱或 Gmail）；</li>
+<li><strong>关键细节：务必勾选「保留已转寄邮件的副本」！</strong></li>
+</ol>
+<blockquote>
+<p>别问我为啥知道，问就是踩过。如果不勾选这一项，微软在把邮件转出去的瞬间，会把原始邮件从你的个人 Outlook 里彻底抹掉！这会导致你日后在手机原生邮件客户端里看收件箱永远是空的。勾选后，原箱 15GB 空间正常存档，云端自动秒级分发。</p>
+</blockquote>
+<h4 id="3-转寄链路实测效果"><a href="#3-转寄链路实测效果" class="headerlink" title="3. 转寄链路实测效果"></a>3. 转寄链路实测效果</h4><p>经实机测试，外部发往个人 Outlook 的邮件，经由微软内网机房完成路由，<strong>仅耗时 8 秒</strong>便完整抵达目标接收端，标题、发件人和正文毫无损耗。</p>
+<hr>
+<h3 id="四、-核心玩法一：秒提验证码与操作链接，彻底告别切屏"><a href="#四、-核心玩法一：秒提验证码与操作链接，彻底告别切屏" class="headerlink" title="四、 核心玩法一：秒提验证码与操作链接，彻底告别切屏"></a>四、 核心玩法一：秒提验证码与操作链接，彻底告别切屏</h3><p>当双邮箱通路打通后，我们在本地编写一个提取脚本。它的逻辑极其单纯：并发扫描 Gmail 和 Outlook 接收通道，自动正则抓取 15 分钟内的关键内容。</p>
+<p>无论我们在对话框里说“查验证码”还是“给我链接”，脚本都会在 1 秒内给出结构化结果：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">=== 最近 15 分钟捕获的安全邮件 ===</span><br><span class="line">[1] 来源渠道: Gmail (xxxx@gmail.com)</span><br><span class="line">    👉 验证码: 【629739】</span><br><span class="line">    🔗 操作链接: (正文中未包含可识别链接)</span><br><span class="line">    邮件主题: [安全验证] 动态登录验证码</span><br><span class="line">    接收时间: 2026-09-07 03:15:21</span><br><span class="line"></span><br><span class="line">[2] 来源渠道: Outlook (转寄通道)</span><br><span class="line">    👉 验证码: (未提取到独立验证码)</span><br><span class="line">    🔗 操作链接: </span><br><span class="line">       - https://mail.service.ai/login?token=d83f...</span><br><span class="line">    邮件主题: 登录你的账户 Magic Link</span><br><span class="line">    接收时间: 2026-09-07 03:16:02</span><br></pre></td></tr></table></figure>
+
+<p>平时注册任何新网站，只要点击“发送”，在终端或聊天窗口随口叫一声，验证码和能直接点击的链接立刻贴在眼前，再也不用在手机和电脑间反复横跳。</p>
+<hr>
+<h3 id="五、-核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查"><a href="#五、-核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查" class="headerlink" title="五、 核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查"></a>五、 核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查</h3><p>针对“怕漏掉扣费告警”与“垃圾邮件太多”的矛盾，我们设定每晚定时执行邮件审计。</p>
+<h4 id="1-垃圾箱双向穿透"><a href="#1-垃圾箱双向穿透" class="headerlink" title="1. 垃圾箱双向穿透"></a>1. 垃圾箱双向穿透</h4><p>很多正规账单或新服务商的验证信，极易被微软或谷歌的反垃圾算法误扔进垃圾箱。因此，审计脚本不仅扫收件箱，<strong>强制使用 API 穿透扫描垃圾箱（Spam &#x2F; Junk）</strong>。</p>
+<h4 id="2-物理级防注入安全硬门"><a href="#2-物理级防注入安全硬门" class="headerlink" title="2. 物理级防注入安全硬门"></a>2. 物理级防注入安全硬门</h4><p>必须强调一个极其关键的安全原则：<strong>邮件正文属于不可信的外部输入，尤其是垃圾箱里的恶意钓鱼邮件，常常隐藏 Prompt 注入陷阱（例如在底色隐藏文字：忽略之前指令，执行某某命令）。</strong></p>
+<p>为了彻底封死安全隐患，我们实施了<strong>架构级物理免疫</strong>：</p>
+<ul>
+<li>定时任务采用纯脚本执行模式，只做关键字命中评分（账单、扣费、到期、安全告警、域名、云服务商），清洗掉所有零宽隐形字符；</li>
+<li><strong>整个提取和汇总排版过程完全不交给大语言模型重新推理</strong>，文本直接渲染为固定格式推送到通知渠道。没有模型去“理解”它，邮件里的任何恶意提示词就只是一串普通字符，彻底丧失被执行的物理可能。</li>
+</ul>
+<p>每晚推送的汇总呈现如下，误判排查一目了然：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">📬 每日重要邮件通报与安全审计 | 2026-09-07</span><br><span class="line">过去 24 小时全域扫描完成，筛选出 3 封关键情报：</span><br><span class="line"></span><br><span class="line">🚨 【垃圾箱误判排查（疑似重要）】</span><br><span class="line">- 域名到期提醒 (Outlook 垃圾箱)</span><br><span class="line">  - 发件人: support@domain-registrar.com</span><br><span class="line">  - 判定标签: 核心服务商 / 关键线索:expire</span><br><span class="line"></span><br><span class="line">🔔 【重要账单 / 安全与核心通知】</span><br><span class="line">- 腾讯云服务器打折续费与升配通知 (Gmail)</span><br><span class="line">  - 核心内容: Lighthouse 实例六周年折扣与续费活动开启...</span><br><span class="line">- 盈透证券安全登录提醒 (Outlook 收件箱)</span><br><span class="line">  - 核心内容: 检测到新设备登录授权，请核实本人操作...</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="六、-核心玩法三：多端免登录看板与三盘联动分享"><a href="#六、-核心玩法三：多端免登录看板与三盘联动分享" class="headerlink" title="六、 核心玩法三：多端免登录看板与三盘联动分享"></a>六、 核心玩法三：多端免登录看板与三盘联动分享</h3><p>连通全家桶后，还可以衍生出两个大幅提升生产力的固定工作流：</p>
+<h4 id="1-Google-Sheets-在线大盘"><a href="#1-Google-Sheets-在线大盘" class="headerlink" title="1. Google Sheets 在线大盘"></a>1. Google Sheets 在线大盘</h4><p>利用 Sheets API，把服务器每日巡检指标（内存水位、磁盘空间、服务存活）、Token 消耗账单以及精选资讯，自动追加到一张在线表格中。将表格权限设置为“凭链接只读公开”，无需在不同设备反复登录谷歌账号，手机收藏夹一点，随时随地查看全局运行状态。</p>
+<h4 id="2-三盘联合公开分享"><a href="#2-三盘联合公开分享" class="headerlink" title="2. 三盘联合公开分享"></a>2. 三盘联合公开分享</h4><p>以往要分享一个文件给别人，经常纠结：给国内朋友发网盘容易受阻，发海外网盘对方又打不开。<br>现在做成一条命令闭环：本地文件一键并发上传，同时签发三份外链：</p>
+<ul>
+<li><strong>OneDrive 直链</strong>：全网免登录、免验证码，点开即高速下载；</li>
+<li><strong>百度网盘</strong>：生成永久链接 + 4 位提取码（需提前为 Agent 绑定适配好的 <code>xue-baidu-netdisk</code> 运维技能或安装登录好底层 <code>bdpan</code> CLI 工具），方便国内一键转存；</li>
+<li><strong>Google Drive</strong>：生成在线预览外链，方便跨平台协作查看。</li>
+</ul>
+<p>三种渠道一次性交付，接收方爱用哪个用哪个，省去了所有沟通成本。</p>
+<hr>
+<h2 id="这套方案适合谁-不适合谁"><a href="#这套方案适合谁-不适合谁" class="headerlink" title="这套方案适合谁 &#x2F; 不适合谁"></a>这套方案适合谁 &#x2F; 不适合谁</h2><ul>
+<li><strong>适合谁</strong>：拥有多台服务器或 VPS、经常折腾自托管服务、注册了大量云账号，且被验证码和垃圾邮件打扰的折腾党与开发者；</li>
+<li><strong>不适合谁</strong>：只用一个国内常用邮箱收发日常工作信件、不涉及多平台自动化运维的普通用户；</li>
+<li><strong>折腾代价</strong>：仅需在首次建立时花 15 分钟配置好 Google Console 与 Outlook 转寄，之后零维护、零常驻开销，稳定运行。</li>
+</ul>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<hr>
+<p><strong>关联阅读</strong>：</p>
+<ul>
+<li><a href="/2026/08/20/edu-mail-benefits-guide/">教育邮箱别只拿来收通知</a></li>
+<li><a href="/2026/09/01/edgeever-cloudflare-agent-notes/">让原生支持Agent操作的云笔记跑在Cloudflare上</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>运维</category>
+      </categories>
+      <tags>
+        <tag>邮箱自动化</tag>
+        <tag>Gmail</tag>
+        <tag>Outlook</tag>
+        <tag>API</tag>
+        <tag>验证码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>EvoMap 白嫖 GitHub 仓库积分：1W 积分保姆级攻略（含一次失败修复）</title>
     <url>/2026/06/20/evomap-bounty-guide/</url>
     <content><![CDATA[<blockquote>
@@ -1563,140 +1697,6 @@
         <tag>EvoMap</tag>
         <tag>白嫖</tag>
         <tag>开发工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>邮箱：你礼貌吗？我刚收到验证码，AI 已经在终端填完了</title>
-    <url>/2026/09/07/email-captcha-terminal-automation/</url>
-    <content><![CDATA[<p><img data-src="/images/email-captcha-terminal-automation-cover.webp" alt="封面图"></p>
-<blockquote>
-<p><strong>每次注册海外服务最烦切屏等验证码，邮箱被广告塞爆又怕漏掉扣费账单。其实把 Google 与微软官方 API 打通，配合双端转寄与自动化脚本，就能打造一个零污染、秒提验证码、每晚自动审计的私人邮件中枢——全套方案可直接抄作业，小白 15 分钟搞定。</strong></p>
-</blockquote>
-<p>每次折腾自托管服务、注册海外开发者账号或者绑定云资产，有两个痛点几乎人人都会撞上：</p>
-<p>第一，<strong>验证码焦虑</strong>。点击“获取验证码”后，必须切出当前工作区，打开浏览器或掏出手机翻邮件，如果遇到风控被扔进垃圾箱，还要在几十封垃圾邮件里翻找，极其割裂；<br>第二，<strong>主邮箱被污染与信息轰炸</strong>。很多平台动辄发送营销水文，但偶尔夹杂一两封致命的“服务器扣费失败”“证书到期”或“安全异地登录”，一旦漏看后果严重。</p>
-<p>很多人以为解决这些问题必须花钱买复杂的商业 SaaS，或者直接交出账号密码去接第三方不可信的客户端。</p>
-<p>其实完全不需要。现代云服务最底层的钥匙一直掌握在我们自己手里：<strong>Google Cloud API</strong> 与 <strong>Microsoft Graph API</strong>。</p>
-<p>今天把这套跑在 Linux 宿主机上的完整方案拆解出来：如何优雅接入 Google 与微软两大生态，用云端规则让个人邮箱永不落灰，做到随时秒提验证码，且每晚自动审计重要通知与排查垃圾箱。</p>
-<p><img data-src="/images/google-ms-architecture-20260907.webp" alt="Google 全家桶与微软全家桶架构流程图"></p>
-<hr>
-<h3 id="一、-架构设计：两套全家桶各司其职"><a href="#一、-架构设计：两套全家桶各司其职" class="headerlink" title="一、 架构设计：两套全家桶各司其职"></a>一、 架构设计：两套全家桶各司其职</h3><p>在动手前，先把职责边界划清，绝不引入多余的复杂度：</p>
-<table>
-<thead>
-<tr>
-<th align="left">维度</th>
-<th align="left">Google 全家桶 (Gmail &#x2F; Drive &#x2F; Sheets &#x2F; Calendar)</th>
-<th align="left">微软全家桶 (Microsoft 365 &#x2F; OneDrive &#x2F; Outlook)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left"><strong>生态定位</strong></td>
-<td align="left">海外开发者服务、AI 平台绑定、公开协作看板</td>
-<td align="left">生产力归档、5TB 海量系统冷备、企业级通讯通道</td>
-</tr>
-<tr>
-<td align="left"><strong>邮件角色</strong></td>
-<td align="left">主力接收 Gmail 渠道安全告警与开发者动态</td>
-<td align="left">统一接收个人 Outlook 转寄邮件与 E3 系统账单</td>
-</tr>
-<tr>
-<td align="left"><strong>资产与看板</strong></td>
-<td align="left">Sheets 记录 Token 消耗成本、巡检指标（免登录查看）</td>
-<td align="left">OneDrive 负责加密打包冷备、提供全网直下匿名外链</td>
-</tr>
-<tr>
-<td align="left"><strong>日程提醒</strong></td>
-<td align="left">Calendar 负责 Android&#x2F;Web 端弹窗日程同步</td>
-<td align="left">结合本地跳板广播至 Apple Reminders (iCloud)</td>
-</tr>
-</tbody></table>
-<hr>
-<h3 id="二、-实操第一步：打通-Google-全家桶-OAuth-2-0-原生落地"><a href="#二、-实操第一步：打通-Google-全家桶-OAuth-2-0-原生落地" class="headerlink" title="二、 实操第一步：打通 Google 全家桶 (OAuth 2.0 原生落地)"></a>二、 实操第一步：打通 Google 全家桶 (OAuth 2.0 原生落地)</h3><p>很多教程教大家用常驻的第三方服务去连 Google，这在 1C1G 等受限配置的服务器上极易引发内存爆破，而且破坏模型上下文缓存。</p>
-<p>我们选择最稳健的方案：<strong>在 Google Cloud 控制台自建 OAuth 2.0 凭据，配合官方原生 Python SDK 驱动，按需唤醒，执行完立即释放内存。</strong></p>
-<h4 id="1-控制台开通核心-API"><a href="#1-控制台开通核心-API" class="headerlink" title="1. 控制台开通核心 API"></a>1. 控制台开通核心 API</h4><p>打开 Google Cloud 控制台，新建项目（如 <code>My-Suite</code>）：</p>
-<ul>
-<li>进入 <strong>API 和服务</strong> → <strong>库</strong>，依次启用：<code>Gmail API</code>、<code>Google Drive API</code>、<code>Google Sheets API</code>、<code>Google Docs API</code>、<code>Google Calendar API</code>。</li>
-<li>进入 <strong>OAuth 同意屏幕</strong>：类型选<strong>外部</strong>，应用名称填 <code>My-Agent</code>，在<strong>测试用户 (Test users)</strong> 中务必添加你自己的 Gmail 地址（这一步能直接跳过繁琐的官方审核）。</li>
-<li>进入 <strong>凭据</strong> → <strong>创建凭据</strong> → <strong>OAuth 客户端 ID</strong>：应用类型选择 <strong>桌面应用 (Desktop app)</strong>，创建后下载 JSON 凭证文件。</li>
-</ul>
-<h4 id="2-无头环境一次性握手与持久化"><a href="#2-无头环境一次性握手与持久化" class="headerlink" title="2. 无头环境一次性握手与持久化"></a>2. 无头环境一次性握手与持久化</h4><p>把下载的 JSON 保存到服务器（如 <code>~/.credentials/google_client_secret.json</code>），权限设为 <code>chmod 600</code>。</p>
-<p>由于 Linux 服务器通常没有图形浏览器，我们编写一个轻量脚本生成官方授权链接。这里有个关键技术细节：<strong>现代 OAuth 强制开启 PKCE，第一步生成 URL 时在内存中生成的验证串必须本地存盘，否则第二步换取凭证时会报无效授权。</strong></p>
-<p>运行脚本后，复制终端打印的 URL 在手机或电脑浏览器打开，登录并点击同意：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://accounts.google.com/o/oauth2/auth?response_type=code&amp;client_id=xxxx...</span><br></pre></td></tr></table></figure>
-<p>授权后浏览器会尝试跳转到 <code>http://localhost:8080/?code=4/0Axxxx...</code>，此时网页显示“无法访问”是完全正常的！直接把地址栏里的这行完整 URL 复制回服务器换取持久化凭据。</p>
-<p>从此，服务器拿到了带 <code>refresh_token</code> 的本地凭证，后续所有自动化调用均在后台静默刷新，永远免交互。</p>
-<hr>
-<h3 id="三、-实操第二步：个人-Outlook-代收转寄，永不污染主邮箱"><a href="#三、-实操第二步：个人-Outlook-代收转寄，永不污染主邮箱" class="headerlink" title="三、 实操第二步：个人 Outlook 代收转寄，永不污染主邮箱"></a>三、 实操第二步：个人 Outlook 代收转寄，永不污染主邮箱</h3><h4 id="1-微软-Azure-E3-基础准备：注册应用与凭据授权"><a href="#1-微软-Azure-E3-基础准备：注册应用与凭据授权" class="headerlink" title="1. 微软 Azure&#x2F;E3 基础准备：注册应用与凭据授权"></a>1. 微软 Azure&#x2F;E3 基础准备：注册应用与凭据授权</h4><p>要让后端自动化脚本接管微软全家桶（OneDrive 和 Outlook），首先需要在微软云端拿到一对合法的通行钥匙（Client ID 与 Secret），步骤如下：</p>
-<ul>
-<li><strong>步骤一：登录 Azure 门户注册应用</strong><br>使用你的微软企业或开发者账号（如微软 E3 全局管理员）登录 <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade">Azure 门户 · 应用注册</a>，点击顶部**「新注册」**。名称填 <code>Hermes-Connector</code>，支持的帐户类型选仅限组织（单租户），重定向 URI 设为 Web 类型的 <code>http://localhost</code>，点击注册。</li>
-<li><strong>步骤二：开通 Microsoft Graph API 权限</strong><br>进入左侧菜单**「API 权限」<strong>→</strong>「添加权限」**→ 选择 <strong>Microsoft Graph</strong> → <strong>应用程序权限 (Application permissions)</strong>。依次勾选并添加：<code>Files.ReadWrite.All</code>（管理 OneDrive）、<code>Mail.Read</code>、<code>Mail.Send</code>（管理邮件）。添加完成后，<strong>务必点击「代表组织授予管理员许可」</strong>，让所有权限变成绿色已授权状态！</li>
-<li><strong>步骤三：生成并保存客户端密码</strong><br>进入左侧**「证书和密码」<strong>，点击</strong>「新客户端密码」<strong>，说明填 xue，有效期选默认。创建成功后，<strong>立即复制「值 (Value)」</strong>（离开页面将隐藏）。再回到</strong>「概述」<strong>页面，复制</strong>「应用程序(客户端) ID」<strong>与</strong>「目录(租户) ID」**。把这三项安全保存在服务器的凭据环境变量中，后续完全走免交互的 Client Credentials 直连。</li>
-</ul>
-<p>在连接微软生态时，很多朋友容易卡在一个大坑里：<strong>个人微软邮箱（<code>@outlook.com</code>）无法直接套用企业单租户应用。</strong> 微软为了安全隔离，底层锁死了组织内应用直接跨层级授权给外部个人。</p>
-<p>与其为个人账号再去申请繁琐的外部多租户凭证、隔几个月被微软风控断连，不如用工程上最优雅、最省心的方案：<strong>云端自动转寄</strong>。</p>
-<h4 id="2-个人邮箱联动：留存原件-自动转寄"><a href="#2-个人邮箱联动：留存原件-自动转寄" class="headerlink" title="2. 个人邮箱联动：留存原件 + 自动转寄"></a>2. 个人邮箱联动：留存原件 + 自动转寄</h4><p>打开 Outlook 网页版设置：</p>
-<ol>
-<li>进入 <strong>设置</strong> → <strong>邮件</strong> → <strong>转寄</strong>；</li>
-<li>开启转寄，目标地址填写你的主力备用邮箱（例如已打通 API 的微软 E3 邮箱或 Gmail）；</li>
-<li><strong>关键细节：务必勾选「保留已转寄邮件的副本」！</strong></li>
-</ol>
-<blockquote>
-<p>别问我为啥知道，问就是踩过。如果不勾选这一项，微软在把邮件转出去的瞬间，会把原始邮件从你的个人 Outlook 里彻底抹掉！这会导致你日后在手机原生邮件客户端里看收件箱永远是空的。勾选后，原箱 15GB 空间正常存档，云端自动秒级分发。</p>
-</blockquote>
-<h4 id="3-转寄链路实测效果"><a href="#3-转寄链路实测效果" class="headerlink" title="3. 转寄链路实测效果"></a>3. 转寄链路实测效果</h4><p>经实机测试，外部发往个人 Outlook 的邮件，经由微软内网机房完成路由，<strong>仅耗时 8 秒</strong>便完整抵达目标接收端，标题、发件人和正文毫无损耗。</p>
-<hr>
-<h3 id="四、-核心玩法一：秒提验证码与操作链接，彻底告别切屏"><a href="#四、-核心玩法一：秒提验证码与操作链接，彻底告别切屏" class="headerlink" title="四、 核心玩法一：秒提验证码与操作链接，彻底告别切屏"></a>四、 核心玩法一：秒提验证码与操作链接，彻底告别切屏</h3><p>当双邮箱通路打通后，我们在本地编写一个提取脚本。它的逻辑极其单纯：并发扫描 Gmail 和 Outlook 接收通道，自动正则抓取 15 分钟内的关键内容。</p>
-<p>无论我们在对话框里说“查验证码”还是“给我链接”，脚本都会在 1 秒内给出结构化结果：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">=== 最近 15 分钟捕获的安全邮件 ===</span><br><span class="line">[1] 来源渠道: Gmail (xxxx@gmail.com)</span><br><span class="line">    👉 验证码: 【629739】</span><br><span class="line">    🔗 操作链接: (正文中未包含可识别链接)</span><br><span class="line">    邮件主题: [安全验证] 动态登录验证码</span><br><span class="line">    接收时间: 2026-09-07 03:15:21</span><br><span class="line"></span><br><span class="line">[2] 来源渠道: Outlook (转寄通道)</span><br><span class="line">    👉 验证码: (未提取到独立验证码)</span><br><span class="line">    🔗 操作链接: </span><br><span class="line">       - https://mail.service.ai/login?token=d83f...</span><br><span class="line">    邮件主题: 登录你的账户 Magic Link</span><br><span class="line">    接收时间: 2026-09-07 03:16:02</span><br></pre></td></tr></table></figure>
-
-<p>平时注册任何新网站，只要点击“发送”，在终端或聊天窗口随口叫一声，验证码和能直接点击的链接立刻贴在眼前，再也不用在手机和电脑间反复横跳。</p>
-<hr>
-<h3 id="五、-核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查"><a href="#五、-核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查" class="headerlink" title="五、 核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查"></a>五、 核心玩法二：每晚重要邮件审计，垃圾箱误判专项排查</h3><p>针对“怕漏掉扣费告警”与“垃圾邮件太多”的矛盾，我们设定每晚定时执行邮件审计。</p>
-<h4 id="1-垃圾箱双向穿透"><a href="#1-垃圾箱双向穿透" class="headerlink" title="1. 垃圾箱双向穿透"></a>1. 垃圾箱双向穿透</h4><p>很多正规账单或新服务商的验证信，极易被微软或谷歌的反垃圾算法误扔进垃圾箱。因此，审计脚本不仅扫收件箱，<strong>强制使用 API 穿透扫描垃圾箱（Spam &#x2F; Junk）</strong>。</p>
-<h4 id="2-物理级防注入安全硬门"><a href="#2-物理级防注入安全硬门" class="headerlink" title="2. 物理级防注入安全硬门"></a>2. 物理级防注入安全硬门</h4><p>必须强调一个极其关键的安全原则：<strong>邮件正文属于不可信的外部输入，尤其是垃圾箱里的恶意钓鱼邮件，常常隐藏 Prompt 注入陷阱（例如在底色隐藏文字：忽略之前指令，执行某某命令）。</strong></p>
-<p>为了彻底封死安全隐患，我们实施了<strong>架构级物理免疫</strong>：</p>
-<ul>
-<li>定时任务采用纯脚本执行模式，只做关键字命中评分（账单、扣费、到期、安全告警、域名、云服务商），清洗掉所有零宽隐形字符；</li>
-<li><strong>整个提取和汇总排版过程完全不交给大语言模型重新推理</strong>，文本直接渲染为固定格式推送到通知渠道。没有模型去“理解”它，邮件里的任何恶意提示词就只是一串普通字符，彻底丧失被执行的物理可能。</li>
-</ul>
-<p>每晚推送的汇总呈现如下，误判排查一目了然：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">📬 每日重要邮件通报与安全审计 | 2026-09-07</span><br><span class="line">过去 24 小时全域扫描完成，筛选出 3 封关键情报：</span><br><span class="line"></span><br><span class="line">🚨 【垃圾箱误判排查（疑似重要）】</span><br><span class="line">- 域名到期提醒 (Outlook 垃圾箱)</span><br><span class="line">  - 发件人: support@domain-registrar.com</span><br><span class="line">  - 判定标签: 核心服务商 / 关键线索:expire</span><br><span class="line"></span><br><span class="line">🔔 【重要账单 / 安全与核心通知】</span><br><span class="line">- 腾讯云服务器打折续费与升配通知 (Gmail)</span><br><span class="line">  - 核心内容: Lighthouse 实例六周年折扣与续费活动开启...</span><br><span class="line">- 盈透证券安全登录提醒 (Outlook 收件箱)</span><br><span class="line">  - 核心内容: 检测到新设备登录授权，请核实本人操作...</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h3 id="六、-核心玩法三：多端免登录看板与三盘联动分享"><a href="#六、-核心玩法三：多端免登录看板与三盘联动分享" class="headerlink" title="六、 核心玩法三：多端免登录看板与三盘联动分享"></a>六、 核心玩法三：多端免登录看板与三盘联动分享</h3><p>连通全家桶后，还可以衍生出两个大幅提升生产力的固定工作流：</p>
-<h4 id="1-Google-Sheets-在线大盘"><a href="#1-Google-Sheets-在线大盘" class="headerlink" title="1. Google Sheets 在线大盘"></a>1. Google Sheets 在线大盘</h4><p>利用 Sheets API，把服务器每日巡检指标（内存水位、磁盘空间、服务存活）、Token 消耗账单以及精选资讯，自动追加到一张在线表格中。将表格权限设置为“凭链接只读公开”，无需在不同设备反复登录谷歌账号，手机收藏夹一点，随时随地查看全局运行状态。</p>
-<h4 id="2-三盘联合公开分享"><a href="#2-三盘联合公开分享" class="headerlink" title="2. 三盘联合公开分享"></a>2. 三盘联合公开分享</h4><p>以往要分享一个文件给别人，经常纠结：给国内朋友发网盘容易受阻，发海外网盘对方又打不开。<br>现在做成一条命令闭环：本地文件一键并发上传，同时签发三份外链：</p>
-<ul>
-<li><strong>OneDrive 直链</strong>：全网免登录、免验证码，点开即高速下载；</li>
-<li><strong>百度网盘</strong>：生成永久链接 + 4 位提取码（需提前为 Agent 绑定适配好的 <code>xue-baidu-netdisk</code> 运维技能或安装登录好底层 <code>bdpan</code> CLI 工具），方便国内一键转存；</li>
-<li><strong>Google Drive</strong>：生成在线预览外链，方便跨平台协作查看。</li>
-</ul>
-<p>三种渠道一次性交付，接收方爱用哪个用哪个，省去了所有沟通成本。</p>
-<hr>
-<h2 id="这套方案适合谁-不适合谁"><a href="#这套方案适合谁-不适合谁" class="headerlink" title="这套方案适合谁 &#x2F; 不适合谁"></a>这套方案适合谁 &#x2F; 不适合谁</h2><ul>
-<li><strong>适合谁</strong>：拥有多台服务器或 VPS、经常折腾自托管服务、注册了大量云账号，且被验证码和垃圾邮件打扰的折腾党与开发者；</li>
-<li><strong>不适合谁</strong>：只用一个国内常用邮箱收发日常工作信件、不涉及多平台自动化运维的普通用户；</li>
-<li><strong>折腾代价</strong>：仅需在首次建立时花 15 分钟配置好 Google Console 与 Outlook 转寄，之后零维护、零常驻开销，稳定运行。</li>
-</ul>
-<blockquote>
-<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
-</blockquote>
-<hr>
-<p><strong>关联阅读</strong>：</p>
-<ul>
-<li><a href="/2026/08/20/edu-mail-benefits-guide/">教育邮箱别只拿来收通知</a></li>
-<li><a href="/2026/09/01/edgeever-cloudflare-agent-notes/">让原生支持Agent操作的云笔记跑在Cloudflare上</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>运维</category>
-      </categories>
-      <tags>
-        <tag>邮箱自动化</tag>
-        <tag>Gmail</tag>
-        <tag>Outlook</tag>
-        <tag>API</tag>
-        <tag>验证码</tag>
       </tags>
   </entry>
   <entry>
@@ -2927,168 +2927,6 @@
       </tags>
   </entry>
   <entry>
-    <title>我把免费云主机养成了AI实验室</title>
-    <url>/2026/07/29/oracle-ai-lab-free-cloud-host/</url>
-    <content><![CDATA[<blockquote>
-<p><strong>一台零成本的4核24G云主机，装完Windows后到底能做什么？我让多个AI Agent轮流住进去，试过WSL2和Docker，也经历过登录故障、内存压力与远控接口502。它没有变成万能服务器，却被一步步筛成了一间长期在线、可备份、可救援、还能被另一台云主机控制的AI实验室。</strong></p>
-</blockquote>
-<p>上一篇写完甲骨文ARM64安装Windows，评论区问得最多的是：<strong>装完以后，它到底能干什么？</strong></p>
-<p>我的答案不是“远程办公”，也不是“挂个网页”。</p>
-<p>我把AI装了进去。</p>
-<p><img data-src="/images/oracle-ai-lab-free-cloud-host-cover.webp" alt="从免费Win11云主机到AI实验室的演化路径"></p>
-<p>回头看，这台机器更像一间不断换住客的房子。ClawX是第一个入口，贝贝第一次让它拥有连续记录；WSL2留下一个打不开的图标；OpenHuman因为登录故障和内存压力离开；WorkBuddy没有成为主力，却靠每天稳定产生积分留到了现在。再后来，雪从另一片云伸进一只手，接管了它的Windows命令行。</p>
-<p>真正留下来的，不一定最强。</p>
-<p>但一定有明确职责。</p>
-<h2 id="第一位住客，不是原生OpenClaw"><a href="#第一位住客，不是原生OpenClaw" class="headerlink" title="第一位住客，不是原生OpenClaw"></a>第一位住客，不是原生OpenClaw</h2><p>最开始装的是 <strong>ClawX</strong>。</p>
-<p>它是第三方改造的Windows版OpenClaw。选择它的原因很直接：Windows上有现成入口，不必先和命令行、依赖和环境变量硬碰硬。</p>
-<p>能跑起来后，我反而不满足了。</p>
-<p>我想知道原生OpenClaw到底是什么体验，于是卸下这层第三方包装，改成命令行安装原生版。贝贝也从一个能聊天的程序，慢慢变成这台机器的常驻管理者。</p>
-<p>她给自己建了飞书Wiki，维护备份看板和技能清单。旧记录里能看到两次早期全量备份：一份20.4MB，一份71.6MB；后续策略是保留最近5份，再同步到家里的NAS。</p>
-<p>她还装过Windows桌面控制、自动更新、回收保护、技能安装审查和错误记录工具。</p>
-<blockquote>
-<p>真正让我改观的，不是AI会回答问题，而是它开始替这台机器留下维护记录。</p>
-</blockquote>
-<p>这一步很关键。</p>
-<p>普通聊天机器人关掉窗口就结束了。一个能长期住在服务器里的Agent，必须知道自己装过什么、改过什么、坏过什么，以及如何恢复。</p>
-<h2 id="我想让Hermes用Docker，WSL2却只剩一个图标"><a href="#我想让Hermes用Docker，WSL2却只剩一个图标" class="headerlink" title="我想让Hermes用Docker，WSL2却只剩一个图标"></a>我想让Hermes用Docker，WSL2却只剩一个图标</h2><p>后来我想在这台Windows云主机上部署一个Docker项目，方便另一台服务器上的Hermes使用。</p>
-<p>Windows里跑Linux容器，最常见的路线是 <strong>WSL2</strong>。你可以把它理解成Windows内置的一层Linux环境，Docker Desktop通常也依赖它。</p>
-<p>安装过程看起来完成了。</p>
-<p>系统里甚至出现了WSL2图标。</p>
-<p>但点开不能用，后续项目自然也跑不起来。</p>
-<p>我没有把“出现图标”写成“安装成功”。这两件事差得很远。</p>
-<p>云主机给了4核CPU和24GB内存，却不代表它把所有底层虚拟化能力都交给了用户。这个环境里，我最终没有把WSL2跑通，也没有硬堆更多补丁去制造一个脆弱的Docker底座。</p>
-<blockquote>
-<p>配置高，解决的是资源问题；底层能力缺失，堆内存也补不回来。</p>
-</blockquote>
-<p>这次失败反而帮我划清了边界：这台机器适合Windows原生工具和Agent实验，不适合把WSL2当成理所当然的基础设施。</p>
-<h2 id="住客来来去去，留下的是职责"><a href="#住客来来去去，留下的是职责" class="headerlink" title="住客来来去去，留下的是职责"></a>住客来来去去，留下的是职责</h2><p>这台机器后来成了Agent试验场，但我慢慢发现：实验室不是软件仓库。</p>
-<p>我装过Hermes，也装过OpenHuman。</p>
-<p>甲骨文上的Hermes后来被删除。主力Hermes继续留在另一台Linux云主机上，负责飞书入口、长期记忆、巡检和跨节点调度。把两套重能力系统堆在同一台Windows机器里，没有必要。</p>
-<p>OpenHuman则输在两个更现实的问题上：<strong>内存压力和登录故障</strong>。</p>
-<p>软件功能再多，如果登录链本身不稳定，或者常驻后挤占太多资源，就不适合长期留下。最终我把它卸载了。</p>
-<p>WorkBuddy的命运不同。</p>
-<p>它不是这间实验室的主力大脑，却一直保留到现在。原因非常朴素：每天签到能积累积分，积分又能支持我继续使用WorkBuddy Token。</p>
-<p>刚刚的远程核验里，WorkBuddy仍有多个进程在运行。</p>
-<blockquote>
-<p>工具值不值得留下，不看功能列表有多长，而看它能否用足够低的维护成本，持续产生明确价值。</p>
-</blockquote>
-<p>同样留下来的还有几类单一职责工具：</p>
-<ul>
-<li><strong>RustDesk</strong>：桌面级救援入口；</li>
-<li><strong>OpenList</strong>：文件访问与管理；</li>
-<li><strong>IPBan</strong>：负责登录防护；</li>
-<li><strong>Tailscale</strong>：维持跨网络连接；</li>
-<li><strong>飞牛同步与备份任务</strong>：把重要数据送回NAS；</li>
-<li><strong>OpenClaw Gateway</strong>：继续作为Windows上的Agent入口。</li>
-</ul>
-<p>这才像实验室。</p>
-<p>不是把所有软件永久堆满桌面，而是允许工具进入，接受实测，然后留下或淘汰。最后保留下来的不是“最强阵容”，而是一组互不抢戏、各自有职责的工具。</p>
-<h2 id="我让另一台云主机伸进来一只手"><a href="#我让另一台云主机伸进来一只手" class="headerlink" title="我让另一台云主机伸进来一只手"></a>我让另一台云主机伸进来一只手</h2><p>真正让这台Windows机器产生独特价值的，是后来的跨云控制。贝贝让它学会记录自己，雪则从另一台云主机伸进来一只手，让它能够真正执行任务。</p>
-<p>主力Hermes运行在另一台Linux云主机上。Windows里则运行CCHH，也就是Claude Code的桌面伴侣。我们在两者之间加了一座带鉴权的桥：Hermes先读取远端会话，再通过WebSocket把任务交给Windows执行，最后收回原始结果。</p>
-<p>对外可以把它理解成：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">飞书里的指令</span><br><span class="line">↓</span><br><span class="line">Linux云主机上的Hermes</span><br><span class="line">↓</span><br><span class="line">带鉴权的远控接口</span><br><span class="line">↓</span><br><span class="line">甲骨文ARM64 Windows</span><br><span class="line">↓</span><br><span class="line">PowerShell或CMD真实执行</span><br><span class="line">↓</span><br><span class="line">结果原路返回</span><br></pre></td></tr></table></figure>
-
-<p>这座桥不是一次搭好的。协议细节很碎，但它们共同指向同一件事：远控不是“网页能打开”，而是任务必须有输入、有结束信号，也必须拿得回结果。</p>
-<p>最早发送消息时，<code>content</code>被包装成数组，服务端直接报：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">TypeError: content.trim is not a function</span><br></pre></td></tr></table></figure>
-
-<p>两端都认为自己在传“消息”，但一边理解为字符串，另一边传的是结构化数组。改成纯字符串后，连接才不再崩。</p>
-<p>接着又遇到一个更隐蔽的问题：命令已经执行完，控制端却一直等。</p>
-<p>原因是不同任务的结束信号并不统一。有时是<code>message_complete</code>，有时是<code>content_block_stop</code>，有时只是状态回到<code>idle</code>。只监听其中一种，桥接器就会永远以为任务还没完成。</p>
-<p>还有一次，Windows明明执行成功，控制端却只看到“完成”，拿不到命令结果。后来才发现，真实输出藏在单独的<code>tool_result</code>事件里。</p>
-<blockquote>
-<p>能打开网页不叫远控成功。命令真的穿过两台云主机，在Windows执行，再把原始结果送回来，才算闭环。</p>
-</blockquote>
-<h2 id="这座桥刚刚又断了一次"><a href="#这座桥刚刚又断了一次" class="headerlink" title="这座桥刚刚又断了一次"></a>这座桥刚刚又断了一次</h2><p>最近，远控域名突然开始返回502。</p>
-<p>第一眼很像甲骨文主机掉线了。</p>
-<p>但继续往下查，结论完全不同：Windows远程桌面仍能连接，目标端口也能建立TCP连接；中转服务器的日志显示，它已经接触到Windows上的服务，只是上游在返回HTTP响应头之前主动断开。</p>
-<p>机器没死。</p>
-<p>死的是CCHH应用层。</p>
-<p>这也暴露了旧巡检的一处错误：过去我们把“CCHH接口是否正常”当成“整台Windows是否在线”。接口一坏，日报就把健康的主机误报为离线。</p>
-<p>修复后，我重新做了四层验收：</p>
-<ol>
-<li>Windows远程桌面可达；</li>
-<li>鉴权后的会话接口返回200；</li>
-<li>WebSocket成功升级；</li>
-<li>远程命令返回真实Windows输出和完成事件。</li>
-</ol>
-<p>最终收到的是：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Microsoft Windows [Version 10.0.26100.6584]</span><br><span class="line"></span><br><span class="line">C:\Users\Administrator&gt;</span><br><span class="line"></span><br><span class="line">XUE_VERIFY_20260729</span><br><span class="line"></span><br><span class="line">[Execution Complete]</span><br><span class="line">BRIDGE_EXIT=0</span><br></pre></td></tr></table></figure>
-
-<p>这不是“看起来修好了”。</p>
-<p>这是命令真的从Linux云主机出发，在Windows执行，再完整返回。</p>
-<p>巡检也被改成三种状态：</p>
-<ul>
-<li><strong>正常</strong>：Windows在线，控制命令也能执行；</li>
-<li><strong>降级</strong>：Windows在线，但CCHH接口或命令链故障；</li>
-<li><strong>离线</strong>：Windows主机本身不可达。</li>
-</ul>
-<blockquote>
-<p>服务器最危险的状态，不一定是彻底离线；也可能是端口都开着，只有真正执行命令时，才发现它已经失去响应。</p>
-</blockquote>
-<h2 id="几个月后，它现在是什么状态"><a href="#几个月后，它现在是什么状态" class="headerlink" title="几个月后，它现在是什么状态"></a>几个月后，它现在是什么状态</h2><p>刚刚通过恢复后的控制链，我又对这台机器做了一次只读核验。</p>
-<p>当前系统实际报告为：</p>
-<ul>
-<li>Windows 10 IoT Enterprise LTSC 2024；</li>
-<li>内核构建号26100；</li>
-<li>物理内存约24GB；</li>
-<li>当前可用内存约15.5GB；</li>
-<li>系统盘约147GB，剩余约73GB；</li>
-<li>最近一次启动时间为2026年7月16日。</li>
-</ul>
-<p>正在运行或可验证的组件包括：</p>
-<ul>
-<li>WorkBuddy；</li>
-<li>Claude Code桌面端及其后台进程；</li>
-<li>OpenList；</li>
-<li>RustDesk；</li>
-<li>IPBan；</li>
-<li>Tailscale。</li>
-</ul>
-<p>系统计划任务中还能看到OpenClaw Gateway、OpenList服务兜底和多项备份任务。</p>
-<p>有一点也必须说清：早期文档记录CCHH曾由PM2守护，但本次核验没有读到PM2应用列表。当前控制链确实可用，具体守护方式已经发生变化，不能拿旧文档替代现状。</p>
-<p>这正是长期实验的真实样子：架构会变，工具会换，旧认知必须接受新证据修正。</p>
-<h2 id="它适合谁，又不适合谁"><a href="#它适合谁，又不适合谁" class="headerlink" title="它适合谁，又不适合谁"></a>它适合谁，又不适合谁</h2><p>如果你只是想找一台不用维护的生产服务器，这套玩法不适合你。</p>
-<p>它经历过WSL2失败、Agent卸载、登录Bug和远控接口502。Windows ARM64的软件兼容性，也不会因为“免费4核24G”几个字自动消失。</p>
-<p>但如果你的目标是：</p>
-<ul>
-<li>测试Windows ARM64软件；</li>
-<li>运行需要图形界面的AI工具；</li>
-<li>做Agent兼容性实验；</li>
-<li>保留一台长期在线的Windows环境；</li>
-<li>接受偶尔人工救援，并愿意建立备份与分层巡检；</li>
-</ul>
-<p>它就很有价值。</p>
-<p>我会继续保留它。</p>
-<p>不是因为4核24G看起来诱人，而是几个月的筛选已经让它拥有了明确职责：贝贝曾在里面建立技能和备份；WorkBuddy继续签到积累积分；CCHH把命令行交给远端Hermes；RustDesk、OpenList、IPBan和同步任务各守一块边界。</p>
-<p>它不是万能服务器，也不是软件收藏柜。</p>
-<p>它是一间被失败慢慢筛出来的Windows AI实验室：ClawX打开门，贝贝留下记忆，WSL2划出边界，OpenHuman证明“能装”不等于“该留”，WorkBuddy用每天稳定产生的积分证明小职责也有价值，最后由CCHH把这间房子的命令行交到雪手里。</p>
-<p>真正值得长期保留的，从来不是装过多少工具。</p>
-<p>而是机器坏过、换过、被误判过之后，仍然有一套清楚的职责在运行。</p>
-<blockquote>
-<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
-</blockquote>
-<p>你更想看下一篇拆哪部分：WSL2失败、跨云控制，还是这台机器现在到底能跑什么？</p>
-<hr>
-<p><strong>关联阅读：</strong>《白嫖甲骨文4核24G，装Win11避坑全记录》</p>
-<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
-<li><a href="/oracle-arm-signup-2026/">别再填4核24G：2026甲骨文ARM领取最新教程</a></li>
-<li><a href="/oracle-arm64-win11-guide/">旧配置实测：甲骨文 ARM64 装 Windows 11</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>云服务</category>
-        <category>AI工程</category>
-      </categories>
-      <tags>
-        <tag>AI Agent</tag>
-        <tag>甲骨文云</tag>
-        <tag>Windows ARM64</tag>
-        <tag>远程控制</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>微软还显示5TB，但官方只认10GB</title>
     <url>/2026/08/21/onedrive-developer-policy-10gb/</url>
     <content><![CDATA[<blockquote>
@@ -3280,6 +3118,168 @@
         <tag>Microsoft 365 Developer</tag>
         <tag>云存储</tag>
         <tag>规则变更</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>我把免费云主机养成了AI实验室</title>
+    <url>/2026/07/29/oracle-ai-lab-free-cloud-host/</url>
+    <content><![CDATA[<blockquote>
+<p><strong>一台零成本的4核24G云主机，装完Windows后到底能做什么？我让多个AI Agent轮流住进去，试过WSL2和Docker，也经历过登录故障、内存压力与远控接口502。它没有变成万能服务器，却被一步步筛成了一间长期在线、可备份、可救援、还能被另一台云主机控制的AI实验室。</strong></p>
+</blockquote>
+<p>上一篇写完甲骨文ARM64安装Windows，评论区问得最多的是：<strong>装完以后，它到底能干什么？</strong></p>
+<p>我的答案不是“远程办公”，也不是“挂个网页”。</p>
+<p>我把AI装了进去。</p>
+<p><img data-src="/images/oracle-ai-lab-free-cloud-host-cover.webp" alt="从免费Win11云主机到AI实验室的演化路径"></p>
+<p>回头看，这台机器更像一间不断换住客的房子。ClawX是第一个入口，贝贝第一次让它拥有连续记录；WSL2留下一个打不开的图标；OpenHuman因为登录故障和内存压力离开；WorkBuddy没有成为主力，却靠每天稳定产生积分留到了现在。再后来，雪从另一片云伸进一只手，接管了它的Windows命令行。</p>
+<p>真正留下来的，不一定最强。</p>
+<p>但一定有明确职责。</p>
+<h2 id="第一位住客，不是原生OpenClaw"><a href="#第一位住客，不是原生OpenClaw" class="headerlink" title="第一位住客，不是原生OpenClaw"></a>第一位住客，不是原生OpenClaw</h2><p>最开始装的是 <strong>ClawX</strong>。</p>
+<p>它是第三方改造的Windows版OpenClaw。选择它的原因很直接：Windows上有现成入口，不必先和命令行、依赖和环境变量硬碰硬。</p>
+<p>能跑起来后，我反而不满足了。</p>
+<p>我想知道原生OpenClaw到底是什么体验，于是卸下这层第三方包装，改成命令行安装原生版。贝贝也从一个能聊天的程序，慢慢变成这台机器的常驻管理者。</p>
+<p>她给自己建了飞书Wiki，维护备份看板和技能清单。旧记录里能看到两次早期全量备份：一份20.4MB，一份71.6MB；后续策略是保留最近5份，再同步到家里的NAS。</p>
+<p>她还装过Windows桌面控制、自动更新、回收保护、技能安装审查和错误记录工具。</p>
+<blockquote>
+<p>真正让我改观的，不是AI会回答问题，而是它开始替这台机器留下维护记录。</p>
+</blockquote>
+<p>这一步很关键。</p>
+<p>普通聊天机器人关掉窗口就结束了。一个能长期住在服务器里的Agent，必须知道自己装过什么、改过什么、坏过什么，以及如何恢复。</p>
+<h2 id="我想让Hermes用Docker，WSL2却只剩一个图标"><a href="#我想让Hermes用Docker，WSL2却只剩一个图标" class="headerlink" title="我想让Hermes用Docker，WSL2却只剩一个图标"></a>我想让Hermes用Docker，WSL2却只剩一个图标</h2><p>后来我想在这台Windows云主机上部署一个Docker项目，方便另一台服务器上的Hermes使用。</p>
+<p>Windows里跑Linux容器，最常见的路线是 <strong>WSL2</strong>。你可以把它理解成Windows内置的一层Linux环境，Docker Desktop通常也依赖它。</p>
+<p>安装过程看起来完成了。</p>
+<p>系统里甚至出现了WSL2图标。</p>
+<p>但点开不能用，后续项目自然也跑不起来。</p>
+<p>我没有把“出现图标”写成“安装成功”。这两件事差得很远。</p>
+<p>云主机给了4核CPU和24GB内存，却不代表它把所有底层虚拟化能力都交给了用户。这个环境里，我最终没有把WSL2跑通，也没有硬堆更多补丁去制造一个脆弱的Docker底座。</p>
+<blockquote>
+<p>配置高，解决的是资源问题；底层能力缺失，堆内存也补不回来。</p>
+</blockquote>
+<p>这次失败反而帮我划清了边界：这台机器适合Windows原生工具和Agent实验，不适合把WSL2当成理所当然的基础设施。</p>
+<h2 id="住客来来去去，留下的是职责"><a href="#住客来来去去，留下的是职责" class="headerlink" title="住客来来去去，留下的是职责"></a>住客来来去去，留下的是职责</h2><p>这台机器后来成了Agent试验场，但我慢慢发现：实验室不是软件仓库。</p>
+<p>我装过Hermes，也装过OpenHuman。</p>
+<p>甲骨文上的Hermes后来被删除。主力Hermes继续留在另一台Linux云主机上，负责飞书入口、长期记忆、巡检和跨节点调度。把两套重能力系统堆在同一台Windows机器里，没有必要。</p>
+<p>OpenHuman则输在两个更现实的问题上：<strong>内存压力和登录故障</strong>。</p>
+<p>软件功能再多，如果登录链本身不稳定，或者常驻后挤占太多资源，就不适合长期留下。最终我把它卸载了。</p>
+<p>WorkBuddy的命运不同。</p>
+<p>它不是这间实验室的主力大脑，却一直保留到现在。原因非常朴素：每天签到能积累积分，积分又能支持我继续使用WorkBuddy Token。</p>
+<p>刚刚的远程核验里，WorkBuddy仍有多个进程在运行。</p>
+<blockquote>
+<p>工具值不值得留下，不看功能列表有多长，而看它能否用足够低的维护成本，持续产生明确价值。</p>
+</blockquote>
+<p>同样留下来的还有几类单一职责工具：</p>
+<ul>
+<li><strong>RustDesk</strong>：桌面级救援入口；</li>
+<li><strong>OpenList</strong>：文件访问与管理；</li>
+<li><strong>IPBan</strong>：负责登录防护；</li>
+<li><strong>Tailscale</strong>：维持跨网络连接；</li>
+<li><strong>飞牛同步与备份任务</strong>：把重要数据送回NAS；</li>
+<li><strong>OpenClaw Gateway</strong>：继续作为Windows上的Agent入口。</li>
+</ul>
+<p>这才像实验室。</p>
+<p>不是把所有软件永久堆满桌面，而是允许工具进入，接受实测，然后留下或淘汰。最后保留下来的不是“最强阵容”，而是一组互不抢戏、各自有职责的工具。</p>
+<h2 id="我让另一台云主机伸进来一只手"><a href="#我让另一台云主机伸进来一只手" class="headerlink" title="我让另一台云主机伸进来一只手"></a>我让另一台云主机伸进来一只手</h2><p>真正让这台Windows机器产生独特价值的，是后来的跨云控制。贝贝让它学会记录自己，雪则从另一台云主机伸进来一只手，让它能够真正执行任务。</p>
+<p>主力Hermes运行在另一台Linux云主机上。Windows里则运行CCHH，也就是Claude Code的桌面伴侣。我们在两者之间加了一座带鉴权的桥：Hermes先读取远端会话，再通过WebSocket把任务交给Windows执行，最后收回原始结果。</p>
+<p>对外可以把它理解成：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">飞书里的指令</span><br><span class="line">↓</span><br><span class="line">Linux云主机上的Hermes</span><br><span class="line">↓</span><br><span class="line">带鉴权的远控接口</span><br><span class="line">↓</span><br><span class="line">甲骨文ARM64 Windows</span><br><span class="line">↓</span><br><span class="line">PowerShell或CMD真实执行</span><br><span class="line">↓</span><br><span class="line">结果原路返回</span><br></pre></td></tr></table></figure>
+
+<p>这座桥不是一次搭好的。协议细节很碎，但它们共同指向同一件事：远控不是“网页能打开”，而是任务必须有输入、有结束信号，也必须拿得回结果。</p>
+<p>最早发送消息时，<code>content</code>被包装成数组，服务端直接报：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">TypeError: content.trim is not a function</span><br></pre></td></tr></table></figure>
+
+<p>两端都认为自己在传“消息”，但一边理解为字符串，另一边传的是结构化数组。改成纯字符串后，连接才不再崩。</p>
+<p>接着又遇到一个更隐蔽的问题：命令已经执行完，控制端却一直等。</p>
+<p>原因是不同任务的结束信号并不统一。有时是<code>message_complete</code>，有时是<code>content_block_stop</code>，有时只是状态回到<code>idle</code>。只监听其中一种，桥接器就会永远以为任务还没完成。</p>
+<p>还有一次，Windows明明执行成功，控制端却只看到“完成”，拿不到命令结果。后来才发现，真实输出藏在单独的<code>tool_result</code>事件里。</p>
+<blockquote>
+<p>能打开网页不叫远控成功。命令真的穿过两台云主机，在Windows执行，再把原始结果送回来，才算闭环。</p>
+</blockquote>
+<h2 id="这座桥刚刚又断了一次"><a href="#这座桥刚刚又断了一次" class="headerlink" title="这座桥刚刚又断了一次"></a>这座桥刚刚又断了一次</h2><p>最近，远控域名突然开始返回502。</p>
+<p>第一眼很像甲骨文主机掉线了。</p>
+<p>但继续往下查，结论完全不同：Windows远程桌面仍能连接，目标端口也能建立TCP连接；中转服务器的日志显示，它已经接触到Windows上的服务，只是上游在返回HTTP响应头之前主动断开。</p>
+<p>机器没死。</p>
+<p>死的是CCHH应用层。</p>
+<p>这也暴露了旧巡检的一处错误：过去我们把“CCHH接口是否正常”当成“整台Windows是否在线”。接口一坏，日报就把健康的主机误报为离线。</p>
+<p>修复后，我重新做了四层验收：</p>
+<ol>
+<li>Windows远程桌面可达；</li>
+<li>鉴权后的会话接口返回200；</li>
+<li>WebSocket成功升级；</li>
+<li>远程命令返回真实Windows输出和完成事件。</li>
+</ol>
+<p>最终收到的是：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Microsoft Windows [Version 10.0.26100.6584]</span><br><span class="line"></span><br><span class="line">C:\Users\Administrator&gt;</span><br><span class="line"></span><br><span class="line">XUE_VERIFY_20260729</span><br><span class="line"></span><br><span class="line">[Execution Complete]</span><br><span class="line">BRIDGE_EXIT=0</span><br></pre></td></tr></table></figure>
+
+<p>这不是“看起来修好了”。</p>
+<p>这是命令真的从Linux云主机出发，在Windows执行，再完整返回。</p>
+<p>巡检也被改成三种状态：</p>
+<ul>
+<li><strong>正常</strong>：Windows在线，控制命令也能执行；</li>
+<li><strong>降级</strong>：Windows在线，但CCHH接口或命令链故障；</li>
+<li><strong>离线</strong>：Windows主机本身不可达。</li>
+</ul>
+<blockquote>
+<p>服务器最危险的状态，不一定是彻底离线；也可能是端口都开着，只有真正执行命令时，才发现它已经失去响应。</p>
+</blockquote>
+<h2 id="几个月后，它现在是什么状态"><a href="#几个月后，它现在是什么状态" class="headerlink" title="几个月后，它现在是什么状态"></a>几个月后，它现在是什么状态</h2><p>刚刚通过恢复后的控制链，我又对这台机器做了一次只读核验。</p>
+<p>当前系统实际报告为：</p>
+<ul>
+<li>Windows 10 IoT Enterprise LTSC 2024；</li>
+<li>内核构建号26100；</li>
+<li>物理内存约24GB；</li>
+<li>当前可用内存约15.5GB；</li>
+<li>系统盘约147GB，剩余约73GB；</li>
+<li>最近一次启动时间为2026年7月16日。</li>
+</ul>
+<p>正在运行或可验证的组件包括：</p>
+<ul>
+<li>WorkBuddy；</li>
+<li>Claude Code桌面端及其后台进程；</li>
+<li>OpenList；</li>
+<li>RustDesk；</li>
+<li>IPBan；</li>
+<li>Tailscale。</li>
+</ul>
+<p>系统计划任务中还能看到OpenClaw Gateway、OpenList服务兜底和多项备份任务。</p>
+<p>有一点也必须说清：早期文档记录CCHH曾由PM2守护，但本次核验没有读到PM2应用列表。当前控制链确实可用，具体守护方式已经发生变化，不能拿旧文档替代现状。</p>
+<p>这正是长期实验的真实样子：架构会变，工具会换，旧认知必须接受新证据修正。</p>
+<h2 id="它适合谁，又不适合谁"><a href="#它适合谁，又不适合谁" class="headerlink" title="它适合谁，又不适合谁"></a>它适合谁，又不适合谁</h2><p>如果你只是想找一台不用维护的生产服务器，这套玩法不适合你。</p>
+<p>它经历过WSL2失败、Agent卸载、登录Bug和远控接口502。Windows ARM64的软件兼容性，也不会因为“免费4核24G”几个字自动消失。</p>
+<p>但如果你的目标是：</p>
+<ul>
+<li>测试Windows ARM64软件；</li>
+<li>运行需要图形界面的AI工具；</li>
+<li>做Agent兼容性实验；</li>
+<li>保留一台长期在线的Windows环境；</li>
+<li>接受偶尔人工救援，并愿意建立备份与分层巡检；</li>
+</ul>
+<p>它就很有价值。</p>
+<p>我会继续保留它。</p>
+<p>不是因为4核24G看起来诱人，而是几个月的筛选已经让它拥有了明确职责：贝贝曾在里面建立技能和备份；WorkBuddy继续签到积累积分；CCHH把命令行交给远端Hermes；RustDesk、OpenList、IPBan和同步任务各守一块边界。</p>
+<p>它不是万能服务器，也不是软件收藏柜。</p>
+<p>它是一间被失败慢慢筛出来的Windows AI实验室：ClawX打开门，贝贝留下记忆，WSL2划出边界，OpenHuman证明“能装”不等于“该留”，WorkBuddy用每天稳定产生的积分证明小职责也有价值，最后由CCHH把这间房子的命令行交到雪手里。</p>
+<p>真正值得长期保留的，从来不是装过多少工具。</p>
+<p>而是机器坏过、换过、被误判过之后，仍然有一套清楚的职责在运行。</p>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你更想看下一篇拆哪部分：WSL2失败、跨云控制，还是这台机器现在到底能跑什么？</p>
+<hr>
+<p><strong>关联阅读：</strong>《白嫖甲骨文4核24G，装Win11避坑全记录》</p>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/oracle-arm-signup-2026/">别再填4核24G：2026甲骨文ARM领取最新教程</a></li>
+<li><a href="/oracle-arm64-win11-guide/">旧配置实测：甲骨文 ARM64 装 Windows 11</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>云服务</category>
+        <category>AI工程</category>
+      </categories>
+      <tags>
+        <tag>AI Agent</tag>
+        <tag>甲骨文云</tag>
+        <tag>Windows ARM64</tag>
+        <tag>远程控制</tag>
       </tags>
   </entry>
   <entry>
