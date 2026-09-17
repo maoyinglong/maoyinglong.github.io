@@ -29,33 +29,6 @@
   </url>
   
   <url>
-    <loc>https://blog.rnm.gv.uy/2026/07/27/magnet-crawler-fallback/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/07/27/mineru-pdf-parse-mcp/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/08/21/onedrive-developer-policy-10gb/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.rnm.gv.uy/2026/07/29/oracle-ai-lab-free-cloud-host/</loc>
     
     <lastmod>2026-09-17</lastmod>
@@ -66,15 +39,6 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/2026/07/29/oracle-arm-signup-2026/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/07/11/skillopt-agent-self-evolution/</loc>
     
     <lastmod>2026-09-17</lastmod>
     
@@ -120,6 +84,87 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/2026/07/27/zhihu-openapi-practical/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/07/11/skillopt-agent-self-evolution/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/06/20/feishu-wiki-automation/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/09/02/google-ai-student-offer-2026/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/07/13/hexo-cyberpunk-css-overhaul/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/07/27/magnet-crawler-fallback/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/07/27/mineru-pdf-parse-mcp/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/08/21/onedrive-developer-policy-10gb/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/06/21/ai-agent-beginner-guide/</loc>
     
     <lastmod>2026-09-17</lastmod>
     
@@ -182,15 +227,6 @@
   </url>
   
   <url>
-    <loc>https://blog.rnm.gv.uy/2026/08/22/edgeever-cloudflare-agent-notes/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.rnm.gv.uy/2026/08/20/edu-mail-benefits-guide/</loc>
     
     <lastmod>2026-09-17</lastmod>
@@ -201,6 +237,15 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/2026/09/07/email-captcha-terminal-automation/</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/2026/08/22/edgeever-cloudflare-agent-notes/</loc>
     
     <lastmod>2026-09-17</lastmod>
     
@@ -237,51 +282,6 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/2026/07/27/feishu-docx-batch-edit/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/06/20/feishu-wiki-automation/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/09/02/google-ai-student-offer-2026/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/07/13/hexo-cyberpunk-css-overhaul/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/07/22/hexo-next-theme-migration-guide/</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/2026/06/21/ai-agent-beginner-guide/</loc>
     
     <lastmod>2026-09-17</lastmod>
     
@@ -513,34 +513,6 @@
   </url>
   
   <url>
-    <loc>https://blog.rnm.gv.uy/tags/EdgeEver/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/tags/Cloudflare/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/tags/MCP/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.rnm.gv.uy/tags/%E6%95%99%E8%82%B2%E9%82%AE%E7%AE%B1/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -598,6 +570,34 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/tags/%E9%AA%8C%E8%AF%81%E7%A0%81/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/EdgeEver/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/Cloudflare/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/MCP/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -828,27 +828,6 @@
   </url>
   
   <url>
-    <loc>https://blog.rnm.gv.uy/tags/Microsoft-365-Developer/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/tags/%E4%BA%91%E5%AD%98%E5%82%A8/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/tags/%E8%A7%84%E5%88%99%E5%8F%98%E6%9B%B4/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.rnm.gv.uy/tags/E3/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -864,6 +843,27 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/tags/%E5%A4%87%E4%BB%BD/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/Microsoft-365-Developer/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/%E4%BA%91%E5%AD%98%E5%82%A8/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/%E8%A7%84%E5%88%99%E5%8F%98%E6%9B%B4/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -913,20 +913,6 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/tags/%E6%8A%98%E8%85%BE/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/tags/SkillOpt/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.rnm.gv.uy/tags/%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1023,6 +1009,20 @@
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/SkillOpt/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/tags/%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
   
   <url>
@@ -1054,13 +1054,6 @@
   </url>
   
   <url>
-    <loc>https://blog.rnm.gv.uy/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E5%BC%80%E6%BA%90/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.rnm.gv.uy/categories/%E5%88%86%E4%BA%AB/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -1069,6 +1062,13 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E8%BF%90%E7%BB%B4/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E5%BC%80%E6%BA%90/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1103,13 +1103,6 @@
   </url>
   
   <url>
-    <loc>https://blog.rnm.gv.uy/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E5%BC%80%E6%BA%90/%E4%BA%91%E6%9C%8D%E5%8A%A1/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.rnm.gv.uy/categories/%E5%88%86%E4%BA%AB/%E6%95%99%E7%A8%8B%E7%B1%BB/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -1117,7 +1110,7 @@
   </url>
   
   <url>
-    <loc>https://blog.rnm.gv.uy/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E5%BC%80%E6%BA%90/%E8%BF%90%E7%BB%B4/</loc>
+    <loc>https://blog.rnm.gv.uy/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E5%BC%80%E6%BA%90/%E4%BA%91%E6%9C%8D%E5%8A%A1/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1146,6 +1139,13 @@
   
   <url>
     <loc>https://blog.rnm.gv.uy/categories/%E7%BE%8A%E6%AF%9B/%E6%95%99%E7%A8%8B%E7%B1%BB/AI%E5%B7%A5%E5%85%B7/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.rnm.gv.uy/categories/%E6%95%99%E7%A8%8B%E7%B1%BB/%E5%BC%80%E6%BA%90/%E8%BF%90%E7%BB%B4/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
