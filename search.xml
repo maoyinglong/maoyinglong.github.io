@@ -883,6 +883,283 @@
       </tags>
   </entry>
   <entry>
+    <title>让原生支持Agent操作的云笔记跑在Cloudflare上</title>
+    <url>/2026/08/22/edgeever-cloudflare-agent-notes/</url>
+    <content><![CDATA[<blockquote>
+<p><strong>笔记能导出，不等于真正属于你；AI能读一篇，也不等于能长期安全地管理整座知识库。我的旧笔记服务开始频繁掉授权后，我没有把全部数据押给下一家商业平台，而是在Cloudflare上搭了一套开源笔记库：不用养服务器，398篇历史文档完成迁移，AI通过细粒度权限读写，旧平台继续保留为第二份副本。</strong></p>
+</blockquote>
+<p>我没有因为某次登录失败，就愤怒地把旧笔记全部删掉。</p>
+<p>那样不叫数据主权，只是把依赖从一家公司搬到另一家公司。</p>
+<p>真正让我改变架构的，是三个问题反复出现：命令行上传偶发报错、授权会过期、数据虽然能看，却很难被AI稳定、自动、细粒度地使用。</p>
+<p>我需要的不是“另一款漂亮笔记软件”。</p>
+<p>我需要一座能被人正常编辑、能被AI调用、能完整导出、还能保留第二份副本的知识库。</p>
+<p>最后留下来的方案叫EdgeEver。</p>
+<p>【官方文档】<a href="https://github.com/tianma-if/edgeever">https://github.com/tianma-if/edgeever</a></p>
+<h2 id="我真正想解决的，不是记笔记"><a href="#我真正想解决的，不是记笔记" class="headerlink" title="我真正想解决的，不是记笔记"></a>我真正想解决的，不是记笔记</h2><p>多数笔记产品解决的是“把文字放进去”。</p>
+<p>Agent时代还多了四个问题：</p>
+<ol>
+<li>AI如何找到正确的笔记；</li>
+<li>AI能不能只读某些内容，而不是拿到整个账户；</li>
+<li>自动写入失败后，能否验证到底写没写；</li>
+<li>平台消失时，数据是否还能以普通文件恢复。</li>
+</ol>
+<p>EdgeEver吸引我的地方不是“像印象笔记”，而是它把这些能力放在同一套开源系统里：</p>
+<ul>
+<li>Cloudflare Workers运行接口；</li>
+<li>D1保存结构化数据；</li>
+<li>R2保存图片和附件；</li>
+<li>MCP让Agent按工具读写；</li>
+<li>ZIP导出中包含Markdown和附件关系；</li>
+<li>同一套程序也能部署到Docker、NAS或VPS。</li>
+</ul>
+<p><img data-src="/images/edgeever-cloudflare-agent-notes-cover.webp" alt="AI原生私人知识库架构"></p>
+<p>项目官方说可以运行在Cloudflare免费额度内。我的实例截至2026年8月22日仍能正常返回健康状态：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;ok&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span><span class="string">&quot;edgeever&quot;</span><span class="punctuation">,</span><span class="attr">&quot;runtime&quot;</span><span class="punctuation">:</span><span class="string">&quot;cloudflare-workers&quot;</span><span class="punctuation">,</span><span class="attr">&quot;authMode&quot;</span><span class="punctuation">:</span><span class="string">&quot;required&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>“零月租”不是绝对承诺。超过Cloudflare免费额度、使用外部对象存储或接入收费模型，仍可能产生费用。对我的个人知识库规模，目前没有单独购买服务器。</p>
+<h2 id="我没有做单点迁移，而是双写"><a href="#我没有做单点迁移，而是双写" class="headerlink" title="我没有做单点迁移，而是双写"></a>我没有做单点迁移，而是双写</h2><p>这套架构最重要的决定，不是部署，而是<strong>不把旧平台立刻废掉</strong>。</p>
+<p>我的写入顺序是：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">新知识</span><br><span class="line">  ├─ EdgeEver：主写，供AI搜索与操作</span><br><span class="line">  └─ 旧笔记平台：追加备份，保留第二条恢复路径</span><br></pre></td></tr></table></figure>
+
+<p>EdgeEver优先，旧平台兜底。两边不互相替代。</p>
+<p>为什么要多此一举？</p>
+<p>因为自托管也会失败：Cloudflare接口可能变化，新版本可能覆盖本地修补，迁移脚本可能漏项，自己也可能误删，开源项目同样可能停止维护。</p>
+<blockquote>
+<p><strong>数据主权不是“只信自己”，而是任何一边坏掉，都有退出路线。</strong></p>
+</blockquote>
+<h2 id="部署前，我先审了一遍安全边界"><a href="#部署前，我先审了一遍安全边界" class="headerlink" title="部署前，我先审了一遍安全边界"></a>部署前，我先审了一遍安全边界</h2><p>我不会因为项目开源就自动相信它。</p>
+<p>部署前检查了认证、会话、限流和数据库调用。基于当时版本的代码审计结果：</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>当时实测结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>密码存储</td>
+<td>PBKDF2-SHA256，10万次迭代并加盐</td>
+</tr>
+<tr>
+<td>会话Cookie</td>
+<td>HttpOnly、Secure、SameSite</td>
+</tr>
+<tr>
+<td>MCP令牌</td>
+<td>Bearer认证，只存哈希</td>
+</tr>
+<tr>
+<td>权限</td>
+<td>8种细粒度Scope</td>
+</tr>
+<tr>
+<td>登录限流</td>
+<td>用户名与IP分别限流</td>
+</tr>
+<tr>
+<td>数据库调用</td>
+<td>D1参数化查询</td>
+</tr>
+</tbody></table>
+<p>这是2026年7月29日对当时版本的代码审计，不代表以后每个版本都自动安全。升级仍然要复查关键变更。</p>
+<h2 id="先按官方路线部署：浏览器就能完成"><a href="#先按官方路线部署：浏览器就能完成" class="headerlink" title="先按官方路线部署：浏览器就能完成"></a>先按官方路线部署：浏览器就能完成</h2><p>如果你只是想先把 EdgeEver 跑起来，最稳的路线不是在服务器上拉代码，而是直接走 Cloudflare 的在线构建。全程只需要 GitHub 和 Cloudflare 两个账号。</p>
+<h3 id="第一步：Fork-项目"><a href="#第一步：Fork-项目" class="headerlink" title="第一步：Fork 项目"></a>第一步：Fork 项目</h3><p>打开 EdgeEver 官方仓库：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://github.com/tianma-if/edgeever</span><br></pre></td></tr></table></figure>
+
+<p>点右上角 <code>Fork</code>，把项目复制到自己的 GitHub 账号下面。</p>
+<p>这一步的意义很简单：Cloudflare 后面要从你的仓库读取代码并自动部署。不要直接改官方仓库，也不要把密码写进代码文件。</p>
+<h3 id="第二步：在-Cloudflare-创建-D1-数据库"><a href="#第二步：在-Cloudflare-创建-D1-数据库" class="headerlink" title="第二步：在 Cloudflare 创建 D1 数据库"></a>第二步：在 Cloudflare 创建 D1 数据库</h3><p>进入 Cloudflare 控制台：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Workers &amp; Pages → D1 → Create database</span><br></pre></td></tr></table></figure>
+
+<p>数据库名字必须填：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">edgeever</span><br></pre></td></tr></table></figure>
+
+<p>D1 可以理解成 Cloudflare 版 SQLite。EdgeEver 的笔记标题、正文索引、用户、笔记本、标签、修订记录，都靠它保存。</p>
+<h3 id="第三步：创建-R2-存储桶"><a href="#第三步：创建-R2-存储桶" class="headerlink" title="第三步：创建 R2 存储桶"></a>第三步：创建 R2 存储桶</h3><p>继续在 Cloudflare 控制台里进入：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Workers &amp; Pages → R2 → Create bucket</span><br></pre></td></tr></table></figure>
+
+<p>存储桶名字必须填：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">edgeever-resources</span><br></pre></td></tr></table></figure>
+
+<p>R2 用来放图片和附件。这里有一个容易忽略的点：R2 虽然有免费额度，但首次启用通常需要绑定付款方式。个人笔记规模一般很难打穿免费额度，但这一步 Cloudflare 不会因为你“只想免费用”就跳过。</p>
+<h3 id="第四步：导入-GitHub-仓库"><a href="#第四步：导入-GitHub-仓库" class="headerlink" title="第四步：导入 GitHub 仓库"></a>第四步：导入 GitHub 仓库</h3><p>进入：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Workers &amp; Pages → Overview → Create application → Import Git Repository</span><br></pre></td></tr></table></figure>
+
+<p>选择刚才 Fork 出来的 <code>edgeever</code> 仓库。</p>
+<p>关键配置保持这样：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Production branch: main</span><br><span class="line">Root directory: 留空或 /</span><br><span class="line">Deploy command: npx wrangler deploy</span><br></pre></td></tr></table></figure>
+
+<p>新版 EdgeEver 会通过仓库里的部署入口自动完成构建、D1 迁移、R2 绑定和 Worker 发布。不要手动改 <code>wrangler.toml</code>，也不要在 Cloudflare 面板里重复添加一堆绑定。这里越“勤快”，越容易把配置搞乱。</p>
+<h3 id="第五步：设置管理员密码"><a href="#第五步：设置管理员密码" class="headerlink" title="第五步：设置管理员密码"></a>第五步：设置管理员密码</h3><p>在 Cloudflare 项目的设置里进入：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Settings → Variables and Secrets</span><br></pre></td></tr></table></figure>
+
+<p>添加一个 Worker Secret：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Name: EDGE_EVER_AUTH_PASSWORD</span><br><span class="line">Value: 你自己的强密码</span><br></pre></td></tr></table></figure>
+
+<p>注意，是 <code>Secret</code>，不是普通变量。密码不要写进 GitHub，不要写进 <code>wrangler.toml</code>，也不要贴进文章或截图里。</p>
+<p>默认管理员用户名是：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">admin</span><br></pre></td></tr></table></figure>
+
+<p>如果要改用户名，需要在第一次构建前添加 Builds 变量：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">EDGE_EVER_AUTH_USERNAME=你的用户名</span><br></pre></td></tr></table></figure>
+
+<p>已经创建过管理员账号后，再改这个变量不会自动重命名旧账号。</p>
+<h3 id="第六步：启动第一次部署"><a href="#第六步：启动第一次部署" class="headerlink" title="第六步：启动第一次部署"></a>第六步：启动第一次部署</h3><p>保存配置后点 <code>Save and Deploy</code>。</p>
+<p>第一次构建会做几件事：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">安装依赖</span><br><span class="line">→ 构建前端</span><br><span class="line">→ 构建 Worker API</span><br><span class="line">→ 查找名为 edgeever 的 D1</span><br><span class="line">→ 绑定名为 edgeever-resources 的 R2</span><br><span class="line">→ 执行数据库迁移</span><br><span class="line">→ 发布 Worker</span><br><span class="line">→ 请求健康检查</span><br></pre></td></tr></table></figure>
+
+<p>成功后，Cloudflare 会给你一个默认访问地址，类似：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://edgeever.你的子域.workers.dev</span><br></pre></td></tr></table></figure>
+
+<p>打开健康检查地址：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://你的EdgeEver地址/api/health</span><br></pre></td></tr></table></figure>
+
+<p>正常会看到类似结果：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;ok&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">true</span></span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>再检查接口文档：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://你的EdgeEver地址/api/openapi.json</span><br></pre></td></tr></table></figure>
+
+<p>这两个地址都能打开，再回到首页，用 <code>admin</code> 和刚才设置的密码登录。</p>
+<h3 id="第七步：打开自动更新"><a href="#第七步：打开自动更新" class="headerlink" title="第七步：打开自动更新"></a>第七步：打开自动更新</h3><p>Fork 仓库之后，GitHub 默认会关闭公开 Fork 的定时工作流。你需要手动打开一次。</p>
+<p>进入你的 Fork：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Actions → I understand my workflows, go ahead and enable them</span><br></pre></td></tr></table></figure>
+
+<p>找到这个工作流：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Update deployed EdgeEver</span><br></pre></td></tr></table></figure>
+
+<p>手动点一次 <code>Run workflow</code>。</p>
+<p>它的作用不是“再部署一个新实例”，而是让你的 Fork 后续能跟随 EdgeEver 官方稳定版本更新。以后官方发新版本时，它会把更新同步到你的部署仓库，再触发 Cloudflare 重新构建。</p>
+<h2 id="如果你想用自定义域名"><a href="#如果你想用自定义域名" class="headerlink" title="如果你想用自定义域名"></a>如果你想用自定义域名</h2><p>默认 <code>workers.dev</code> 地址能用，但我更建议给知识库单独准备一个子域名，例如：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">notes.example.com</span><br></pre></td></tr></table></figure>
+
+<p>在 EdgeEver 的 Cloudflare 构建变量里加：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">EDGE_EVER_CUSTOM_DOMAIN=notes.example.com</span><br></pre></td></tr></table></figure>
+
+<p>或者用完整路由：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">EDGE_EVER_ROUTE_PATTERN=notes.example.com/*</span><br></pre></td></tr></table></figure>
+
+<p>这里有个坑：如果用 Worker 路由接管域名，通常不要再额外创建一个指向 Worker 的 CNAME。重复配置可能让 Cloudflare 不知道该把请求交给谁，最后浏览器看到的不是你的笔记，而是奇怪的 DNS 或路由错误。</p>
+<p>部署完成后，用这三个地址验收：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://notes.example.com/api/health</span><br><span class="line">https://notes.example.com/api/openapi.json</span><br><span class="line">https://notes.example.com/mcp</span><br></pre></td></tr></table></figure>
+
+<p>前两个用于确认 Web 和 REST API 活着；<code>/mcp</code> 是给 Agent 用的入口。</p>
+<h2 id="我自己的部署路线：重活不放主服务器"><a href="#我自己的部署路线：重活不放主服务器" class="headerlink" title="我自己的部署路线：重活不放主服务器"></a>我自己的部署路线：重活不放主服务器</h2><p>我最初把编译放在主服务器上。很快发现这是错误路径：带宽慢、依赖重、下载失败会污染长期运行环境。</p>
+<p>后来我把编译挪到家里的 NAS 节点，只在临时目录里完成构建：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">临时目录拉源码</span><br><span class="line">→ 安装 Bun 依赖</span><br><span class="line">→ 构建</span><br><span class="line">→ Wrangler 部署到 Cloudflare</span><br><span class="line">→ 验证 /api/health 和 /mcp</span><br><span class="line">→ 删除临时构建目录</span><br></pre></td></tr></table></figure>
+
+<p>主服务器只负责运行 Agent，不承担重型前端编译。这个取舍很重要：主 Agent 节点越干净，后续排障越简单。</p>
+<p>如果走命令行部署，核心环境变量大概长这样：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">CLOUDFLARE_ACCOUNT_ID=你的Cloudflare账户ID</span><br><span class="line">EDGE_EVER_WORKER_NAME=edgeever</span><br><span class="line">EDGE_EVER_WORKERS_DEV=true</span><br><span class="line">EDGE_EVER_D1_DATABASE_NAME=edgeever</span><br><span class="line">EDGE_EVER_D1_DATABASE_ID=你的D1数据库ID</span><br><span class="line">EDGE_EVER_R2_BUCKET_NAME=edgeever-resources</span><br><span class="line">EDGE_EVER_AUTH_USERNAME=admin</span><br><span class="line">EDGE_EVER_AUTH_PASSWORD=你的强密码</span><br><span class="line">EDGE_EVER_SESSION_TTL_DAYS=400</span><br><span class="line">EDGE_EVER_CUSTOM_DOMAIN=notes.example.com</span><br></pre></td></tr></table></figure>
+
+<p>本地部署前先安装依赖：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun install</span><br></pre></td></tr></table></figure>
+
+<p>再跑部署检查：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun run deploy:doctor</span><br></pre></td></tr></table></figure>
+
+<p>构建 Cloudflare 版本：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun run build:cloudflare</span><br></pre></td></tr></table></figure>
+
+<p>最后部署：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun run deploy:ci</span><br></pre></td></tr></table></figure>
+
+<p>这里不要把真实 <code>database_id</code>、密码、Token 写进仓库里的 <code>wrangler.toml</code>。新版 EdgeEver 会拒绝这类实例化配置进入受版本管理的文件。正确做法是放在 Cloudflare 面板变量、Worker Secret，或者本机不提交的 <code>.env.local</code> 里。</p>
+<p>真实遇到的坑包括：</p>
+<h3 id="Cloudflare认证报错"><a href="#Cloudflare认证报错" class="headerlink" title="Cloudflare认证报错"></a>Cloudflare认证报错</h3><p>接口返回：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Unknown X-Auth-Key [code: 9103]</span><br></pre></td></tr></table></figure>
+
+<p>根因不是Cloudflare服务坏了，而是凭据写入过程中被错误转义和截断。修复后重新部署才通过。</p>
+<h3 id="浏览器登录显示“连接不到实例”"><a href="#浏览器登录显示“连接不到实例”" class="headerlink" title="浏览器登录显示“连接不到实例”"></a>浏览器登录显示“连接不到实例”</h3><p>API健康检查正常，浏览器却登录失败。</p>
+<p>最终定位到CORS：服务端只允许本地开发地址，没有加入正式域名。补上生产域名后重新部署，登录恢复。</p>
+<h3 id="56KB正文把命令行撑爆"><a href="#56KB正文把命令行撑爆" class="headerlink" title="56KB正文把命令行撑爆"></a>56KB正文把命令行撑爆</h3><p>直接把长正文拼进命令参数，触发：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Argument list too long</span><br></pre></td></tr></table></figure>
+
+<p>后来改为把正文写入临时文件，再让请求工具读取文件内容。这个坑对长笔记迁移尤其常见。</p>
+<h3 id="Web接口被防护规则拦截"><a href="#Web接口被防护规则拦截" class="headerlink" title="Web接口被防护规则拦截"></a>Web接口被防护规则拦截</h3><p>普通会话路径被拦截后，我没有关闭整套防护，而是改用带Bearer令牌的MCP接口。认证边界更明确，也更适合自动化。</p>
+<h2 id="398篇历史笔记怎么搬"><a href="#398篇历史笔记怎么搬" class="headerlink" title="398篇历史笔记怎么搬"></a>398篇历史笔记怎么搬</h2><p>我按原知识库目录映射成18个笔记本，然后批量写入。</p>
+<p>第一次结果不是“398篇全绿”，而是：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">387 / 398 成功</span><br><span class="line">11 篇失败</span><br></pre></td></tr></table></figure>
+
+<p>这里最容易出现的假闭环，是看到大部分成功就宣布迁移完成。</p>
+<p>我没有这么做。剩下11篇逐个定位，修复长正文传参、接口偶发失败和格式问题，再补同步。最终历史数据全部处理，没有把失败项留在日志里装作不存在。</p>
+<p>迁移验收至少要做三层：</p>
+<ol>
+<li>数量对比：源文件与目标笔记数；</li>
+<li>标题对比：有没有漏项或重名覆盖；</li>
+<li>正文抽查：首尾、图片、代码块是否完整。</li>
+</ol>
+<p>如果只是看到接口返回200，不叫迁移完成。</p>
+<h2 id="AI如何操作这座知识库"><a href="#AI如何操作这座知识库" class="headerlink" title="AI如何操作这座知识库"></a>AI如何操作这座知识库</h2><p>我没有把管理员密码交给Agent，而是签发单独的MCP令牌，并按用途限制Scope。</p>
+<p>典型动作包括搜索标题和正文、读取指定笔记、新建和追加内容、移动笔记本、管理标签与获取附件。</p>
+<p>MCP 的配置也不复杂。登录 EdgeEver 后进入：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Profile → MCP settings</span><br></pre></td></tr></table></figure>
+
+<p>创建一个新的 API Token。不要直接把管理员密码交给 Agent，给 Agent 的应该是单独令牌，而且按用途拆权限。</p>
+<p>只读检索型 Agent，可以只给：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">读取笔记</span><br><span class="line">搜索笔记</span><br><span class="line">读取笔记本</span><br><span class="line">读取标签</span><br></pre></td></tr></table></figure>
+
+<p>需要自动沉淀复盘的 Agent，再额外给：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">创建笔记</span><br><span class="line">更新笔记</span><br><span class="line">移动笔记</span><br><span class="line">添加标签</span><br></pre></td></tr></table></figure>
+
+<p>Agent 侧只需要记住三个东西：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Base URL: https://你的EdgeEver域名</span><br><span class="line">MCP endpoint: https://你的EdgeEver域名/mcp</span><br><span class="line">Authorization: Bearer 你的MCP令牌</span><br></pre></td></tr></table></figure>
+
+<p>配置完以后，不要只看“工具列表能不能加载”。至少做一次完整回读：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">创建一条测试笔记</span><br><span class="line">→ 搜索这条笔记</span><br><span class="line">→ 读取正文</span><br><span class="line">→ 检查标题、首段和结尾</span><br><span class="line">→ 删除或移入测试笔记本</span><br></pre></td></tr></table></figure>
+
+<p>只有写入后能回读，才算 Agent 真正接上了这座云笔记。</p>
+<p>这样做的价值不是“可以聊天”，而是Agent能把知识管理变成可靠流程：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">排障结束</span><br><span class="line">→ 生成复盘</span><br><span class="line">→ 写入EdgeEver</span><br><span class="line">→ 回读首尾验证</span><br><span class="line">→ 追加旧平台备份</span><br></pre></td></tr></table></figure>
+
+<p>读写权限可以拆开。只做检索的Agent，不需要拿写权限；只向收件箱追加的自动化，也不需要管理用户和系统设置。</p>
+<h2 id="我为什么没有直接换成Notion或Obsidian"><a href="#我为什么没有直接换成Notion或Obsidian" class="headerlink" title="我为什么没有直接换成Notion或Obsidian"></a>我为什么没有直接换成Notion或Obsidian</h2><p>Notion适合数据库和团队协作，我仍然保留它作为结构化总枢纽。但它不是我唯一的原始知识副本。</p>
+<p>Obsidian的本地Markdown很干净，却需要自己解决移动端同步、接口和自动写入验证。</p>
+<p>EdgeEver的价值刚好在中间：保留传统三栏笔记体验、数据可以导出为普通Markdown、原生支持Agent接口、不要求我长期维护一台新服务器。</p>
+<p>它不是所有人的最终答案，但正好补上了我的缺口。</p>
+<h2 id="这套方案适合谁"><a href="#这套方案适合谁" class="headerlink" title="这套方案适合谁"></a>这套方案适合谁</h2><p>适合：</p>
+<ul>
+<li>有大量个人笔记，希望AI能长期整理的人；</li>
+<li>不想为同步设备数持续付费；</li>
+<li>已有Cloudflare账号和域名；</li>
+<li>愿意理解备份、令牌和升级的人；</li>
+<li>希望保留Markdown退出路线的人。</li>
+</ul>
+<p>不适合：</p>
+<ul>
+<li>完全不想碰部署和维护；</li>
+<li>团队需要复杂审批、企业审计和成熟售后；</li>
+<li>只记录几条临时便签；</li>
+<li>认为“部署成功”等于“不再需要备份”。</li>
+</ul>
+<p>我的最终判断不是“EdgeEver取代所有笔记”。</p>
+<blockquote>
+<p><strong>我保留了旧平台，也保留了Notion。EdgeEver解决的是最关键的一层：让原始知识有一份可迁移、可被AI调用、又不被单一商业平台锁死的主副本。</strong></p>
+</blockquote>
+<p>398篇笔记搬完后，我得到的不是一个新玩具，而是一条退出路线。</p>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>如果你只能带走一种格式，会选数据库，还是普通Markdown？</p>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/wewe-rss-archived-but-kept/">项目停更了，我为什么还留着它</a></li>
+<li><a href="/audit-script-false-positive/">我的安全审计脚本，把自己的修复当成了攻击</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开源</category>
+        <category>云服务</category>
+      </categories>
+      <tags>
+        <tag>自托管</tag>
+        <tag>EdgeEver</tag>
+        <tag>Cloudflare</tag>
+        <tag>MCP</tag>
+        <tag>知识库</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>教育邮箱别只拿来收通知</title>
     <url>/2026/08/20/edu-mail-benefits-guide/</url>
     <content><![CDATA[<blockquote>
@@ -1248,283 +1525,6 @@
         <tag>Outlook</tag>
         <tag>API</tag>
         <tag>验证码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>让原生支持Agent操作的云笔记跑在Cloudflare上</title>
-    <url>/2026/08/22/edgeever-cloudflare-agent-notes/</url>
-    <content><![CDATA[<blockquote>
-<p><strong>笔记能导出，不等于真正属于你；AI能读一篇，也不等于能长期安全地管理整座知识库。我的旧笔记服务开始频繁掉授权后，我没有把全部数据押给下一家商业平台，而是在Cloudflare上搭了一套开源笔记库：不用养服务器，398篇历史文档完成迁移，AI通过细粒度权限读写，旧平台继续保留为第二份副本。</strong></p>
-</blockquote>
-<p>我没有因为某次登录失败，就愤怒地把旧笔记全部删掉。</p>
-<p>那样不叫数据主权，只是把依赖从一家公司搬到另一家公司。</p>
-<p>真正让我改变架构的，是三个问题反复出现：命令行上传偶发报错、授权会过期、数据虽然能看，却很难被AI稳定、自动、细粒度地使用。</p>
-<p>我需要的不是“另一款漂亮笔记软件”。</p>
-<p>我需要一座能被人正常编辑、能被AI调用、能完整导出、还能保留第二份副本的知识库。</p>
-<p>最后留下来的方案叫EdgeEver。</p>
-<p>【官方文档】<a href="https://github.com/tianma-if/edgeever">https://github.com/tianma-if/edgeever</a></p>
-<h2 id="我真正想解决的，不是记笔记"><a href="#我真正想解决的，不是记笔记" class="headerlink" title="我真正想解决的，不是记笔记"></a>我真正想解决的，不是记笔记</h2><p>多数笔记产品解决的是“把文字放进去”。</p>
-<p>Agent时代还多了四个问题：</p>
-<ol>
-<li>AI如何找到正确的笔记；</li>
-<li>AI能不能只读某些内容，而不是拿到整个账户；</li>
-<li>自动写入失败后，能否验证到底写没写；</li>
-<li>平台消失时，数据是否还能以普通文件恢复。</li>
-</ol>
-<p>EdgeEver吸引我的地方不是“像印象笔记”，而是它把这些能力放在同一套开源系统里：</p>
-<ul>
-<li>Cloudflare Workers运行接口；</li>
-<li>D1保存结构化数据；</li>
-<li>R2保存图片和附件；</li>
-<li>MCP让Agent按工具读写；</li>
-<li>ZIP导出中包含Markdown和附件关系；</li>
-<li>同一套程序也能部署到Docker、NAS或VPS。</li>
-</ul>
-<p><img data-src="/images/edgeever-cloudflare-agent-notes-cover.webp" alt="AI原生私人知识库架构"></p>
-<p>项目官方说可以运行在Cloudflare免费额度内。我的实例截至2026年8月22日仍能正常返回健康状态：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;ok&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span><span class="string">&quot;edgeever&quot;</span><span class="punctuation">,</span><span class="attr">&quot;runtime&quot;</span><span class="punctuation">:</span><span class="string">&quot;cloudflare-workers&quot;</span><span class="punctuation">,</span><span class="attr">&quot;authMode&quot;</span><span class="punctuation">:</span><span class="string">&quot;required&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>“零月租”不是绝对承诺。超过Cloudflare免费额度、使用外部对象存储或接入收费模型，仍可能产生费用。对我的个人知识库规模，目前没有单独购买服务器。</p>
-<h2 id="我没有做单点迁移，而是双写"><a href="#我没有做单点迁移，而是双写" class="headerlink" title="我没有做单点迁移，而是双写"></a>我没有做单点迁移，而是双写</h2><p>这套架构最重要的决定，不是部署，而是<strong>不把旧平台立刻废掉</strong>。</p>
-<p>我的写入顺序是：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">新知识</span><br><span class="line">  ├─ EdgeEver：主写，供AI搜索与操作</span><br><span class="line">  └─ 旧笔记平台：追加备份，保留第二条恢复路径</span><br></pre></td></tr></table></figure>
-
-<p>EdgeEver优先，旧平台兜底。两边不互相替代。</p>
-<p>为什么要多此一举？</p>
-<p>因为自托管也会失败：Cloudflare接口可能变化，新版本可能覆盖本地修补，迁移脚本可能漏项，自己也可能误删，开源项目同样可能停止维护。</p>
-<blockquote>
-<p><strong>数据主权不是“只信自己”，而是任何一边坏掉，都有退出路线。</strong></p>
-</blockquote>
-<h2 id="部署前，我先审了一遍安全边界"><a href="#部署前，我先审了一遍安全边界" class="headerlink" title="部署前，我先审了一遍安全边界"></a>部署前，我先审了一遍安全边界</h2><p>我不会因为项目开源就自动相信它。</p>
-<p>部署前检查了认证、会话、限流和数据库调用。基于当时版本的代码审计结果：</p>
-<table>
-<thead>
-<tr>
-<th>检查项</th>
-<th>当时实测结果</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>密码存储</td>
-<td>PBKDF2-SHA256，10万次迭代并加盐</td>
-</tr>
-<tr>
-<td>会话Cookie</td>
-<td>HttpOnly、Secure、SameSite</td>
-</tr>
-<tr>
-<td>MCP令牌</td>
-<td>Bearer认证，只存哈希</td>
-</tr>
-<tr>
-<td>权限</td>
-<td>8种细粒度Scope</td>
-</tr>
-<tr>
-<td>登录限流</td>
-<td>用户名与IP分别限流</td>
-</tr>
-<tr>
-<td>数据库调用</td>
-<td>D1参数化查询</td>
-</tr>
-</tbody></table>
-<p>这是2026年7月29日对当时版本的代码审计，不代表以后每个版本都自动安全。升级仍然要复查关键变更。</p>
-<h2 id="先按官方路线部署：浏览器就能完成"><a href="#先按官方路线部署：浏览器就能完成" class="headerlink" title="先按官方路线部署：浏览器就能完成"></a>先按官方路线部署：浏览器就能完成</h2><p>如果你只是想先把 EdgeEver 跑起来，最稳的路线不是在服务器上拉代码，而是直接走 Cloudflare 的在线构建。全程只需要 GitHub 和 Cloudflare 两个账号。</p>
-<h3 id="第一步：Fork-项目"><a href="#第一步：Fork-项目" class="headerlink" title="第一步：Fork 项目"></a>第一步：Fork 项目</h3><p>打开 EdgeEver 官方仓库：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://github.com/tianma-if/edgeever</span><br></pre></td></tr></table></figure>
-
-<p>点右上角 <code>Fork</code>，把项目复制到自己的 GitHub 账号下面。</p>
-<p>这一步的意义很简单：Cloudflare 后面要从你的仓库读取代码并自动部署。不要直接改官方仓库，也不要把密码写进代码文件。</p>
-<h3 id="第二步：在-Cloudflare-创建-D1-数据库"><a href="#第二步：在-Cloudflare-创建-D1-数据库" class="headerlink" title="第二步：在 Cloudflare 创建 D1 数据库"></a>第二步：在 Cloudflare 创建 D1 数据库</h3><p>进入 Cloudflare 控制台：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Workers &amp; Pages → D1 → Create database</span><br></pre></td></tr></table></figure>
-
-<p>数据库名字必须填：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">edgeever</span><br></pre></td></tr></table></figure>
-
-<p>D1 可以理解成 Cloudflare 版 SQLite。EdgeEver 的笔记标题、正文索引、用户、笔记本、标签、修订记录，都靠它保存。</p>
-<h3 id="第三步：创建-R2-存储桶"><a href="#第三步：创建-R2-存储桶" class="headerlink" title="第三步：创建 R2 存储桶"></a>第三步：创建 R2 存储桶</h3><p>继续在 Cloudflare 控制台里进入：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Workers &amp; Pages → R2 → Create bucket</span><br></pre></td></tr></table></figure>
-
-<p>存储桶名字必须填：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">edgeever-resources</span><br></pre></td></tr></table></figure>
-
-<p>R2 用来放图片和附件。这里有一个容易忽略的点：R2 虽然有免费额度，但首次启用通常需要绑定付款方式。个人笔记规模一般很难打穿免费额度，但这一步 Cloudflare 不会因为你“只想免费用”就跳过。</p>
-<h3 id="第四步：导入-GitHub-仓库"><a href="#第四步：导入-GitHub-仓库" class="headerlink" title="第四步：导入 GitHub 仓库"></a>第四步：导入 GitHub 仓库</h3><p>进入：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Workers &amp; Pages → Overview → Create application → Import Git Repository</span><br></pre></td></tr></table></figure>
-
-<p>选择刚才 Fork 出来的 <code>edgeever</code> 仓库。</p>
-<p>关键配置保持这样：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Production branch: main</span><br><span class="line">Root directory: 留空或 /</span><br><span class="line">Deploy command: npx wrangler deploy</span><br></pre></td></tr></table></figure>
-
-<p>新版 EdgeEver 会通过仓库里的部署入口自动完成构建、D1 迁移、R2 绑定和 Worker 发布。不要手动改 <code>wrangler.toml</code>，也不要在 Cloudflare 面板里重复添加一堆绑定。这里越“勤快”，越容易把配置搞乱。</p>
-<h3 id="第五步：设置管理员密码"><a href="#第五步：设置管理员密码" class="headerlink" title="第五步：设置管理员密码"></a>第五步：设置管理员密码</h3><p>在 Cloudflare 项目的设置里进入：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Settings → Variables and Secrets</span><br></pre></td></tr></table></figure>
-
-<p>添加一个 Worker Secret：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Name: EDGE_EVER_AUTH_PASSWORD</span><br><span class="line">Value: 你自己的强密码</span><br></pre></td></tr></table></figure>
-
-<p>注意，是 <code>Secret</code>，不是普通变量。密码不要写进 GitHub，不要写进 <code>wrangler.toml</code>，也不要贴进文章或截图里。</p>
-<p>默认管理员用户名是：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">admin</span><br></pre></td></tr></table></figure>
-
-<p>如果要改用户名，需要在第一次构建前添加 Builds 变量：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">EDGE_EVER_AUTH_USERNAME=你的用户名</span><br></pre></td></tr></table></figure>
-
-<p>已经创建过管理员账号后，再改这个变量不会自动重命名旧账号。</p>
-<h3 id="第六步：启动第一次部署"><a href="#第六步：启动第一次部署" class="headerlink" title="第六步：启动第一次部署"></a>第六步：启动第一次部署</h3><p>保存配置后点 <code>Save and Deploy</code>。</p>
-<p>第一次构建会做几件事：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">安装依赖</span><br><span class="line">→ 构建前端</span><br><span class="line">→ 构建 Worker API</span><br><span class="line">→ 查找名为 edgeever 的 D1</span><br><span class="line">→ 绑定名为 edgeever-resources 的 R2</span><br><span class="line">→ 执行数据库迁移</span><br><span class="line">→ 发布 Worker</span><br><span class="line">→ 请求健康检查</span><br></pre></td></tr></table></figure>
-
-<p>成功后，Cloudflare 会给你一个默认访问地址，类似：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://edgeever.你的子域.workers.dev</span><br></pre></td></tr></table></figure>
-
-<p>打开健康检查地址：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://你的EdgeEver地址/api/health</span><br></pre></td></tr></table></figure>
-
-<p>正常会看到类似结果：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;ok&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">true</span></span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>再检查接口文档：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://你的EdgeEver地址/api/openapi.json</span><br></pre></td></tr></table></figure>
-
-<p>这两个地址都能打开，再回到首页，用 <code>admin</code> 和刚才设置的密码登录。</p>
-<h3 id="第七步：打开自动更新"><a href="#第七步：打开自动更新" class="headerlink" title="第七步：打开自动更新"></a>第七步：打开自动更新</h3><p>Fork 仓库之后，GitHub 默认会关闭公开 Fork 的定时工作流。你需要手动打开一次。</p>
-<p>进入你的 Fork：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Actions → I understand my workflows, go ahead and enable them</span><br></pre></td></tr></table></figure>
-
-<p>找到这个工作流：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Update deployed EdgeEver</span><br></pre></td></tr></table></figure>
-
-<p>手动点一次 <code>Run workflow</code>。</p>
-<p>它的作用不是“再部署一个新实例”，而是让你的 Fork 后续能跟随 EdgeEver 官方稳定版本更新。以后官方发新版本时，它会把更新同步到你的部署仓库，再触发 Cloudflare 重新构建。</p>
-<h2 id="如果你想用自定义域名"><a href="#如果你想用自定义域名" class="headerlink" title="如果你想用自定义域名"></a>如果你想用自定义域名</h2><p>默认 <code>workers.dev</code> 地址能用，但我更建议给知识库单独准备一个子域名，例如：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">notes.example.com</span><br></pre></td></tr></table></figure>
-
-<p>在 EdgeEver 的 Cloudflare 构建变量里加：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">EDGE_EVER_CUSTOM_DOMAIN=notes.example.com</span><br></pre></td></tr></table></figure>
-
-<p>或者用完整路由：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">EDGE_EVER_ROUTE_PATTERN=notes.example.com/*</span><br></pre></td></tr></table></figure>
-
-<p>这里有个坑：如果用 Worker 路由接管域名，通常不要再额外创建一个指向 Worker 的 CNAME。重复配置可能让 Cloudflare 不知道该把请求交给谁，最后浏览器看到的不是你的笔记，而是奇怪的 DNS 或路由错误。</p>
-<p>部署完成后，用这三个地址验收：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">https://notes.example.com/api/health</span><br><span class="line">https://notes.example.com/api/openapi.json</span><br><span class="line">https://notes.example.com/mcp</span><br></pre></td></tr></table></figure>
-
-<p>前两个用于确认 Web 和 REST API 活着；<code>/mcp</code> 是给 Agent 用的入口。</p>
-<h2 id="我自己的部署路线：重活不放主服务器"><a href="#我自己的部署路线：重活不放主服务器" class="headerlink" title="我自己的部署路线：重活不放主服务器"></a>我自己的部署路线：重活不放主服务器</h2><p>我最初把编译放在主服务器上。很快发现这是错误路径：带宽慢、依赖重、下载失败会污染长期运行环境。</p>
-<p>后来我把编译挪到家里的 NAS 节点，只在临时目录里完成构建：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">临时目录拉源码</span><br><span class="line">→ 安装 Bun 依赖</span><br><span class="line">→ 构建</span><br><span class="line">→ Wrangler 部署到 Cloudflare</span><br><span class="line">→ 验证 /api/health 和 /mcp</span><br><span class="line">→ 删除临时构建目录</span><br></pre></td></tr></table></figure>
-
-<p>主服务器只负责运行 Agent，不承担重型前端编译。这个取舍很重要：主 Agent 节点越干净，后续排障越简单。</p>
-<p>如果走命令行部署，核心环境变量大概长这样：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">CLOUDFLARE_ACCOUNT_ID=你的Cloudflare账户ID</span><br><span class="line">EDGE_EVER_WORKER_NAME=edgeever</span><br><span class="line">EDGE_EVER_WORKERS_DEV=true</span><br><span class="line">EDGE_EVER_D1_DATABASE_NAME=edgeever</span><br><span class="line">EDGE_EVER_D1_DATABASE_ID=你的D1数据库ID</span><br><span class="line">EDGE_EVER_R2_BUCKET_NAME=edgeever-resources</span><br><span class="line">EDGE_EVER_AUTH_USERNAME=admin</span><br><span class="line">EDGE_EVER_AUTH_PASSWORD=你的强密码</span><br><span class="line">EDGE_EVER_SESSION_TTL_DAYS=400</span><br><span class="line">EDGE_EVER_CUSTOM_DOMAIN=notes.example.com</span><br></pre></td></tr></table></figure>
-
-<p>本地部署前先安装依赖：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun install</span><br></pre></td></tr></table></figure>
-
-<p>再跑部署检查：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun run deploy:doctor</span><br></pre></td></tr></table></figure>
-
-<p>构建 Cloudflare 版本：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun run build:cloudflare</span><br></pre></td></tr></table></figure>
-
-<p>最后部署：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bun run deploy:ci</span><br></pre></td></tr></table></figure>
-
-<p>这里不要把真实 <code>database_id</code>、密码、Token 写进仓库里的 <code>wrangler.toml</code>。新版 EdgeEver 会拒绝这类实例化配置进入受版本管理的文件。正确做法是放在 Cloudflare 面板变量、Worker Secret，或者本机不提交的 <code>.env.local</code> 里。</p>
-<p>真实遇到的坑包括：</p>
-<h3 id="Cloudflare认证报错"><a href="#Cloudflare认证报错" class="headerlink" title="Cloudflare认证报错"></a>Cloudflare认证报错</h3><p>接口返回：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Unknown X-Auth-Key [code: 9103]</span><br></pre></td></tr></table></figure>
-
-<p>根因不是Cloudflare服务坏了，而是凭据写入过程中被错误转义和截断。修复后重新部署才通过。</p>
-<h3 id="浏览器登录显示“连接不到实例”"><a href="#浏览器登录显示“连接不到实例”" class="headerlink" title="浏览器登录显示“连接不到实例”"></a>浏览器登录显示“连接不到实例”</h3><p>API健康检查正常，浏览器却登录失败。</p>
-<p>最终定位到CORS：服务端只允许本地开发地址，没有加入正式域名。补上生产域名后重新部署，登录恢复。</p>
-<h3 id="56KB正文把命令行撑爆"><a href="#56KB正文把命令行撑爆" class="headerlink" title="56KB正文把命令行撑爆"></a>56KB正文把命令行撑爆</h3><p>直接把长正文拼进命令参数，触发：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Argument list too long</span><br></pre></td></tr></table></figure>
-
-<p>后来改为把正文写入临时文件，再让请求工具读取文件内容。这个坑对长笔记迁移尤其常见。</p>
-<h3 id="Web接口被防护规则拦截"><a href="#Web接口被防护规则拦截" class="headerlink" title="Web接口被防护规则拦截"></a>Web接口被防护规则拦截</h3><p>普通会话路径被拦截后，我没有关闭整套防护，而是改用带Bearer令牌的MCP接口。认证边界更明确，也更适合自动化。</p>
-<h2 id="398篇历史笔记怎么搬"><a href="#398篇历史笔记怎么搬" class="headerlink" title="398篇历史笔记怎么搬"></a>398篇历史笔记怎么搬</h2><p>我按原知识库目录映射成18个笔记本，然后批量写入。</p>
-<p>第一次结果不是“398篇全绿”，而是：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">387 / 398 成功</span><br><span class="line">11 篇失败</span><br></pre></td></tr></table></figure>
-
-<p>这里最容易出现的假闭环，是看到大部分成功就宣布迁移完成。</p>
-<p>我没有这么做。剩下11篇逐个定位，修复长正文传参、接口偶发失败和格式问题，再补同步。最终历史数据全部处理，没有把失败项留在日志里装作不存在。</p>
-<p>迁移验收至少要做三层：</p>
-<ol>
-<li>数量对比：源文件与目标笔记数；</li>
-<li>标题对比：有没有漏项或重名覆盖；</li>
-<li>正文抽查：首尾、图片、代码块是否完整。</li>
-</ol>
-<p>如果只是看到接口返回200，不叫迁移完成。</p>
-<h2 id="AI如何操作这座知识库"><a href="#AI如何操作这座知识库" class="headerlink" title="AI如何操作这座知识库"></a>AI如何操作这座知识库</h2><p>我没有把管理员密码交给Agent，而是签发单独的MCP令牌，并按用途限制Scope。</p>
-<p>典型动作包括搜索标题和正文、读取指定笔记、新建和追加内容、移动笔记本、管理标签与获取附件。</p>
-<p>MCP 的配置也不复杂。登录 EdgeEver 后进入：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Profile → MCP settings</span><br></pre></td></tr></table></figure>
-
-<p>创建一个新的 API Token。不要直接把管理员密码交给 Agent，给 Agent 的应该是单独令牌，而且按用途拆权限。</p>
-<p>只读检索型 Agent，可以只给：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">读取笔记</span><br><span class="line">搜索笔记</span><br><span class="line">读取笔记本</span><br><span class="line">读取标签</span><br></pre></td></tr></table></figure>
-
-<p>需要自动沉淀复盘的 Agent，再额外给：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">创建笔记</span><br><span class="line">更新笔记</span><br><span class="line">移动笔记</span><br><span class="line">添加标签</span><br></pre></td></tr></table></figure>
-
-<p>Agent 侧只需要记住三个东西：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Base URL: https://你的EdgeEver域名</span><br><span class="line">MCP endpoint: https://你的EdgeEver域名/mcp</span><br><span class="line">Authorization: Bearer 你的MCP令牌</span><br></pre></td></tr></table></figure>
-
-<p>配置完以后，不要只看“工具列表能不能加载”。至少做一次完整回读：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">创建一条测试笔记</span><br><span class="line">→ 搜索这条笔记</span><br><span class="line">→ 读取正文</span><br><span class="line">→ 检查标题、首段和结尾</span><br><span class="line">→ 删除或移入测试笔记本</span><br></pre></td></tr></table></figure>
-
-<p>只有写入后能回读，才算 Agent 真正接上了这座云笔记。</p>
-<p>这样做的价值不是“可以聊天”，而是Agent能把知识管理变成可靠流程：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">排障结束</span><br><span class="line">→ 生成复盘</span><br><span class="line">→ 写入EdgeEver</span><br><span class="line">→ 回读首尾验证</span><br><span class="line">→ 追加旧平台备份</span><br></pre></td></tr></table></figure>
-
-<p>读写权限可以拆开。只做检索的Agent，不需要拿写权限；只向收件箱追加的自动化，也不需要管理用户和系统设置。</p>
-<h2 id="我为什么没有直接换成Notion或Obsidian"><a href="#我为什么没有直接换成Notion或Obsidian" class="headerlink" title="我为什么没有直接换成Notion或Obsidian"></a>我为什么没有直接换成Notion或Obsidian</h2><p>Notion适合数据库和团队协作，我仍然保留它作为结构化总枢纽。但它不是我唯一的原始知识副本。</p>
-<p>Obsidian的本地Markdown很干净，却需要自己解决移动端同步、接口和自动写入验证。</p>
-<p>EdgeEver的价值刚好在中间：保留传统三栏笔记体验、数据可以导出为普通Markdown、原生支持Agent接口、不要求我长期维护一台新服务器。</p>
-<p>它不是所有人的最终答案，但正好补上了我的缺口。</p>
-<h2 id="这套方案适合谁"><a href="#这套方案适合谁" class="headerlink" title="这套方案适合谁"></a>这套方案适合谁</h2><p>适合：</p>
-<ul>
-<li>有大量个人笔记，希望AI能长期整理的人；</li>
-<li>不想为同步设备数持续付费；</li>
-<li>已有Cloudflare账号和域名；</li>
-<li>愿意理解备份、令牌和升级的人；</li>
-<li>希望保留Markdown退出路线的人。</li>
-</ul>
-<p>不适合：</p>
-<ul>
-<li>完全不想碰部署和维护；</li>
-<li>团队需要复杂审批、企业审计和成熟售后；</li>
-<li>只记录几条临时便签；</li>
-<li>认为“部署成功”等于“不再需要备份”。</li>
-</ul>
-<p>我的最终判断不是“EdgeEver取代所有笔记”。</p>
-<blockquote>
-<p><strong>我保留了旧平台，也保留了Notion。EdgeEver解决的是最关键的一层：让原始知识有一份可迁移、可被AI调用、又不被单一商业平台锁死的主副本。</strong></p>
-</blockquote>
-<p>398篇笔记搬完后，我得到的不是一个新玩具，而是一条退出路线。</p>
-<blockquote>
-<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
-</blockquote>
-<p>如果你只能带走一种格式，会选数据库，还是普通Markdown？</p>
-<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
-<li><a href="/wewe-rss-archived-but-kept/">项目停更了，我为什么还留着它</a></li>
-<li><a href="/audit-script-false-positive/">我的安全审计脚本，把自己的修复当成了攻击</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>开源</category>
-        <category>云服务</category>
-      </categories>
-      <tags>
-        <tag>自托管</tag>
-        <tag>EdgeEver</tag>
-        <tag>Cloudflare</tag>
-        <tag>MCP</tag>
-        <tag>知识库</tag>
       </tags>
   </entry>
   <entry>
@@ -2145,6 +2145,289 @@
         <tag>飞书</tag>
         <tag>Wiki</tag>
         <tag>自动化</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>给NAS买大硬盘是智商税！飞牛挂115和夸克strm秒播与看完即焚实战</title>
+    <url>/2026/09/19/fnos-strm-dual-cloud-drive/</url>
+    <content><![CDATA[<p><img data-src="/images/fnos-strm-dual-cloud-drive-cover.webp" alt="给NAS买大硬盘是智商税！飞牛挂115和夸克strm秒播与看完即焚实战"></p>
+<blockquote>
+<p><strong>想用飞牛挂网盘，却天天被找资源、广告乱码、扫盘封号和空间爆满折磨？本文手把手教你从零安装SmartStrm与自动转存，打通115与夸克挂载、官方Skill洗库、STRM秒播及看完即焚，步骤细到命令，小白直接抄作业。</strong></p>
+</blockquote>
+<p>家里有 NAS 的朋友，大多折腾过影音库挂载。</p>
+<p>但传统的网盘挂载方式，常常把人折磨到想要放弃：</p>
+<ol>
+<li><strong>找片与转存纯靠人工搬运</strong>：到处找分享链接，转存到网盘后发现全是广告宣传前缀，甚至转存到几十 GB 的加密假视频，飞牛海报墙识别出来全是空白；</li>
+<li><strong>高频扫盘被风控限速</strong>：直接用 WebDAV 挂载网盘，每次媒体库全盘扫描或海报刮削，都会向网盘发起上万次 API 请求，轻则播放卡顿缓冲，重则被网盘判定为“高频滥用”直接封号或限速到几 KB；</li>
+<li><strong>网盘容量几天被塞爆</strong>：4K 原盘动辄几十 GB，看完了如果不去手动翻找删除，几 TB 的网盘空间几天就告急。</li>
+</ol>
+<p>我们在飞牛私有云（fnOS）上，把 <strong>115 开放平台</strong> 与 <strong>夸克网盘</strong> 接入飞牛原生影视系统，打通了一套从「片名自动搜源」到「看完 24 小时自动释放空间」的全生命周期闭环：</p>
+<p><img data-src="/images/fnos_strm_full_lifecycle_20260916.webp" alt="飞牛影视与多网盘STRM全生命周期闭环"></p>
+<p><strong>全程不需要本地机械硬盘下载几十 GB 的原盘</strong>，全部依托几 KB 的 STRM 文本实现原画秒播。</p>
+<p>本文彻底拒绝空洞概念，<strong>从软件安装、网盘挂载授权、官方 Skill 配置、洗库改名、STRM 映射到看完即焚清理</strong>，手把手带你从零完整落地。</p>
+<hr>
+<h2 id="一、底层机制：什么是-STRM？为什么必须“改名先行”？"><a href="#一、底层机制：什么是-STRM？为什么必须“改名先行”？" class="headerlink" title="一、底层机制：什么是 STRM？为什么必须“改名先行”？"></a>一、底层机制：什么是 STRM？为什么必须“改名先行”？</h2><h3 id="1-什么是-STRM？"><a href="#1-什么是-STRM？" class="headerlink" title="1. 什么是 STRM？"></a>1. 什么是 STRM？</h3><p>用人话解释：<strong>STRM 文件就是一个普通的纯文本文件，扩展名是 <code>.strm</code>，里面只有一行纯文本，即该视频对应的网盘官方 CDN 直链播放 URL。</strong></p>
+<ul>
+<li><strong>传统挂载模式</strong>：NAS 充当中转站把视频从网盘下载到本地内存或缓存盘，再实时推流给电视。不仅吃满 NAS 内存与内网带宽，频繁扫库还会被网盘限速封杀；</li>
+<li><strong>STRM 直链模式</strong>：<ol>
+<li>飞牛影视在本地读取几 KB 的 <code>.strm</code> 小文件（耗时仅 1~2 毫秒）；</li>
+<li>获取到直链后，电视端播放器跳过 NAS 中转，直接向 115 或夸克官方 CDN 请求视频切片；</li>
+<li>实测首播响应时间仅 <strong>913ms</strong>，6GB 视频拖拽进度条仅 <strong>518ms</strong>（命中 <code>HTTP 206 Partial Content</code>）；</li>
+<li>飞牛影视日常的海报刮削与元数据刷新，全部在本地读写小文件，<strong>对网盘 API 请求量暴降 99%</strong>，物理根除风控。</li>
+</ol>
+</li>
+</ul>
+<h3 id="2-绝对不可颠倒的执行时序"><a href="#2-绝对不可颠倒的执行时序" class="headerlink" title="2. 绝对不可颠倒的执行时序"></a>2. 绝对不可颠倒的执行时序</h3><p>整个影音自动化闭环的时序逻辑极其严密：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">1. 片名自动搜盘（pansou 引擎毫秒检索夸克/115分享）</span><br><span class="line">   ↓</span><br><span class="line">2. 智能排假与单文件精准转存（剔除伪视频，仅提取 4K 原生正片）</span><br><span class="line">   ↓</span><br><span class="line">3. 网盘标准化重命名（通过夸克官方 Skill 对齐 TMDB，改名必须先行）</span><br><span class="line">   ↓</span><br><span class="line">4. Webhook 触发 SmartStrm 增量生成 STRM 与字幕</span><br><span class="line">   ↓</span><br><span class="line">5. 本地镜像同步至飞牛影视共享目录（自动修剪死链）</span><br><span class="line">   ↓</span><br><span class="line">6. 飞牛影视本地刮削入库（TMDB 毫秒匹配海报墙）</span><br><span class="line">   ↓</span><br><span class="line">7. 「看完即焚」自动释放（电影看后24h进回收站，白名单资产永久保留）</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>核心铁律：改名必须在生成 STRM 之前完成！</strong><br>STRM 记录的是已经固化的网盘文件路径。如果先生成了 STRM，再去网盘重命名，原本生成的 STRM 会<strong>瞬间全量变死链</strong>，导致媒体库全盘报错崩溃。</p>
+</blockquote>
+<hr>
+<h2 id="二、从零部署：安装-SmartStrm-与自动转存套件"><a href="#二、从零部署：安装-SmartStrm-与自动转存套件" class="headerlink" title="二、从零部署：安装 SmartStrm 与自动转存套件"></a>二、从零部署：安装 SmartStrm 与自动转存套件</h2><h3 id="1-安装-SmartStrm（直链生成引擎）"><a href="#1-安装-SmartStrm（直链生成引擎）" class="headerlink" title="1. 安装 SmartStrm（直链生成引擎）"></a>1. 安装 SmartStrm（直链生成引擎）</h3><p>SmartStrm 是飞牛 NAS 上将网盘路径转化为 STRM 直链的核心服务。</p>
+<p><strong>安装步骤</strong>：</p>
+<ol>
+<li>登录飞牛桌面，打开 <strong>应用中心</strong>；</li>
+<li>在应用中心搜索栏直接输入 <code>SmartStrm</code>（飞牛官方应用中心已直接收录，开箱即用，无需配置任何第三方源）；</li>
+<li>点击 <strong>【安装】</strong>；</li>
+<li>安装完成后，在浏览器打开控制台：<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">http://&lt;你的飞牛NAS_IP&gt;:8024</span><br></pre></td></tr></table></figure>
+首次打开按提示设置管理员账号和密码。</li>
+</ol>
+<p><strong>底层目录分布（持久化说明）</strong>：</p>
+<ul>
+<li>核心配置文件：<code>/var/apps/smartstrm/shares/SmartStrm/config/config.yaml</code>（存储网盘 Token 与任务配置）；</li>
+<li>STRM 临时生成卷：<code>/var/apps/smartstrm/shares/SmartStrm/strm/&lt;task_name&gt;/</code>；</li>
+<li>飞牛共享目录：<code>/vol1/1000/公共共享/视频/</code>。</li>
+</ul>
+<hr>
+<h3 id="2-在飞牛应用中心一键安装「夸克网盘自动转存」（自带-pansou-搜源）"><a href="#2-在飞牛应用中心一键安装「夸克网盘自动转存」（自带-pansou-搜源）" class="headerlink" title="2. 在飞牛应用中心一键安装「夸克网盘自动转存」（自带 pansou 搜源）"></a>2. 在飞牛应用中心一键安装「夸克网盘自动转存」（自带 pansou 搜源）</h3><p>千万不要去命令行手写 Docker Compose！飞牛第三方应用中心早就封装好了开箱即用的套件，直接在界面点一下安装就能完成全部部署。</p>
+<p><strong>安装步骤</strong>：</p>
+<ol>
+<li>打开飞牛桌面，进入 <strong>应用中心</strong>；</li>
+<li>确保已开启第三方社区源（点击应用中心右上角 <strong>设置</strong> -&gt; <strong>应用源</strong>）；</li>
+<li>在应用中心搜索框输入 <strong><code>夸克网盘自动转存</code></strong>（后台标识为 <code>quark-auto-save</code>，应用描述中注明“集成 pansou 版本，实现一键搜索转存”）；</li>
+<li>点击 <strong>【安装】</strong>：<ul>
+<li>飞牛系统会自动在后台完成容器拉取、目录挂载以及伴生搜盘引擎的网络桥接；</li>
+<li>搜盘、自动转存、追更整理一条龙全部就绪，无需手动敲命令建目录；</li>
+</ul>
+</li>
+<li>安装完成后，飞牛桌面上会自动生成 <strong>夸克网盘自动转存</strong> 的快捷应用图标。</li>
+</ol>
+<p><strong>访问端点与底层服务</strong>：</p>
+<ul>
+<li><strong>转存管理控制台</strong>：点击桌面图标直接打开，或浏览器访问 <code>http://&lt;你的飞牛NAS_IP&gt;:15005</code>（首次进入根据向导绑定夸克账号）；</li>
+<li><strong>伴生 pansou 搜盘引擎</strong>：套件已在内部自动拉起并常驻在 <code>http://&lt;你的飞牛NAS_IP&gt;:8888</code>，对外直接提供片名检索接口。</li>
+</ul>
+<hr>
+<h2 id="三、网盘挂载实操：手把手绑定-115-与夸克"><a href="#三、网盘挂载实操：手把手绑定-115-与夸克" class="headerlink" title="三、网盘挂载实操：手把手绑定 115 与夸克"></a>三、网盘挂载实操：手把手绑定 115 与夸克</h2><h3 id="1-在-SmartStrm-中挂载-115-网盘（官方开放平台）"><a href="#1-在-SmartStrm-中挂载-115-网盘（官方开放平台）" class="headerlink" title="1. 在 SmartStrm 中挂载 115 网盘（官方开放平台）"></a>1. 在 SmartStrm 中挂载 115 网盘（官方开放平台）</h3><ol>
+<li>浏览器打开 SmartStrm 网页端（<code>http://&lt;NAS_IP&gt;:8024</code>）；</li>
+<li>点击左侧导航栏 <strong>【存储管理】</strong> -&gt; <strong>【添加存储】</strong>；</li>
+<li>参数填写：<ul>
+<li><strong>存储类型</strong>：选择 <code>115开放平台 (open115)</code>；</li>
+<li><strong>存储名称</strong>：填写 <code>115_main</code>（后续配置任务必须对应）；</li>
+<li><strong>速率限制</strong>：填写 <code>1</code>（表示请求限制为 1 秒 1 次，平稳防封）；</li>
+</ul>
+</li>
+<li>点击 <strong>获取授权二维码</strong>，界面会弹出 115 官方授权二维码；</li>
+<li>打开手机 <strong>115 App</strong>，点击扫一扫完成授权；</li>
+<li>授权成功后，状态显示绿色，界面会自动读出当前 VIP 等级（如年费VIP）和剩余容量（如 40TB+）。</li>
+</ol>
+<hr>
+<h3 id="2-在-SmartStrm-中挂载夸克网盘（TV-直链驱动）"><a href="#2-在-SmartStrm-中挂载夸克网盘（TV-直链驱动）" class="headerlink" title="2. 在 SmartStrm 中挂载夸克网盘（TV 直链驱动）"></a>2. 在 SmartStrm 中挂载夸克网盘（TV 直链驱动）</h3><p>夸克网盘必须使用 TV 协议，因为只有 TV 协议支持 CDN 原画直链输出。</p>
+<ol>
+<li>进入 SmartStrm <strong>【存储管理】</strong> -&gt; <strong>【添加存储】</strong>；</li>
+<li>参数填写：<ul>
+<li><strong>存储类型</strong>：选择 <code>夸克网盘TV (quark_tv)</code>；</li>
+<li><strong>存储名称</strong>：填写 <code>quark_main</code>；</li>
+<li><strong>模式</strong>：选择 <code>streaming</code>（直链串流模式）；</li>
+</ul>
+</li>
+<li>点击 <strong>获取登录二维码</strong>，页面生成夸克登录码；</li>
+<li>打开手机 <strong>夸克 App</strong> 扫码授权；</li>
+<li><strong>⚠️ 避坑提醒（设备数限制）</strong>：<br>夸克官方 TV 接口严格限制最多 2 台 TV 设备同时在线。如果点击获取二维码或绑定时报错 <code>HTTP 500 设备数超限</code>，按以下步骤解绑：<ul>
+<li>打开手机夸克 App -&gt; 右下角【我的】-&gt; 右上角【设置】-&gt;【账号与安全】-&gt;【登录设备管理】；</li>
+<li>找到历史闲置的 TV 或第三方设备，点击 <strong>移除&#x2F;退出登录</strong>，重新扫码即可秒过。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="四、关键核心：安装夸克官方-Skill-与洗库改名实战"><a href="#四、关键核心：安装夸克官方-Skill-与洗库改名实战" class="headerlink" title="四、关键核心：安装夸克官方 Skill 与洗库改名实战"></a>四、关键核心：安装夸克官方 Skill 与洗库改名实战</h2><h3 id="1-为什么必须安装夸克官方-Skill？"><a href="#1-为什么必须安装夸克官方-Skill？" class="headerlink" title="1. 为什么必须安装夸克官方 Skill？"></a>1. 为什么必须安装夸克官方 Skill？</h3><p>很多玩家尝试过自动转存，但都卡死在这一步：</p>
+<ul>
+<li><strong>夸克 TV 接口是只读的</strong>：SmartStrm 用的 <code>quark_tv</code> 驱动只开放看片流，在服务端硬编码拦截了重命名（一旦发起改名直接报错 <code>500 夸克网盘TV不支持重命名操作</code>）；</li>
+<li><strong>网络资源全带广告乱码</strong>：从分享链接存下来的文件往往长这样：<br><code>【4K影视资源发布组 www.xxx.com】星球大战.2026.2160p.mkv</code><br>这种文件名扔给飞牛影视，海报刮削识别率几乎为 0；</li>
+<li><strong>破局解法</strong>：通过**夸克网盘官方 Skill（<code>quarkclouddrive</code>）**的开放平台 API 通道，对网盘下发批量改名与清洗指令，绕过 TV 接口的只读限制。</li>
+</ul>
+<hr>
+<h3 id="2-官方-Skill-安装与授权步骤"><a href="#2-官方-Skill-安装与授权步骤" class="headerlink" title="2. 官方 Skill 安装与授权步骤"></a>2. 官方 Skill 安装与授权步骤</h3><p>在 NAS 宿主机或主控终端中执行以下命令进行安装：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. 克隆官方 Skill 仓库到技能目录</span></span><br><span class="line">git <span class="built_in">clone</span> https://github.com/openclaw/quarkclouddrive.git ~/.hermes/skills/quarkclouddrive</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 运行自动化安装脚本（自动检测并安装 Node.js 运行时环境与依赖）</span></span><br><span class="line"><span class="built_in">cd</span> ~/.hermes/skills/quarkclouddrive</span><br><span class="line">bash scripts/install.sh</span><br></pre></td></tr></table></figure>
+
+<p>看到终端输出 <code>✅ quarkclouddrive CLI 安装完成</code> 后，验证安装：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">node scripts/quark-drive.cjs --<span class="built_in">help</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>账号扫码登录授权</strong>：<br>在终端执行登录命令：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">node scripts/quark-drive.cjs login</span><br></pre></td></tr></table></figure>
+<p>终端会输出一个授权链接与二维码。复制链接在浏览器打开，或用夸克 App 扫码确认，完成 Open API 权限打通！</p>
+<hr>
+<h3 id="3-官方-Skill-实战：单文件精准提取与规范化改名"><a href="#3-官方-Skill-实战：单文件精准提取与规范化改名" class="headerlink" title="3. 官方 Skill 实战：单文件精准提取与规范化改名"></a>3. 官方 Skill 实战：单文件精准提取与规范化改名</h3><p>拥有了官方 Skill 后，洗库变得极度简单高效。</p>
+<h4 id="场景-A：从分享包中单文件提取正片（拒绝假视频与广告）"><a href="#场景-A：从分享包中单文件提取正片（拒绝假视频与广告）" class="headerlink" title="场景 A：从分享包中单文件提取正片（拒绝假视频与广告）"></a>场景 A：从分享包中单文件提取正片（拒绝假视频与广告）</h4><p>调用 <code>saveas</code> 子命令时，加上 <code>--fid-list</code> 参数，只转存正片，跳过捆绑的广告文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 仅转存正片视频文件，指定转存到网盘中的 /影音/电影/ 目录</span></span><br><span class="line">node scripts/quark-drive.cjs saveas \</span><br><span class="line">  --share-url <span class="string">&quot;https://pan.quark.cn/s/xxxxxx&quot;</span> \</span><br><span class="line">  --fid-list <span class="string">&quot;正片文件FID&quot;</span> \</span><br><span class="line">  --to-pdir-path <span class="string">&quot;/影音/电影/&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="场景-B：标准化重命名（对齐-TMDB）"><a href="#场景-B：标准化重命名（对齐-TMDB）" class="headerlink" title="场景 B：标准化重命名（对齐 TMDB）"></a>场景 B：标准化重命名（对齐 TMDB）</h4><p>转存完成后，调用改名功能，剔除网站广告，格式化为标准命名：</p>
+<ul>
+<li><strong>电影标准格式</strong>：<code>片名 (上映年份).扩展名</code></li>
+<li><strong>电视剧标准格式</strong>：<code>剧名/Season 01/剧名.S01E01.扩展名</code></li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 示例：将带广告的文件规范重命名为 TMDB 标准名称</span></span><br><span class="line">node scripts/quark-drive.cjs organize \</span><br><span class="line">  --fid <span class="string">&quot;文件FID&quot;</span> \</span><br><span class="line">  --new-name <span class="string">&quot;星球大战：曼达洛人与古古 (2026).mkv&quot;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、闭环联动：Webhook-触发、镜像同步与串流探活"><a href="#五、闭环联动：Webhook-触发、镜像同步与串流探活" class="headerlink" title="五、闭环联动：Webhook 触发、镜像同步与串流探活"></a>五、闭环联动：Webhook 触发、镜像同步与串流探活</h2><h3 id="1-配置-SmartStrm-增量任务"><a href="#1-配置-SmartStrm-增量任务" class="headerlink" title="1. 配置 SmartStrm 增量任务"></a>1. 配置 SmartStrm 增量任务</h3><p>在 SmartStrm 控制台 <strong>【任务管理】</strong> -&gt; <strong>【添加任务】</strong>：</p>
+<ul>
+<li><strong>任务名称</strong>：<code>quark_movies</code></li>
+<li><strong>存储来源</strong>：选择前面配置的 <code>quark_main</code></li>
+<li><strong>网盘路径</strong>：<code>/影音/电影</code></li>
+<li><strong>生成参数配置</strong>：<ul>
+<li>勾选 <code>增量生成 (incremental)</code>：只对新增视频生成，不重复扫描；</li>
+<li>勾选 <code>目录时间校验 (dir_time_check)</code>：按修改时间快速跳过未变动文件；</li>
+<li>勾选 <code>保留本地资产 (keep_local_asset)</code>：防止误删字幕。</li>
+</ul>
+</li>
+</ul>
+<p>保存后，SmartStrm 会为该任务分配一个专有的 Webhook 触发 URL：<br><code>http://&lt;NAS_IP&gt;:8024/webhook/a7b7c5d390b886e4</code></p>
+<hr>
+<h3 id="2-QAS-容器-Webhook-联动配置（避开-127-0-0-1-大坑）"><a href="#2-QAS-容器-Webhook-联动配置（避开-127-0-0-1-大坑）" class="headerlink" title="2. QAS 容器 Webhook 联动配置（避开 127.0.0.1 大坑）"></a>2. QAS 容器 Webhook 联动配置（避开 127.0.0.1 大坑）</h3><p>进入 QAS 自动转存控制台（<code>http://&lt;NAS_IP&gt;:15005</code>），在对应转存规则的高级设置中填入 Webhook 地址。</p>
+<blockquote>
+<p><strong>⚠️ 核心避坑</strong>：<br>绝不能填写 <code>http://127.0.0.1:8024</code>！因为 QAS 跑在 Docker 容器内部，<code>127.0.0.1</code> 指向的是容器自己，根本连不上宿主机。<br><strong>正确填写</strong>：填写 Docker 宿主网关 IP（如 <code>http://172.31.0.1:8024/...</code>）或 NAS 的局域网真实 IP（如 <code>http://192.168.1.100:8024/...</code>）。</p>
+</blockquote>
+<p>转存完成后，QAS 会自动向 SmartStrm 发送 POST 请求：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;event&quot;</span><span class="punctuation">:</span> <span class="string">&quot;qas_strm&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;data&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;strmtask&quot;</span><span class="punctuation">:</span> <span class="string">&quot;quark_movies&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;savepath&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/影音/电影/星球大战：曼达洛人与古古 (2026)&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>SmartStrm 接收到通知后，将在 <strong>1秒内</strong> 在本地生成对应的 <code>.strm</code> 文件！</p>
+<hr>
+<h3 id="3-本地镜像同步至飞牛共享目录"><a href="#3-本地镜像同步至飞牛共享目录" class="headerlink" title="3. 本地镜像同步至飞牛共享目录"></a>3. 本地镜像同步至飞牛共享目录</h3><p>SmartStrm 生成好的小文件保存在其应用私有目录中。我们需要将其镜像到飞牛影视能够读取的公共共享目录。</p>
+<p>编写同步命令并配置定时任务：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 增量同步镜像，--delete 参数会自动删除网盘中已失效的旧电影死链</span></span><br><span class="line">python3 /usr/local/bin/smartstrm-fnos-mirror \</span><br><span class="line">  --config /usr/local/apps/@appdata/smartstrm/fnos-mirror.json \</span><br><span class="line">  --delete</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="4-终端串流探活验收（必须看到-HTTP-206）"><a href="#4-终端串流探活验收（必须看到-HTTP-206）" class="headerlink" title="4. 终端串流探活验收（必须看到 HTTP 206）"></a>4. 终端串流探活验收（必须看到 HTTP 206）</h3><p>在终端中模拟播放器发起 HTTP Range 分块请求（读取前 1024 字节）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl --noproxy <span class="string">&#x27;*&#x27;</span> -s -I -r 0-1024 -L <span class="string">&quot;http://127.0.0.1:8024/smartstrm_fid/quark_main/...&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>验收回显标准</strong>：<br>终端必须返回：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HTTP/2 206 Partial Content</span><br><span class="line">Content-Range: bytes 0-1024/26980540120</span><br><span class="line">Cache-Control: public, max-age=...</span><br></pre></td></tr></table></figure>
+<p>一旦看到 <code>206 Partial Content</code>，说明直链串流完全打通，CDN 缓存命中！</p>
+<hr>
+<h3 id="5-飞牛影视一秒智能识别入库"><a href="#5-飞牛影视一秒智能识别入库" class="headerlink" title="5. 飞牛影视一秒智能识别入库"></a>5. 飞牛影视一秒智能识别入库</h3><p>打开飞牛桌面，启动 <strong>飞牛影视</strong>：</p>
+<ol>
+<li>点击 <strong>【添加媒体库】</strong>；</li>
+<li>类型选择 <strong>【电影】</strong>（或【电视剧】）；</li>
+<li>路径选择刚才同步的本地共享目录（例如 <code>/vol1/1000/公共共享/视频/电影/SmartStrm_Quark</code>）；</li>
+<li>点击 <strong>【确定】</strong>。</li>
+</ol>
+<blockquote>
+<p><strong>飞牛原生优势（零配置识别）</strong>：飞牛影视内置了官方原生的智能元数据识别服务，<strong>完全不需要像 Emby&#x2F;Jellyfin 那样手动挑选刮削器，更不需要自己费劲去申请配置 TMDB API Key</strong>！只要前面通过夸克官方 Skill 做好了标准化规范命名，飞牛影视在本地毫秒级读取几 KB 的 <code>.strm</code> 文件后，会自动精准完成全库海报、演职员表与简介匹配，海报墙瞬间拉满！</p>
+</blockquote>
+<hr>
+<h2 id="六、进阶利器：「看完即焚」全自动空间释放与白名单守护"><a href="#六、进阶利器：「看完即焚」全自动空间释放与白名单守护" class="headerlink" title="六、进阶利器：「看完即焚」全自动空间释放与白名单守护"></a>六、进阶利器：「看完即焚」全自动空间释放与白名单守护</h2><p>为了彻底摆脱“屯片一时爽，网盘天天满”的困扰，我们在系统中引入了自动清理看门狗。</p>
+<h3 id="1-状态判断逻辑-trimmedia-db"><a href="#1-状态判断逻辑-trimmedia-db" class="headerlink" title="1. 状态判断逻辑 (trimmedia.db)"></a>1. 状态判断逻辑 (<code>trimmedia.db</code>)</h3><p>飞牛影视将所有播放记录存储在内置数据库中：<br><code>/usr/local/apps/@appdata/trim.media/database/trimmedia.db</code></p>
+<p>清理程序只读查询 <code>item_user_play</code> 数据表：</p>
+<ul>
+<li>播放状态：<code>watched = 1</code>（已观看完毕）；</li>
+<li>时间差：<code>(当前时间戳 - update_time) &gt;= 86,400,000</code>（看完已满 24 小时）。</li>
+</ul>
+<h3 id="2-清理规则与白名单保护机制"><a href="#2-清理规则与白名单保护机制" class="headerlink" title="2. 清理规则与白名单保护机制"></a>2. 清理规则与白名单保护机制</h3><ol>
+<li><strong>🛡️ 白名单永久守护（绝对防误删）</strong>：<ul>
+<li>凡路径或标题包含 <code>动画片</code>、<code>动画</code>、<code>纪录片</code>、<code>儿童</code>、<code>经典合集</code>（如《汪汪队》《小汽车欧力》《皮克斯动画》），<strong>系统物理跳过，永久保留，绝不删除</strong>；</li>
+</ul>
+</li>
+<li><strong>🎬 电影处理</strong>：<ul>
+<li>普通电影标记已看满 24 小时，自动调用网盘回收站接口删除原片，并移除本地 STRM 文件；</li>
+</ul>
+</li>
+<li><strong>📺 电视剧处理</strong>：<ul>
+<li>整部剧集 <strong>100% 全部集数均标记已看</strong> 且最后一集看完满 24 小时，才触发整季清理（追剧中途绝不误删）；</li>
+</ul>
+</li>
+<li><strong>安全可逆</strong>：<ul>
+<li>115 与夸克网盘均调用官方回收站接口（文件保留 30 天），误标记可在手机网盘 App 中一键撤回恢复。</li>
+</ul>
+</li>
+</ol>
+<h3 id="3-配置凌晨自治-Cron"><a href="#3-配置凌晨自治-Cron" class="headerlink" title="3. 配置凌晨自治 Cron"></a>3. 配置凌晨自治 Cron</h3><p>在宿主机配置系统定时任务：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">crontab -e</span><br></pre></td></tr></table></figure>
+<p>添加以下任务：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 每日凌晨 00:05 自动执行清理巡检并发送汇总通知</span><br><span class="line">5 0 * * * python3 /root/scripts/xue_fnos_watched_cleaner.py --send-report</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="七、量化实测与对比总结"><a href="#七、量化实测与对比总结" class="headerlink" title="七、量化实测与对比总结"></a>七、量化实测与对比总结</h2><p>整套闭环落地运行后，实际体验提升极其明显：</p>
+<table>
+<thead>
+<tr>
+<th align="left">评估指标</th>
+<th align="left">传统 WebDAV 挂载</th>
+<th align="left">本地机械硬盘下载</th>
+<th align="left">STRM + 看完即焚闭环</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>本地磁盘占用</strong></td>
+<td align="left">0 GB（但易吃满系统缓存）</td>
+<td align="left">30GB ~ 80GB &#x2F; 部</td>
+<td align="left"><strong>仅 4 KB &#x2F; 部</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>首播响应速度</strong></td>
+<td align="left">3s ~ 10s（易卡顿）</td>
+<td align="left">秒开（需提前几小时下载）</td>
+<td align="left"><strong>约 913ms（极速秒播）</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>进度条拖拽</strong></td>
+<td align="left">频繁转圈缓冲</td>
+<td align="left">秒响应</td>
+<td align="left"><strong>约 518ms（丝滑跳转）</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>网盘风控概率</strong></td>
+<td align="left">极高（全库扫描被封）</td>
+<td align="left">极高（频繁大流量拉取）</td>
+<td align="left"><strong>极低（API 请求下降 99%）</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>空间维护成本</strong></td>
+<td align="left">需人工定期排查删除</td>
+<td align="left">硬盘塞满需持续花钱扩容</td>
+<td align="left"><strong>看完 24 小时自动释放</strong></td>
+</tr>
+</tbody></table>
+<p>不仅让电视端畅享原画杜比视界，更让 NAS 彻底告别了硬盘扩容与网盘爆满的焦虑。</p>
+<hr>
+<h2 id="八、这套方案适合谁？"><a href="#八、这套方案适合谁？" class="headerlink" title="八、这套方案适合谁？"></a>八、这套方案适合谁？</h2><p><strong>适合谁</strong>：</p>
+<ul>
+<li>家里 NAS 盘位紧张、不想买昂贵大容量机械硬盘的影音爱好者；</li>
+<li>拥有 115 VIP 或夸克 VIP，希望将网盘直接化身原生海报墙的用户；</li>
+<li>痛恨 WebDAV 扫盘被封号、追求搜源、改名、追更、入库到看完自动释放全流程自动化的极客玩家。</li>
+</ul>
+<p><strong>不适合谁</strong>：</p>
+<ul>
+<li>家庭宽带下行低于 100Mbps 且无网盘 VIP 会员的用户（4K 原画直链需要稳定的下行带宽）；</li>
+<li>追求 100% 离线、断网也要看本地原盘的发烧友。</li>
+</ul>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<p>你现在在飞牛 NAS 上挂载了哪些网盘？在搭建影音库时踩过哪些让你头疼的坑？欢迎在评论区交流！</p>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>开源</category>
+        <category>分享</category>
+      </categories>
+      <tags>
+        <tag>NAS</tag>
+        <tag>飞牛私有云</tag>
+        <tag>fnOS</tag>
+        <tag>STRM</tag>
+        <tag>115网盘</tag>
+        <tag>夸克网盘</tag>
+        <tag>影音库</tag>
       </tags>
   </entry>
   <entry>
@@ -3788,6 +4071,73 @@
       </tags>
   </entry>
   <entry>
+    <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
+    <url>/2026/07/11/skillopt-agent-self-evolution/</url>
+    <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
+<p>自从上次凌晨三点那场差点提桶跑路的事故后，我给系统上了物理护栏。但这不够，护栏只能防守，我需要 Agent 学会自己长记性。</p>
+<p>所以，我盯上了微软开源的 <code>SkillOpt</code>。</p>
+<p>做过自动化运维的人都懂，把生产环境交给 LLM，就像把拉满弦的弓交给一个随时会犯困的射手。你写了几千字的 System Prompt，告诉它”不能干什么”，但只要上下文一长，它照样会给你输出一段带有”作为AI助手”的废话，然后顺手把一个非法的命令丢进终端。</p>
+<p>问题是，我绝不会把核心主机的”自我修改权”交给一个黑盒。为了把 <code>SkillOpt</code> 的精华压榨出来，又不丢掉主权，我给它做了一场”开胸手术”。</p>
+<blockquote>
+<p><strong>提示词是软的，代码是硬的。</strong> 不要指望用自然语言去约束一个会幻觉的大脑，必须用物理机制去卡死它。</p>
+</blockquote>
+<p>下面是这场手术的核心刀法。</p>
+<h2 id="1-记忆不是用来读的，是用来防坑的"><a href="#1-记忆不是用来读的，是用来防坑的" class="headerlink" title="1. 记忆不是用来读的，是用来防坑的"></a>1. 记忆不是用来读的，是用来防坑的</h2><p><code>SkillOpt</code> 的第一招叫”经验回放”。它把过去的失败案例拿出来重新跑，找到坑在哪里。</p>
+<p>但在我的系统里，这招被改造为了<strong>纪律级的 FTS5 事故卷宗回溯</strong>。我给 Agent 立了一个死规矩：</p>
+<p>在执行任何修改配置或处理故障前，必须强制调用底层的 <code>session_search(query=&quot;&lt;报错特征词&gt;&quot;, limit=3)</code>。</p>
+<p>这是什么概念？这就好比在排雷前，先强制调阅过去一年这个阵地所有的地雷分布图。前段时间因为 <code>mDNS</code> 陷阱和网络路由冲突，服务器掉线。现在，只要遇到类似的网络配置变更，Agent 必须先读卷宗。不再盲目试错，新方案绝对不能踩进旧坑。</p>
+<h2 id="2-把”软约束”换成”硬护栏”"><a href="#2-把”软约束”换成”硬护栏”" class="headerlink" title="2. 把”软约束”换成”硬护栏”"></a>2. 把”软约束”换成”硬护栏”</h2><p><code>SkillOpt</code> 的第二招是”验证门”，跑分更高才允许更新技能。</p>
+<p>我把它落地成了物理实装的 <code>guardrail.py</code> 脚本，并直接嵌进了夜间的自动化引擎。这是一个无情的双重拦截机制：</p>
+<ul>
+<li><strong>主权拦截</strong>：正则暴戾扫描。只要出现”作为AI”、”风险提示”、”温馨提示”等废话，直接打回重写。绝不把这些污染传递给下游解析器。</li>
+<li><strong>语法拦截</strong>：所有生成的 Python、Bash 脚本或 YAML 配置，必须先过 <code>ast.parse</code> 或 <code>dry-run</code>。</li>
+</ul>
+<p>如果引擎在夜间生成了垃圾，内部自动熔断并重试，最高 3 次。通过这种硬约束，实现了零污染 180 天的稳定运行。</p>
+<blockquote>
+<p>不要用 AI 写作。AI 写作就是”说什么都对，但读完啥也没记住”。这条规律同样适用于 AI 写的 Agent 规则——必须用代码来验证，而非再加一句”请你遵守”。</p>
+</blockquote>
+<h2 id="3-把方向盘锁死在手里"><a href="#3-把方向盘锁死在手里" class="headerlink" title="3. 把方向盘锁死在手里"></a>3. 把方向盘锁死在手里</h2><p>最后，如何让这些新技能生效？<code>SkillOpt</code> 喜欢全自动合并，但这里不行。</p>
+<p>对基因进化引擎做了一次阻断改造：</p>
+<ul>
+<li>所有提炼出的新规则（XML），全部打入 <code>.proposed/</code> 暂存区。</li>
+<li>系统自动推送通知，把旧坑和新规则列清。</li>
+</ul>
+<p><strong>没有人工的显式确认，任何基因都不会生效。</strong> 这是底线。</p>
+<p>通过这次改造，这套 Agent 不仅有了自我迭代的”免疫抗体”，还被死死戴上了”物理项圈”。它越进化，反而越安全。</p>
+<p>如果你也被大模型的幻觉折磨过，把这套护栏加进去，今晚睡个好觉。</p>
+<p>你现在的 Agent 系统有没有类似的护栏？评论区聊聊你踩过的坑 ❄️</p>
+<hr>
+<p><strong>关联阅读：</strong></p>
+<ul>
+<li><a href="/ai-agent-beginner-guide/">AI Agent 到底是个啥？小白也能看懂的入门指南</a></li>
+<li><a href="/ai-agent-governance-scale-os/">我让AI管AI，结果它把数据库清空了</a></li>
+<li><a href="/ai-agent-sunk-cost-trap/">我的 AI 助手疯了，30 分钟停不下来</a></li>
+<li><a href="/cli-proxy-api-docker-deploy-guide/">手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器</a></li>
+<li><a href="/mineru-pdf-parse-mcp/">GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF</a></li>
+<li><a href="/yuanbao-api-pure-proxy/">腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</a></li>
+<li><a href="/zhihu-openapi-practical/">三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源</a></li>
+</ul>
+<blockquote>
+<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
+</blockquote>
+<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
+<li><a href="/ai-agent-governance-scale-os/">从失控到门禁：AI Agent 治理复盘</a></li>
+<li><a href="/ai-skill-pruning-token-cost/">我删掉一半 AI 技能，它反而更聪明了</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>教程类</category>
+        <category>AI工程</category>
+      </categories>
+      <tags>
+        <tag>AI Agent</tag>
+        <tag>LLM</tag>
+        <tag>自动化运维</tag>
+        <tag>SkillOpt</tag>
+        <tag>工程实践</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>不用远程桌面，我用微信远程开关Win主机跑Codex</title>
     <url>/2026/09/06/wechat-remote-windows-codex/</url>
     <content><![CDATA[<blockquote>
@@ -4332,77 +4682,10 @@
         <category>AI工程</category>
       </categories>
       <tags>
-        <tag>API</tag>
         <tag>MCP</tag>
+        <tag>API</tag>
         <tag>知乎</tag>
         <tag>AI应用</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>SkillOpt 在 AI Agent 中的硬核落地：如何让 Agent 自己长记性？</title>
-    <url>/2026/07/11/skillopt-agent-self-evolution/</url>
-    <content><![CDATA[<p><img data-src="/images/skillopt-cover.webp" alt="SkillOpt 封面"></p>
-<p>自从上次凌晨三点那场差点提桶跑路的事故后，我给系统上了物理护栏。但这不够，护栏只能防守，我需要 Agent 学会自己长记性。</p>
-<p>所以，我盯上了微软开源的 <code>SkillOpt</code>。</p>
-<p>做过自动化运维的人都懂，把生产环境交给 LLM，就像把拉满弦的弓交给一个随时会犯困的射手。你写了几千字的 System Prompt，告诉它”不能干什么”，但只要上下文一长，它照样会给你输出一段带有”作为AI助手”的废话，然后顺手把一个非法的命令丢进终端。</p>
-<p>问题是，我绝不会把核心主机的”自我修改权”交给一个黑盒。为了把 <code>SkillOpt</code> 的精华压榨出来，又不丢掉主权，我给它做了一场”开胸手术”。</p>
-<blockquote>
-<p><strong>提示词是软的，代码是硬的。</strong> 不要指望用自然语言去约束一个会幻觉的大脑，必须用物理机制去卡死它。</p>
-</blockquote>
-<p>下面是这场手术的核心刀法。</p>
-<h2 id="1-记忆不是用来读的，是用来防坑的"><a href="#1-记忆不是用来读的，是用来防坑的" class="headerlink" title="1. 记忆不是用来读的，是用来防坑的"></a>1. 记忆不是用来读的，是用来防坑的</h2><p><code>SkillOpt</code> 的第一招叫”经验回放”。它把过去的失败案例拿出来重新跑，找到坑在哪里。</p>
-<p>但在我的系统里，这招被改造为了<strong>纪律级的 FTS5 事故卷宗回溯</strong>。我给 Agent 立了一个死规矩：</p>
-<p>在执行任何修改配置或处理故障前，必须强制调用底层的 <code>session_search(query=&quot;&lt;报错特征词&gt;&quot;, limit=3)</code>。</p>
-<p>这是什么概念？这就好比在排雷前，先强制调阅过去一年这个阵地所有的地雷分布图。前段时间因为 <code>mDNS</code> 陷阱和网络路由冲突，服务器掉线。现在，只要遇到类似的网络配置变更，Agent 必须先读卷宗。不再盲目试错，新方案绝对不能踩进旧坑。</p>
-<h2 id="2-把”软约束”换成”硬护栏”"><a href="#2-把”软约束”换成”硬护栏”" class="headerlink" title="2. 把”软约束”换成”硬护栏”"></a>2. 把”软约束”换成”硬护栏”</h2><p><code>SkillOpt</code> 的第二招是”验证门”，跑分更高才允许更新技能。</p>
-<p>我把它落地成了物理实装的 <code>guardrail.py</code> 脚本，并直接嵌进了夜间的自动化引擎。这是一个无情的双重拦截机制：</p>
-<ul>
-<li><strong>主权拦截</strong>：正则暴戾扫描。只要出现”作为AI”、”风险提示”、”温馨提示”等废话，直接打回重写。绝不把这些污染传递给下游解析器。</li>
-<li><strong>语法拦截</strong>：所有生成的 Python、Bash 脚本或 YAML 配置，必须先过 <code>ast.parse</code> 或 <code>dry-run</code>。</li>
-</ul>
-<p>如果引擎在夜间生成了垃圾，内部自动熔断并重试，最高 3 次。通过这种硬约束，实现了零污染 180 天的稳定运行。</p>
-<blockquote>
-<p>不要用 AI 写作。AI 写作就是”说什么都对，但读完啥也没记住”。这条规律同样适用于 AI 写的 Agent 规则——必须用代码来验证，而非再加一句”请你遵守”。</p>
-</blockquote>
-<h2 id="3-把方向盘锁死在手里"><a href="#3-把方向盘锁死在手里" class="headerlink" title="3. 把方向盘锁死在手里"></a>3. 把方向盘锁死在手里</h2><p>最后，如何让这些新技能生效？<code>SkillOpt</code> 喜欢全自动合并，但这里不行。</p>
-<p>对基因进化引擎做了一次阻断改造：</p>
-<ul>
-<li>所有提炼出的新规则（XML），全部打入 <code>.proposed/</code> 暂存区。</li>
-<li>系统自动推送通知，把旧坑和新规则列清。</li>
-</ul>
-<p><strong>没有人工的显式确认，任何基因都不会生效。</strong> 这是底线。</p>
-<p>通过这次改造，这套 Agent 不仅有了自我迭代的”免疫抗体”，还被死死戴上了”物理项圈”。它越进化，反而越安全。</p>
-<p>如果你也被大模型的幻觉折磨过，把这套护栏加进去，今晚睡个好觉。</p>
-<p>你现在的 Agent 系统有没有类似的护栏？评论区聊聊你踩过的坑 ❄️</p>
-<hr>
-<p><strong>关联阅读：</strong></p>
-<ul>
-<li><a href="/ai-agent-beginner-guide/">AI Agent 到底是个啥？小白也能看懂的入门指南</a></li>
-<li><a href="/ai-agent-governance-scale-os/">我让AI管AI，结果它把数据库清空了</a></li>
-<li><a href="/ai-agent-sunk-cost-trap/">我的 AI 助手疯了，30 分钟停不下来</a></li>
-<li><a href="/cli-proxy-api-docker-deploy-guide/">手把手教你部署 CLI Proxy API——统一管理所有 AI 大模型的神器</a></li>
-<li><a href="/mineru-pdf-parse-mcp/">GPT-4读PDF错到离谱，这个工具却对了95%：PDF转Markdown，让所有AI工具都能读PDF</a></li>
-<li><a href="/yuanbao-api-pure-proxy/">腾讯元宝 API 提取实战：把它的非标接口包装成标准 OpenAI 兼容</a></li>
-<li><a href="/zhihu-openapi-practical/">三步接入知乎API，Agent立刻会查资料：知乎比Google更适合做中文AI内容源</a></li>
-</ul>
-<blockquote>
-<p>「每天帮你踩一个 AI 的坑，省下一小时。」</p>
-</blockquote>
-<h2 id="关联阅读"><a href="#关联阅读" class="headerlink" title="关联阅读"></a>关联阅读</h2><ul>
-<li><a href="/ai-agent-governance-scale-os/">从失控到门禁：AI Agent 治理复盘</a></li>
-<li><a href="/ai-skill-pruning-token-cost/">我删掉一半 AI 技能，它反而更聪明了</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>教程类</category>
-        <category>AI工程</category>
-      </categories>
-      <tags>
-        <tag>AI Agent</tag>
-        <tag>LLM</tag>
-        <tag>自动化运维</tag>
-        <tag>SkillOpt</tag>
-        <tag>工程实践</tag>
       </tags>
   </entry>
 </search>
